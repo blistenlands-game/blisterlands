@@ -100,6 +100,20 @@ main.flush{padding-top:0}
 .ritratto.grande{float:none;display:block;width:max-content;margin:14px auto 12px;transform:rotate(-2deg);padding:8px 8px 4px}
 .ritratto.grande figcaption{font-size:24px}
 .card .btn{clear:both}
+/* negozio */
+.prod{position:relative;padding:10px 4px 10px 2px;border-bottom:1.5px dashed var(--faint);line-height:20px}
+.prod.locked{opacity:.55}
+.pbrand{display:inline-block;font-family:var(--hand);font-size:17px;font-weight:700;border:1.5px solid;border-radius:50%;padding:0 9px;transform:rotate(-3deg);margin-bottom:2px}
+.pname{font-family:var(--hand);font-size:25px;font-weight:700;line-height:26px}
+.pline{font-family:var(--serif);font-size:13px;font-style:italic;font-weight:400;color:var(--soft)}
+.pmeta{font-size:13px;color:var(--soft)}
+.pattr{font-size:14px}
+.ptrait{font-size:13.5px;font-style:italic;color:var(--rust)}
+.act{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px}
+.btn.mini{width:auto;min-height:40px;margin:6px 0 0;padding:4px 14px;align-items:center;font-family:var(--hand);font-size:20px;font-weight:700}
+.btn.mini::after{content:""}
+.act .btn.mini{margin:0}
+.tagline{display:inline-block;margin-top:6px;font-family:var(--hand);font-size:19px;color:var(--soft)}
 /* scelte compatte */
 .card h2{font-size:22px;line-height:26px}
 .card p{font-size:15.5px;line-height:23px;margin:2px 0 4px}
@@ -242,12 +256,12 @@ function newState(){return{screen:'intro',kit:new Set(['zainoClassico','saccoPiu
  energia:100,morale:65,soldi:220,ferie:8,xp:0,stati:new Set(),timbri:[],flags:{},mem:new Set(),
  tappa:0,seg:0,gseg:0,clock:630,start:630,wx:'nuvole',forecast:null,later:[],notes:[],
  current:null,outcome:null,used:new Set(),log:[],end:null,arrive:0,night:[],extraKg:0}}
-const has=id=>S.kit.has(id);
+const has=id=>{if(S.kit.has(id))return true;for(const k of S.kit){const it=typeof ITEM_BY!=='undefined'&&ITEM_BY[k];if(it&&it.base===id)return true}return false};
 /* caratteristiche: gli eventi ragionano su queste, non sui singoli oggetti */
 const ATTR={impermeabile:'Impermeabilità',antivento:'Antivento',calore:'Calore',piediAsciutti:'Piedi asciutti',fango:'Protezione dal fango',asciugatura:'Asciugatura',caviglia:'Protezione caviglia',aderenza:'Aderenza',suola:'Protezione suola',appoggio:'Appoggio',guado:'Guado',antinsetti:'Antinsetti',ombra:'Ombra',acquaSicura:'Acqua sicura',orientamento:'Orientamento',riparazione:'Riparazione',portanza:'Portanza',sonno:'Calore notturno',umido:'Resistenza all\'umido',comfort:'Comfort notturno',cucina:'Cucina',riparo:'Riparo',svago:'Svago'};
 function att(k){return Math.min(3,attBase(k)+skillBonus(k))}
 function skillBonus(k){if(typeof H==='undefined'||!H)return 0;if(k==='orientamento')return Math.floor(H.abil.orientamento/2);if(k==='aderenza'||k==='appoggio')return Math.floor(H.abil.tecnica/2);return 0}
-function attBase(k){let v=0;for(const id of S.kit){const it=ITEMS.find(i=>i.id===id);if(!it||!it.a)continue;if(it.dev&&S.bat[id]<=0)continue;if(it.a[k]>v)v=it.a[k]}return v}
+function attBase(k){let v=0;for(const id of S.kit){const it=ITEMS.find(i=>i.id===id);if(!it||!it.a)continue;if(it.dev&&S.bat[it.base||id]<=0)continue;const a=(S.eff&&S.eff[id])||it.a;if((a[k]||0)>v)v=a[k]}return v}
 const devOn=id=>has(id)&&S.bat[id]>0;
 const inv=id=>S.inv[id]||0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -2572,6 +2586,84 @@ const REV5={
  'monologo/1':[O(1,'g',`L'escursionista che ti aveva sentito ride e ti dice che lo fa anche lui.`,{m:4})]
 };
 for(const k in REV5){const [id,i]=k.split('/');const ev=EV.find(e=>e.id===id);if(ev&&ev.o[+i]&&REV5[k].length)ev.o[+i].out.push(...REV5[k]);}
+/* =========== CATALOGO: quattro marchi =========== */
+const BRANDS={
+ A:{name:'Alvenheim',color:'#4F6B4A',color2:'#A97C3B',rule:'Caro e durevole. Garanzia: un oggetto rotto viene sostituito gratis una volta. Si rivende bene.'},
+ S:{name:'Sentivo',color:'#2F6DB5',color2:'#C8402E',rule:'Economico e sempre in negozio, saldi frequenti. Si consuma in fretta.'},
+ Sh:{name:'Shanwu',color:'#E07B24',color2:'#2B2B2B',rule:'Ottimo prezzo, ma qualità variabile: lo scopri solo usandolo.'},
+ D:{name:'Dirtbag Stitchworks',color:'#CDB892',color2:'#B5452E',rule:'Artigianale e leggerissimo. Si ordina e arriva in tre mesi. Delicato, ma si ripara con poco.'}};
+const TRAITS={tasche:'Tasche sulla cintura: mangi senza fermarti (+3 energia a ogni tappa)',lana:'Lana che non puzza: +2 morale ogni sera',
+ sedile:'Fa anche da sedile: +3 morale a ogni tappa',sgargiante:'Colore sgargiante: si vede da lontano',riparabile:'Si ripara con poco',
+ poncho:'Fa anche da riparo d\'emergenza',rete:'Tasca a rete esterna: le calze asciugano camminando'};
+/* base = l'oggetto generico che gli eventi riconoscono; lvl = livello minimo per comprarlo; dur = chilometri di vita */
+const CATALOG=[
+ // zaini
+ ['sGita','zainoClassico','S','classica','Gita 40',1.9,90,0,220,{portanza:2},null],
+ ['sSentiero','zainoClassico','S','classica','Sentiero 55',2.1,120,0,260,{portanza:3},null],
+ ['shAirpeak','zainoUL','Sh','ultralight','AirPeak UL 45',0.95,110,1,320,{portanza:1},'tasche'],
+ ['aFjellvind','zainoClassico','A','classica','Fjellvind 50',1.7,260,2,900,{portanza:3},'tasche'],
+ ['dMule','zainoUL','D','ultralight','The Mule',0.7,240,3,420,{portanza:2,asciugatura:1},'rete'],
+ ['aFjellLite','zainoUL','A','ultralight','Fjellvind Lite 40',1.0,330,4,750,{portanza:2},'tasche'],
+ // sacchi e quilt
+ ['sRifugio','saccoSint','S','classica','Rifugio 10°',1.7,60,0,260,{sonno:1,umido:3},null],
+ ['shSynth','quiltSint','Sh','ultralight','SynthQuilt X',0.9,80,0,320,{sonno:1,umido:3},null],
+ ['shCocoon','saccoPiuma','Sh','classica','DownCocoon 600',1.0,140,1,420,{sonno:2,umido:0},null],
+ ['dSasquatch','quiltPiuma','D','ultralight','Sasquatch Quilt',0.55,260,2,600,{sonno:2,umido:0},'riparabile'],
+ ['aPolarnatt','saccoPiuma','A','classica','Polarnatt −5',0.9,380,3,1300,{sonno:3,umido:1},null],
+ // materassini
+ ['sZigzag','matSchiuma','S','classica','Zigzag',0.4,20,0,2000,{comfort:1},null],
+ ['shPuff','matGonfiabile','Sh','ultralight','PuffPad',0.5,45,0,260,{comfort:2},null],
+ ['dPancake','matSchiuma','D','ultralight','Pancake',0.25,35,1,1500,{comfort:1},'sedile'],
+ ['aDunvik','matGonfiabile','A','classica','Dunvik Air',0.45,170,2,800,{comfort:3},null],
+ // scarpe
+ ['sCresta','basse','S','classica','Cresta Low',1.1,70,0,300,{asciugatura:2,caviglia:2,aderenza:1,suola:1,piediAsciutti:1},null],
+ ['sVetta','scarponi','S','classica','Vetta Mid',1.8,140,0,450,{asciugatura:1,caviglia:3,aderenza:2,suola:2,piediAsciutti:2},null],
+ ['shCloud','trail','Sh','ultralight','CloudStep X3',0.8,75,0,350,{asciugatura:3,caviglia:1,aderenza:2,suola:1},null],
+ ['aStig','basse','A','classica','Stigfinner',1.2,190,1,800,{asciugatura:2,caviglia:2,aderenza:3,suola:2,piediAsciutti:2},null],
+ ['aGletscher','scarponi','A','classica','Gletscher GTX',1.6,260,2,1200,{asciugatura:1,caviglia:3,aderenza:3,suola:3,fango:1,piediAsciutti:3},null],
+ // gusci
+ ['sAntipioggia','guscio','S','classica','Antipioggia',0.45,45,0,150,{impermeabile:1,antivento:1},null],
+ ['shStorm','guscio','Sh','ultralight','StormShell',0.3,90,0,320,{impermeabile:2,antivento:2},null],
+ ['dPoncho','guscio','D','ultralight','Poncho Tarp',0.35,110,1,320,{impermeabile:2,antivento:1,riparo:1},'poncho'],
+ ['aRegn','guscio','A','classica','Regnskydd 3L',0.38,290,3,950,{impermeabile:3,antivento:3},'sgargiante'],
+ // strato caldo
+ ['sPile','pile','S','classica','Pile Base',0.45,25,0,600,{calore:2,antivento:1},null],
+ ['shPuffLite','pile','Sh','ultralight','PuffLite',0.3,70,0,320,{calore:2},null],
+ ['aUll','pile','A','classica','Ullvarm',0.42,150,1,900,{calore:2,antivento:1},'lana'],
+ ['aVarme','pile','A','ultralight','Varmekjerne',0.33,240,2,900,{calore:3,antivento:1},null],
+ // tende
+ ['sCampeggio','tenda','S','classica','Campeggio 2',2.6,90,0,400,{riparo:2},null],
+ ['shSky','tenda','Sh','ultralight','SkyDome 1',1.2,150,1,320,{riparo:2},null],
+ ['dPyramid','tenda','D','ultralight','Pyramid Tarp',0.6,300,2,600,{riparo:2},'riparabile'],
+ ['aTundra','tenda','A','classica','Tundra 2',2.0,450,3,1600,{riparo:3},null],
+ // bastoncini e ghette
+ ['sTrek','bastoncini','S','classica','Trek',0.55,30,0,500,{appoggio:1},null],
+ ['shCarbon','bastoncini','Sh','ultralight','CarbonLite',0.38,60,0,350,{appoggio:2},null],
+ ['aStav','bastoncini','A','ultralight','Stav Carbon',0.35,160,2,1200,{appoggio:3},null],
+ ['sGhette','ghette','S','classica','Ghette Fango',0.25,20,0,300,{fango:1},null],
+ ['dGhost','ghette','D','ultralight','Ghost Gaiters',0.08,35,1,300,{fango:2},'riparabile'],
+ ['aMyr','ghette','A','classica','Myrvakt',0.3,90,2,1000,{fango:3},null],
+ // cucina e acqua
+ ['sFornello','fornello','S','classica','Fornello Base',0.35,25,0,800,{cucina:1},null],
+ ['shRapid','fornello','Sh','ultralight','RapidFlame',0.3,45,0,500,{cucina:2},null],
+ ['dRamen','fornello','D','ultralight','Ramen Pot',0.15,50,1,900,{cucina:1},'riparabile'],
+ ['sPastiglie','filtro','S','classica','Pastiglie',0.05,15,0,200,{acquaSicura:1},null],
+ ['aKlar','filtro','A','ultralight','Klarvann',0.1,55,1,1200,{acquaSicura:3},null],
+ // testa, piccole cose, orientamento
+ ['sRete','rete','S','classica','Rete antizanzare',0.05,10,0,300,{antinsetti:3},null],
+ ['sCappello','cappello','S','classica','Cappello a tesa',0.1,25,0,600,{ombra:2},null],
+ ['sSandali','sandali','S','classica','Sandali da guado',0.4,40,0,500,{guado:2},null],
+ ['sKit','kit','S','classica','Kit riparazione',0.15,20,0,9999,{riparazione:2},null],
+ ['sCarte','carte','S','classica','Mazzo di carte',0.1,5,0,9999,{svago:1},null],
+ ['sMappa','mappa','S','classica','Mappa e bussola',0.15,25,0,9999,{orientamento:2},null],
+ ['shWatch','orologio','Sh','ultralight','TrailWatch 2',0.07,180,1,9999,{orientamento:2},null],
+ ['aFyr','faro','A','classica','Fyr SOS',0.15,350,2,9999,{},null]];
+CATALOG.forEach(([id,base,brand,line,model,kg,price,lvl,dur,a,trait])=>{const b=ITEMS.find(i=>i.id===base);
+ ITEMS.push({id,base,brand,line,model,name:BRANDS[brand].name+' '+model,kg,price,lvl,dur,a,trait,dev:b&&b.dev,fragile:b&&b.fragile,group:b&&b.group,
+  note:(b?b.note:'')+(trait?'. '+TRAITS[trait]:''),color:BRANDS[brand].color});
+});
+const ITEM_BY={};ITEMS.forEach(i=>ITEM_BY[i.id]=i);
+function traitOn(t){for(const k of S.kit){const it=typeof ITEM_BY!=='undefined'&&ITEM_BY[k];if(it&&it.trait===t)return true}return false}
 /* =========== MOTORE =========== */
 const wv=w=>typeof w==='function'?w():w;
 function opts(ev){return ev.o.filter(op=>!op.when||op.when())}
@@ -2618,7 +2710,7 @@ function fail(){
  if(S.energia<=0){S.endKind='energia';S.end='Crolli dalla stanchezza. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  if(S.morale<=0){S.endKind='morale';S.end='Non ne puoi più. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  return false}
-function startTappa(){S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.screen='tappa';
+function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:3});S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.screen='tappa';
  const t=TAPPE[S.tappa];const starts=EV.filter(e=>e.first&&e.tappe.includes(t.n)&&!S.used.has(e.id));
  if(starts.length&&chance(0.5)){const f=starts[Math.floor(rnd()*starts.length)];S.used.add(f.id);S.clock+=f.pre||0;S.current=f;render()}
  else{S.current=null;step()}}
@@ -2664,7 +2756,7 @@ function choose(i){const ev=S.current,op=opts(ev)[i];
  useInv(op.use);S.clock+=op.min||0;
  const w={};op.out.forEach((x,k)=>w[k]=Math.max(0.0001,wv(x.w)));const r=op.out[+pickW(w)];
  fx(vary(r.f));const tw=twist(op.out.length<2);if(r.f.gain){S.kit.add(r.f.gain);S.log.unshift('Nuovo: '+ITEMS.find(x=>x.id===r.f.gain).name)}
- if(r.f.lose){S.kit.delete(r.f.lose);S.log.unshift('Perso: '+ITEMS.find(x=>x.id===r.f.lose).name)}
+ if(r.f.lose){const lid=[...S.kit].find(k=>k===r.f.lose||(ITEM_BY[k]&&ITEM_BY[k].base===r.f.lose));if(lid){S.kit.delete(lid);S.log.unshift('Perso: '+ITEM_BY[lid].name)}}
  if(!ev.forced)S.used.add(ev.id);
  const txt=tw?r.txt+' '+tw.txt:r.txt;S.outcome={txt,bad:r.t==='b'&&!(tw&&tw.t==='g')};S.log.unshift(`${hhmm(S.clock)} · ${ev.title}: ${txt}`);
  S.current=null;S.notes=[];if(fail())return render();render()}
@@ -2706,6 +2798,7 @@ function sleep(where){const t=TAPPE[S.tappa],m=[];
   if(bad&&att('umido')<2&&att('riparo')>=1&&chance(0.4)){fx({e:-6,m:-4});m.push('La condensa della tenda inumidisce la piuma del sacco.')}
   if(S.kit.has('matGonfiabile')&&chance(0.08)){if(att('riparazione')>=1){m.push('Il materassino si è bucato: lo ripari col kit.')}else{fx({e:-10,m:-6});m.push('Il materassino si è bucato: dormi sul duro.')}}
   if(bad&&S.stati.has('bagnati'))m.push('Le scarpe restano fradice.')}
+ if(traitOn('lana')){fx({m:2})}
  if(devOn('faro')){fx({m:3});m.push('Col faro mandi il «tutto bene» a casa. Ti rispondono con un cuore.')}
  if(where!=='tenda'&&(att('svago')>=1)){fx({m:6,xp:3});m.push('Una partita a carte con gli altri ospiti.')}
  if(inv('pasti')>0){const hot=(att('cucina')>=1)&&inv('gas')>0;useInv(hot?{pasti:1,gas:1}:{pasti:1});fx({e:hot?12:6,m:hot?6:0});S.fame=Math.max(0,(S.fame||0)-2);m.push(hot?'Cena calda.':'Cena fredda.')}
@@ -2869,7 +2962,7 @@ function weatherFx(wx){
  return ''}
 function hoodHead(x,y,dir){/* il cappuccio a punta, buio dentro, occhi chiari e naso lungo */const d=dir||1;
  return `<g transform="translate(${x} ${y}) scale(${d} 1)"><path d="M-8 3 C-10 -6 -4 -11 3 -10 C8 -9 10 -4 9 3 C5 6 -4 6 -8 3 Z M-6 -6 C-10 -9 -13 -10 -14 -13 C-10 -12 -7 -11 -4 -9 Z" fill="#7A4A2E" stroke-width="1.3" class="k"></path><ellipse cx="3" cy="-1.5" rx="4.2" ry="4.6" fill="#231B16"></ellipse><circle cx="1.6" cy="-2.6" r=".9" fill="#F3EAD6"></circle><circle cx="4.6" cy="-3" r=".9" fill="#F3EAD6"></circle><path d="M4.5 -1 L11 1.4 L4.5 2 Z" fill="#E2B48C" stroke-width=".8" class="k"></path></g>`}
-function walker(x,y,moving){const zc=packColor(),coat=has('guscio')?'#5E7690':has('pile')?'#B5654A':'#8C8478';
+function walker(x,y,moving){const zc=packColor(),coat=kitColor(['guscio'],kitColor(['pile'],'#8C8478'));
  return `<g transform="translate(${x.toFixed(1)} ${(y-44).toFixed(1)})" class="${moving?'':'fermo'}"><g class="corpo">
  <g class="gamba-b"><path d="M-1 28 L3 43" stroke-width="2.2" stroke-linecap="round" class="k"></path><path d="M0 42 h6" stroke-width="3" stroke-linecap="round" stroke="#4A3A2E"></path></g>
  <path d="M-17 -10 C-17 -14 -3 -15 -2 -11 L-1 25 C-1 28 -16 29 -16 26 Z" fill="${zc}" stroke-width="1.3" class="k"></path>
@@ -2922,7 +3015,7 @@ function hutScene(t){const wx=S.wx,grey=wx==='pioggia'||wx==='nebbia',lit=!S.clo
  ${t.sauna&&lit?`<g transform="translate(166 154)"><path d="M-16 24 V6 L0 -6 L16 6 V24 Z" fill="#8C6A4A" opacity=".7"></path><path d="M-20 8 L0 -8 L20 8 M-16 6 V24 H16 V6" fill="none" stroke-width="1.4" ${INKS}></path>${S.arrive<=1020?[-.7,-2.2].map(d=>`<circle class="fumo" style="animation-delay:${d}s" cx="10" cy="-16" r="4" fill="#B8AFA2"></circle>`).join(''):''}<text x="0" y="-24" font-family="Caveat, cursive" font-size="15" text-anchor="middle" ${INKF}>sauna</text></g><path d="M184 178 H222 V172" fill="none" stroke-width="1.4" ${INKS}></path>`:''}
  ${walker(124,174,false)}${weatherFx(wx)}</svg>`}
 function figure(){const kg=packKg(),ang=clamp((kg-9)*8,-70,70);
- const zc=has('zainoUL')?'#7E9A5B':'#C98B3A',jk=has('guscio')?'#6E97B5':has('pile')?'#B5654A':'#D8CDB8';
+ const zc=packColor(),jk=kitColor(['guscio'],kitColor(['pile'],'#D8CDB8'));
  const shoe=has('scarponi')?'#7A5A3A':has('basse')?'#8C6A4A':'#B5654A',boot=has('scarponi');
  const L=[];const lab=(x1,y1,x2,y2,tx,ty,t1,t2)=>L.push(`<path d="M${x1} ${y1} C${(x1+x2)/2} ${y1} ${(x1+x2)/2} ${y2} ${x2} ${y2}" fill="none" stroke="#5C4E42" stroke-width="1" stroke-dasharray="3 3"></path><text x="${tx}" y="${ty}" font-family="Caveat, cursive" font-size="17" style="fill:var(--soft)">${esc(t1)}</text>${t2?`<text x="${tx}" y="${ty+16}" font-family="Caveat, cursive" font-size="14" style="fill:var(--soft)">${esc(t2)}</text>`:''}`);
  const name=id=>{const it=ITEMS.find(i=>i.id===id);return it?it.name.toLowerCase():''};
@@ -2976,7 +3069,8 @@ function land(wx,clock,seed,groundY){const grey=wx==='pioggia'||wx==='nebbia',gy
  return `${SDEFS}${sky(clock,wx)}<path d="${farHills(seed)} L390 240 L0 240 Z" fill="${grey?'#8E9AA0':'#8FA9B8'}" opacity=".42" filter="url(#washS)"></path><path d="${farHills(seed)} L390 240 L0 240 Z" fill="url(#hatchS)" opacity=".45"></path><path d="${farHills(seed)}" fill="none" stroke-width="2" stroke-linejoin="round" ${INKS} filter="url(#inkS)"></path>
  <path d="M0 ${gy} C90 ${gy-8} 200 ${gy+6} 390 ${gy-4} L390 240 L0 240 Z" fill="${grey?'#8C9A72':'#9DB27A'}" opacity=".6" filter="url(#washS)"></path><path d="M0 ${gy} C90 ${gy-8} 200 ${gy+6} 390 ${gy-4} L390 240 L0 240 Z" fill="url(#dotsS)"></path><path d="M0 ${gy} C90 ${gy-8} 200 ${gy+6} 390 ${gy-4}" fill="none" stroke-width="2.4" ${INKS} filter="url(#inkS)"></path>`}
 function big(s,x,y,k){return `<g transform="translate(${x} ${y}) scale(${k}) translate(${-x} ${-y})">${s}</g>`}
-function packColor(){return has('zainoUL')?'#7E9A5B':'#C98B3A'}
+function kitColor(bases,def){for(const k of S.kit){const it=ITEM_BY[k];if(it&&it.color&&bases.includes(it.base))return it.color}return def}
+function packColor(){return kitColor(['zainoClassico','zainoUL'],has('zainoUL')?'#7E9A5B':'#C98B3A')}
 function figSit(x,y,slump){/* seduto su un masso, testa bassa */
  return `<g transform="translate(${x} ${y})"><path d="M-16 0 C-18 -14 14 -16 16 0 Z" fill="#B8AFA2" stroke-width="1.4" ${INKS}></path>
  ${hoodHead(slump?6:2,slump?-36:-40,1)}<g stroke-width="1.8" stroke-linecap="round" fill="none" ${INKS}><path d="M0 -32 L-2 -14 L14 -12 L16 2 M-2 -14 L10 -10 L8 2"></path><path d="M0 -28 L${slump?10:8} -${slump?18:22}"></path></g>
@@ -3024,7 +3118,7 @@ const ABIL={resistenza:'Resistenza',orientamento:'Orientamento',tecnica:'Tecnica
 const ABIL_NOTE={resistenza:'Meno fatica a ogni chilometro',orientamento:'Un punto di orientamento in più ogni due livelli',tecnica:'Aderenza e appoggio in più ogni due livelli',adattamento:'Meteo, insetti e acciacchi pesano meno sul morale'};
 let H=null;
 function newHome(){return{mese:4,anno:1,soldi:300,ferie:8,forma:60,voglia:70,xp:0,punti:0,abil:{resistenza:0,orientamento:0,tecnica:0,adattamento:0},
- owned:new Set(['zainoClassico','saccoSint','matSchiuma','trail','pile','cappello']),scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
+ owned:new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']),catalogo:true,scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
  timbri:[],storia:[],fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio'}}
 const lvl=()=>Math.floor(H.xp/100);
 function save(){try{const o=Object.assign({},H,{owned:[...H.owned]});localStorage.setItem('blisterlands',JSON.stringify(o))}catch(e){}}
@@ -3076,6 +3170,7 @@ function liveMonth(plan){const P=PLANS[plan]||PLANS.normale;
  const msg=[];H.soldi+=P.soldi;msg.push(`${P.l}: ${P.soldi>=0?'+':''}${P.soldi} €.`);H.fila=P.fila?H.fila+1:0;
  const before=H.ferie;H.ferie=Math.min(FERIE_MAX,H.ferie+FERIE_MESE);if(before+FERIE_MESE>FERIE_MAX)msg.push(`Hai raggiunto il tetto di ${FERIE_MAX} giorni: le ferie nuove si perdono.`);else msg.push(`Maturano ${FERIE_MESE} giorni di ferie.`);
  H.forma=hc(H.forma+P.forma,0,100);H.voglia=hc(H.voglia+P.voglia,0,100);msg.push(`Forma ${P.forma>=0?'+':''}${P.forma}, voglia ${P.voglia>=0?'+':''}${P.voglia}.`);
+ eqInit();H.ordini.forEach(o=>o.m--);H.ordini.filter(o=>o.m<=0).forEach(o=>{H.owned.add(o.id);H.wear[o.id]=0;msg.push(`È arrivato il pacco da Dirtbag Stitchworks: ${ITEM_BY[o.id].name}.`)});H.ordini=H.ordini.filter(o=>o.m>0);rollStock();
  if(H.ordine){H.ordine.m--;if(H.ordine.m<=0){H.owned.add(H.ordine.id);msg.push('È arrivato lo zaino artigianale!');H.ordine=null}}
  H.sconto=0;
  H.carta=pickCard();H.cartaMsg=msg;H.screen='carta';save();render()}
@@ -3089,9 +3184,6 @@ function chooseCard(i){const c=H.carta,o=c.o[i];
  H.esito=txt;H.carta=null;H.screen='casa';save();render()}
 
 /* negozio */
-const price=id=>Math.round(PRICE[id]*(1-H.sconto/100));
-function buyItem(id){if(H.owned.has(id)||H.soldi<price(id))return;H.soldi-=price(id);H.owned.add(id);save();render()}
-function sellItem(id){if(!H.owned.has(id))return;H.owned.delete(id);H.soldi+=Math.round(PRICE[id]/2);save();render()}
 
 /* partenza e ritorno */
 function formaMul(){return 1.35-0.6*H.forma/100}
@@ -3099,11 +3191,6 @@ function formaTxt(){const m=formaMul();return `Forma ${H.forma}: in cammino ogni
 function startMorale(){return Math.round(30+H.voglia*0.5)}
 function vogliaTxt(){return `Voglia ${H.voglia}: partiresti con morale ${startMorale()} su 100.${H.voglia<25?' Attento: rischi il burnout.':''}`}
 function inSeason(){return !!SEASON[H.mese]}
-function prepareTrek(){S=newState();S.mese=SEASON[H.mese];S.kit=new Set();
- for(const g of ['zaino','sacco','materassino','scarpe']){const own=ITEMS.filter(i=>i.group===g&&H.owned.has(i.id));if(own.length)S.kit.add(own[0].id)}
- ITEMS.filter(i=>!i.group&&H.owned.has(i.id)&&!['carte','faro','tenda','orologio'].includes(i.id)).forEach(i=>S.kit.add(i.id));
- for(const k in S.inv)if(k!=='batteria')S.inv[k]=Math.min(H.scorte[k]||0,{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,powerbank:1}[k]);
- S.soldi=H.soldi;S.ferie=H.ferie;S.morale=startMorale();S.screen='zaino';H.screen=null;render()}
 function packQty(id,d){const c=CONSUM.find(c=>c.id===id);const cur=inv(id),stock=H.scorte[id]||0,nv=clamp(cur+d,0,c.max);
  if(nv>cur){const need=nv-stock;if(need>0){if(S.soldi<CPRICE[id])return;S.soldi-=CPRICE[id];H.scorte[id]=(H.scorte[id]||0)+1}}
  else if(nv<cur&&cur>stock){S.soldi+=CPRICE[id];H.scorte[id]=Math.max(0,(H.scorte[id]||0)-1)}
@@ -3116,6 +3203,7 @@ function goHome(){const r={xp:S.xp,timbri:S.timbri.filter(t=>!H.timbri.includes(
  H.soldi=S.soldi;H.ferie=Math.max(0,S.ferie);H.xp+=S.xp;H.timbri.push(...r.timbri);
  const lost=ITEMS.filter(i=>H.owned.has(i.id)&&!i.group&&!S.kit.has(i.id)&&S.log.some(l=>l.includes('Perso: '+i.name)));lost.forEach(i=>H.owned.delete(i.id));
  const gained=[...S.kit].filter(id=>!H.owned.has(id));gained.forEach(id=>H.owned.add(id));r.lost=lost.map(i=>i.name);r.gained=gained.map(id=>ITEMS.find(i=>i.id===id).name);
+ r.usura=wearAfterTrek(trekKm());
  const up=lvl()-r.livPrima;H.punti+=up;r.up=up;
  H.forma=hc(H.forma+15,0,100);H.voglia=r.completo?95:60;if(r.completo)H.completati++;if(r.vetta)H.vette++;
  H.storia.unshift(`${MONTHS[H.mese-1]} anno ${H.anno}: ${r.completo?'Via delle Renne completata':'cammino interrotto'}${r.vetta?', vetta del Gáisi':''}.`);
@@ -3145,17 +3233,33 @@ render=function(){const a=$('#app');
    <button class="btn" onclick="H.screen='negozio';render()">Il negozio di montagna${H.sconto?` · saldi -${H.sconto}%`:''}<span class="meta">Compra e vendi attrezzatura</span></button>
    <button class="btn" onclick="H.screen='abilita';render()">Abilità${H.punti?` · ${H.punti} punti da spendere`:''}<span class="meta">${Object.entries(ABIL).map(([k,v])=>v+' '+H.abil[k]).join(' · ')}</span></button></div>
    <div class="card"><h3>Come partiresti oggi</h3><p class="sub">${formaTxt()}</p><p class="sub">${vogliaTxt()}</p></div>
-   <div class="card"><h3>Il tuo materiale</h3><p class="sub">${[...H.owned].map(id=>ITEMS.find(i=>i.id===id).name).join(' · ')}</p>
+   <div class="card"><h3>Il tuo materiale</h3><p class="sub">${(eqInit(),[...H.owned]).map(id=>{const it=ITEM_BY[id];const c=cond(id);return esc(it?it.name:id)+(it&&it.dur&&it.dur<9999?` (${condLabel(c)})`:'')}).join(' · ')}</p>
    <p class="sub">Scorte: ${Object.entries(H.scorte).filter(([k,v])=>v>0).map(([k,v])=>CONSUM.find(c=>c.id===k).name+' '+v).join(' · ')||'nessuna'}${H.ordine?` · zaino artigianale in arrivo tra ${H.ordine.m} mesi`:''}</p></div>
    ${H.timbri.length?`<div class="card"><h3>Diario</h3><p>${H.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join('')}</p></div>`:''}
    ${H.storia.length?`<details class="log"><summary>Storia</summary><ul>${H.storia.slice(0,24).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></details>`:''}
    <button class="btn" onclick="if(confirm('Ricominciare da capo? Perderai tutti i progressi.')){H=newHome();H.screen='intro';save();render()}">Ricomincia da capo</button>`}
   else if(H.screen==='carta'){const c=H.carta;
    html=top+H.cartaMsg.map(m=>`<p class="note">${esc(m)}</p>`).join('')+`<div class="card">${tapedCard(CARD_PORTRAIT[c.id],190,196,'ritratto grande')}<h2>${esc(c.title)}</h2><p>${esc(c.text)}</p>${c.o.map((o,i)=>`<button class="btn" onclick="chooseCard(${i})">${esc(o.l)}</button>`).join('')}</div>`}
-  else if(H.screen==='negozio'){
-   const row=it=>{const own=H.owned.has(it.id),p=price(it.id);return `<div class="qrow"><span>${esc(it.name)}<small>${esc(it.note)}</small>${it.a&&Object.keys(it.a).length?`<small>${Object.entries(it.a).map(([k,v])=>ATTR[k]+' '+v).join(' · ')}</small>`:''}<small>${it.kg} kg</small></span>${own?`<button class="btn" style="width:auto;margin:0" onclick="sellItem('${it.id}')">Vendi ${Math.round(PRICE[it.id]/2)} €</button>`:`<button class="btn" style="width:auto;margin:0" ${H.soldi<p?'disabled':''} onclick="buyItem('${it.id}')">Compra ${p} €</button>`}</div>`};
-   html=top+`<button class="btn" onclick="H.screen='casa';render()">← Torna a casa</button><p class="sub">Si rivende a metà prezzo.${H.sconto?` Saldi: -${H.sconto}% su tutto.`:''} Le scorte di cibo e consumabili si comprano quando prepari lo zaino.</p>
-   ${SECTIONS.map(([t,g])=>`<h3>${t}</h3>`+ITEMS.filter(it=>(it.group||null)===g).map(row).join('')).join('')}`}
+  else if(H.screen==='negozio'){eqInit();
+   const SEZ=[['Zaini',['zainoClassico','zainoUL']],['Sacchi a pelo e quilt',['saccoPiuma','saccoSint','quiltPiuma','quiltSint']],['Materassini',['matGonfiabile','matSchiuma']],['Scarpe',['trail','basse','scarponi']],['Gusci',['guscio']],['Strato caldo',['pile']],['Tende e ripari',['tenda']],['Bastoncini e ghette',['bastoncini','ghette','sandali']],['Cucina e acqua',['fornello','filtro']],['Orientamento e sicurezza',['mappa','orologio','faro','kit']],['Testa e svago',['rete','cappello','carte']]];
+   const row=it=>{const own=H.owned.has(it.id),p=price(it.id),lock=(it.lvl||0)>lvl(),ord=H.ordini.find(o=>o.id===it.id),avail=it.brand==='D'||H.stock.includes(it.id);
+    const c=own?cond(it.id):1,q=own&&it.brand==='Sh'?(H.known[it.id]?{difetto:' · difettoso',gioiello:' · esemplare eccellente',normale:''}[H.qual[it.id]]:' · qualità da scoprire'):'';
+    const attrs=Object.entries(own?effAttrs(it.id):it.a).filter(([k,v])=>v>0).map(([k,v])=>ATTR[k]+' '+v).join(' · ');
+    let act;
+    if(own)act=`<div class="act">${H.wear[it.id]>0?`<button class="btn mini" ${H.soldi<repairCost(it.id)?'disabled':''} onclick="repairItem('${it.id}')">Ripara ${repairCost(it.id)} €</button>`:''}<button class="btn mini" onclick="sellItem('${it.id}')">Vendi ${sellValue(it.id)} €</button></div>`;
+    else if(ord)act=`<span class="tagline">in arrivo tra ${ord.m} ${ord.m===1?'mese':'mesi'}</span>`;
+    else if(lock)act=`<span class="tagline">dal livello ${it.lvl}</span>`;
+    else if(!avail)act=`<span class="tagline">non c'è questo mese</span>`;
+    else act=`<button class="btn mini" ${H.soldi<p?'disabled':''} onclick="buyItem('${it.id}')">${it.brand==='D'?'Ordina':'Compra'} ${p} €</button>`;
+    return `<div class="prod ${lock?'locked':''}"><div class="pbrand" style="border-color:${BRANDS[it.brand].color};color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</div>
+     <div class="pname">${esc(it.model)} <span class="pline">${it.line}</span></div>
+     <div class="pmeta">${it.kg.toString().replace('.',',')} kg${it.dur<9999?` · dura ${it.dur} km`:''}${own&&it.dur<9999?` · <b>${condLabel(c)} ${Math.round(c*100)}%</b>`:''}${q}</div>
+     ${attrs?`<div class="pattr">${attrs}</div>`:''}${it.trait?`<div class="ptrait">${esc(TRAITS[it.trait])}</div>`:''}${act}</div>`};
+   html=top+`<button class="btn" onclick="H.screen='casa';H.esitoNeg=null;render()">Torna a casa<span class="meta">Livello ${lvl()}: gli oggetti migliori si sbloccano salendo di livello</span></button>
+   ${H.esitoNeg?`<div class="out">${esc(H.esitoNeg)}</div>`:''}
+   <details class="log"><summary>I quattro marchi</summary>${Object.values(BRANDS).map(b=>`<p><b style="color:${b.color}">${esc(b.name)}</b>: ${esc(b.rule)}</p>`).join('')}</details>
+   <p class="sub">L'assortimento cambia ogni mese.${H.sconto?` Saldi: -${H.sconto}% su tutto.`:''} Le scorte si comprano preparando lo zaino.</p>
+   ${SEZ.map(([t,bases])=>{const its=ITEMS.filter(i=>i.brand&&bases.includes(i.base));return its.length?`<h3>${t}</h3>`+its.map(row).join(''):''}).join('')}`}
   else if(H.screen==='abilita'){
    html=top+`<button class="btn" onclick="H.screen='casa';render()">← Torna a casa</button><p class="sub">Ogni 100 punti di esperienza sali di livello e guadagni un punto. Punti disponibili: ${H.punti}.</p>
    ${Object.entries(ABIL).map(([k,v])=>`<div class="qrow"><span>${v} ${H.abil[k]}/5<small>${ABIL_NOTE[k]}</small></span><button class="btn" style="width:auto;margin:0" ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">+1</button></div>`).join('')}`}
@@ -3163,7 +3267,7 @@ render=function(){const a=$('#app');
    html=`<h2>Di nuovo a casa</h2><p>${esc(r.fine)}</p><div class="card">
    <p>Esperienza guadagnata: ${r.xp}.${r.up?` <b>Sali di livello!</b> Hai ${H.punti} punti abilità da spendere.`:''}</p>
    ${r.timbri.length?`<p>Nuovi timbri: ${r.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join('')}</p>`:'<p class="sub">Nessun timbro nuovo.</p>'}
-   ${r.lost.length?`<p class="sub">Perso lungo il cammino: ${esc(r.lost.join(', '))}.</p>`:''}${r.gained.length?`<p class="sub">Trovato lungo il cammino: ${esc(r.gained.join(', '))}.</p>`:''}
+   ${r.usura&&r.usura.length?`<div class="out">${r.usura.map(esc).join('<br>')}</div>`:''}${r.lost.length?`<p class="sub">Perso lungo il cammino: ${esc(r.lost.join(', '))}.</p>`:''}${r.gained.length?`<p class="sub">Trovato lungo il cammino: ${esc(r.gained.join(', '))}.</p>`:''}
    <p class="sub">Il cammino ti ha rimesso in forma. ${r.completo?'E la voglia di partire è alle stelle.':'La voglia di riprovarci resta.'}</p></div>
    <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button>`}
   a.innerHTML=html;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
@@ -3174,7 +3278,7 @@ render=function(){const a=$('#app');
 };
 /* zaino: solo quello che possiedi; le scorte si comprano partendo */
 function homeZainoPatch(a){
- a.querySelectorAll('label.item').forEach(l=>{const inp=l.querySelector('input');const m=(inp.getAttribute('onchange')||'').match(/'(\w+)'/);if(m&&!H.owned.has(m[1]))l.remove()});
+ a.querySelectorAll('label.item').forEach(l=>{const inp=l.querySelector('input');const m=(inp.getAttribute('onchange')||'').match(/'(\w+)'/);if(m&&!H.owned.has(m[1]))l.remove();else if(m&&ITEM_BY[m[1]]&&ITEM_BY[m[1]].dur<9999){const c=cond(m[1]);const sm=document.createElement('small');sm.textContent=`${condLabel(c)} ${Math.round(c*100)}%`+(c<=0?' · non serve a niente':c<=0.33?' · rende meno':'');const sp=l.querySelector('span');if(sp)sp.appendChild(sm)}});
  a.querySelectorAll('.qrow').forEach(r=>{const btns=r.querySelectorAll('button');if(btns.length===2){const m=btns[0].getAttribute('onclick').match(/'(\w+)'/);if(m){const id=m[1];btns[0].setAttribute('onclick',`packQty('${id}',-1)`);btns[1].setAttribute('onclick',`packQty('${id}',1)`);const sm=r.querySelector('small');if(sm)sm.textContent+=` · a casa ne hai ${H.scorte[id]||0}, altre a ${CPRICE[id]} €`}}});
  const go=[...a.querySelectorAll('.btn.primary')].pop();if(go){go.setAttribute('onclick','homeDepart()');go.textContent=`Parti · ${S.soldi} € nel portafoglio`}
  const h=a.querySelector('h2');if(h)h.insertAdjacentHTML('afterend',`<p class="note">${formaTxt()} ${vogliaTxt()}</p><button class="btn" onclick="H.soldi=S.soldi;H.screen='casa';save();render()">← Rimanda la partenza</button><p class="sub">Puoi portare solo quello che possiedi. Le scorte che non hai a casa le compri ora.</p>`)}
@@ -3183,6 +3287,42 @@ if(!H){H=newHome();H.screen='intro'}
 if(H.trekking){H.trekking=false;H.screen='casa';H.esito='Il cammino interrotto a metà non è stato salvato: sei tornato a casa.'}
 if(!H.screen)H.screen='casa';
 S=newState();render();
+/* =========== ATTREZZATURA: usura, qualità, marchi, negozio =========== */
+function eqInit(){H.wear=H.wear||{};H.qual=H.qual||{};H.known=H.known||{};H.warr=H.warr||{};H.ordini=H.ordini||[];if(!H.stock)rollStock();
+ if(!H.catalogo){H.catalogo=true;if([...H.owned].every(id=>!ITEM_BY[id]||!ITEM_BY[id].brand)&&H.completati===0&&H.xp===0){H.owned=new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello'])}}}
+function itPrice(id){const it=ITEM_BY[id];return it&&it.price!=null?it.price:(PRICE[id]||0)}
+function cond(id){const it=ITEM_BY[id];if(!it||!it.dur||it.dur>=9999)return 1;const d=it.dur*(H.qual[id]==='difetto'?0.5:1);return Math.max(0,1-(H.wear[id]||0)/d)}
+function condLabel(c){return c<=0?'rotto':c<=0.33?'consumato':c<=0.66?'usato':'nuovo'}
+function effAttrs(id){const it=ITEM_BY[id];if(!it||!it.a)return {};let a={...it.a};const ks=Object.keys(a).sort((x,y)=>a[y]-a[x]);
+ if(H.qual[id]==='difetto'&&ks[0])a[ks[0]]=Math.max(0,a[ks[0]]-1);if(H.qual[id]==='gioiello'&&ks[0])a[ks[0]]=Math.min(3,a[ks[0]]+1);
+ const c=cond(id);if(c<=0)return {};if(c<=0.33)for(const k in a)a[k]=Math.max(0,a[k]-1);return a}
+function rollStock(){H.stock=ITEMS.filter(i=>i.brand).filter(i=>i.brand==='S'||i.brand==='D'||(i.brand==='Sh'&&chance(0.7))||(i.brand==='A'&&chance(0.6))).map(i=>i.id)}
+const price=id=>Math.round(itPrice(id)*(1-H.sconto/100));
+function buyItem(id){eqInit();const it=ITEM_BY[id];if(!it||H.owned.has(id)||H.soldi<price(id)||(it.lvl||0)>lvl())return;
+ if(it.brand!=='D'&&!H.stock.includes(id))return;if(H.ordini.some(o=>o.id===id))return;
+ H.soldi-=price(id);
+ if(it.brand==='D'){H.ordini.push({id,m:3});H.esitoNeg=`Ordinato: ${it.name}. Arriverà tra tre mesi.`}
+ else{H.owned.add(id);H.wear[id]=0;delete H.warr[id];if(it.brand==='Sh'){const r=Math.random();H.qual[id]=r<0.18?'difetto':r<0.28?'gioiello':'normale';H.known[id]=false}
+  H.esitoNeg=`Comprato: ${it.name}.`}
+ save();render()}
+function sellValue(id){const it=ITEM_BY[id];const base=itPrice(id)*(it&&it.brand==='A'?0.65:0.5);return Math.round(base*Math.max(0.15,cond(id)))}
+function sellItem(id){eqInit();if(!H.owned.has(id))return;H.soldi+=sellValue(id);H.owned.delete(id);delete H.wear[id];H.esitoNeg=`Venduto: ${ITEM_BY[id]?ITEM_BY[id].name:id}.`;save();render()}
+function repairCost(id){const it=ITEM_BY[id];return Math.max(5,Math.round(itPrice(id)*(it&&it.brand==='D'?0.15:0.3)))}
+function repairItem(id){eqInit();const it=ITEM_BY[id];if(!it||!H.wear[id]||H.soldi<repairCost(id))return;H.soldi-=repairCost(id);H.wear[id]=Math.max(0,H.wear[id]-0.6*it.dur);H.esitoNeg=`Riparato: ${it.name}.`;save();render()}
+function prepareTrek(){eqInit();S=newState();S.mese=SEASON[H.mese];S.kit=new Set();
+ const best=list=>list.sort((x,y)=>(cond(y.id)>0)-(cond(x.id)>0)||itPrice(y.id)-itPrice(x.id))[0];
+ for(const g of ['zaino','sacco','materassino','scarpe']){const own=ITEMS.filter(i=>i.group===g&&H.owned.has(i.id));if(own.length)S.kit.add(best(own).id)}
+ const seen=new Set();ITEMS.filter(i=>!i.group&&H.owned.has(i.id)&&!['carte','faro','tenda','orologio'].includes(i.base||i.id)).sort((x,y)=>itPrice(y.id)-itPrice(x.id)).forEach(i=>{const b=i.base||i.id;if(!seen.has(b)&&cond(i.id)>0){seen.add(b);S.kit.add(i.id)}});
+ S.eff={};H.owned.forEach(id=>S.eff[id]=effAttrs(id));
+ for(const k in S.inv)if(k!=='batteria')S.inv[k]=Math.min(H.scorte[k]||0,{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,powerbank:1}[k]);
+ S.soldi=H.soldi;S.ferie=H.ferie;S.morale=startMorale();S.screen='zaino';H.screen=null;render()}
+/* dopo il cammino: chilometri sugli oggetti, garanzia, qualità scoperta */
+function wearAfterTrek(km){eqInit();const notes=[];
+ S.kit.forEach(id=>{const it=ITEM_BY[id];if(!it||!it.dur||it.dur>=9999||!H.owned.has(id))return;const before=cond(id);H.wear[id]=(H.wear[id]||0)+km;const after=cond(id);
+  if(it.brand==='Sh'&&!H.known[id]){H.known[id]=true;if(H.qual[id]==='difetto')notes.push(`${it.name}: era un esemplare difettoso, si consuma il doppio e rende meno.`);else if(H.qual[id]==='gioiello')notes.push(`${it.name}: ti è capitato un esemplare eccellente!`)}
+  if(after<=0&&before>0){if(it.brand==='A'&&!H.warr[id]){H.wear[id]=0;H.warr[id]=true;notes.push(`${it.name} si è rotto: la garanzia Alvenheim lo sostituisce gratis.`)}else notes.push(`${it.name} è rotto: va riparato o ricomprato.`)}
+  else if(condLabel(after)!==condLabel(before))notes.push(`${it.name} ora è ${condLabel(after)}.`)});
+ return notes}
 </script>
 <script>
 if('serviceWorker' in navigator){window.addEventListener('load',()=>{navigator.serviceWorker.register('sw.js').catch(()=>{})})}
