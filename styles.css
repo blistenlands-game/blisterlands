@@ -78,7 +78,7 @@ main.flush{padding-top:0}
 /* ritratti incollati sul taccuino */
 .ritratto{float:right;margin:0 0 6px 12px;padding:4px 4px 2px;background:#F5EDDC;border:1.5px solid var(--ink);border-radius:2px;box-shadow:2px 3px 0 rgba(46,38,32,.22);transform:rotate(2.5deg);position:relative;text-align:center}
 .ritratto::before{content:"";position:absolute;top:-8px;left:50%;width:34px;height:13px;margin-left:-17px;background:rgba(214,200,160,.85);border:1px solid rgba(46,38,32,.18);transform:rotate(-5deg)}
-.ritratto svg{display:block}
+.ritratto .portrait-sprite{display:block}
 .ritratto figcaption{font-family:var(--hand);font-size:18px;font-weight:700;line-height:1}
 .ritratto.grande{float:none;display:block;width:max-content;margin:14px auto 12px;transform:rotate(-2deg);padding:8px 8px 4px}
 .ritratto.grande figcaption{font-size:24px}
@@ -97,9 +97,9 @@ main.flush{padding-top:0}
 .plan span{font-size:12.5px;color:var(--soft)}
 .ver{font-size:12px;color:var(--faint);text-align:right;margin-top:14px}
 .pgpick{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:8px 0}
-.pgcard{display:flex;flex-direction:column;align-items:center;padding:6px 4px 4px;background:var(--paper2);border:1.6px solid var(--ink);border-radius:3px;box-shadow:2px 3px 0 rgba(46,38,32,.22);cursor:pointer;transform:rotate(-1deg)}
+.pgcard{display:flex;align-items:center;justify-content:center;min-width:0;padding:7px;background:var(--paper2);border:1.6px solid var(--ink);border-radius:3px;box-shadow:2px 3px 0 rgba(46,38,32,.22);cursor:pointer;transform:rotate(-1deg);overflow:hidden}
 .pgcard:nth-child(even){transform:rotate(1.2deg)}
-.pgcard span{font-family:var(--hand);font-size:24px;font-weight:700}
+.pgcard .portrait-sprite{width:100%!important;height:auto!important;aspect-ratio:120/130}
 .pgcard.on{outline:3px solid var(--rust);outline-offset:2px;background:#FBF4E4}
 .namefield{display:flex;flex-direction:column;gap:4px;margin:10px 0;font-family:var(--hand);font-size:21px}
 .namefield input{font:inherit;font-family:var(--serif);font-size:18px;padding:8px 10px;border:1.6px solid var(--ink);border-radius:4px;background:var(--paper2);color:var(--ink)}
@@ -107,13 +107,13 @@ main.flush{padding-top:0}
 .prod{position:relative;display:grid;grid-template-columns:82px 1fr;gap:10px;align-items:start;padding:10px 4px 10px 2px;border-bottom:1.5px dashed var(--faint);line-height:20px}
 .pthumb{background:#F5EDDC;border:1.5px solid var(--ink);border-radius:3px;box-shadow:2px 2px 0 rgba(46,38,32,.2);transform:rotate(-1.5deg);padding:2px}
 .prod:nth-child(even) .pthumb{transform:rotate(1.5deg)}
-.pthumb svg{display:block}
+.pthumb .gear-sprite{display:block;width:100%!important;height:auto!important;aspect-ratio:1}
 .gallery{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:8px;margin-top:6px}
 .gcell{display:flex;flex-direction:column;align-items:center;text-align:center;font-size:12px;line-height:14px}
 .gcell span{font-family:var(--hand);font-size:16px;font-weight:700;line-height:16px}
 .gcell small{color:var(--soft)}
-.gcell.worn svg{opacity:.55}
-.item .gsvg{flex:none;margin-top:-2px}
+.gcell.worn .gear-sprite{opacity:.55}
+.item .gear-sprite{flex:none;margin-top:-2px}
 .prod.locked{opacity:.55}
 .pbrand{display:inline-block;font-family:var(--hand);font-size:17px;font-weight:700;border:1.5px solid;border-radius:50%;padding:0 9px;transform:rotate(-3deg);margin-bottom:2px}
 .pname{font-family:var(--hand);font-size:25px;font-weight:700;line-height:26px}
@@ -136,8 +136,20 @@ main.flush{padding-top:0}
 .card .risk{font-size:16px}
 .note{font-size:14px;line-height:20px}
 .out{font-size:19px;line-height:23px;margin:6px 0}
-.scene .k{stroke:var(--ink)} .scene .kf{fill:var(--ink)} .scene .pf{fill:var(--paper)}
-.scene{display:block;width:100%;height:auto;margin:6px 0 0;overflow:visible}
+.sprite{display:block;background-repeat:no-repeat;background-color:transparent}
+.scene{display:block;width:100%;height:auto;margin:6px 0 0}
+.raster-scene{position:relative;aspect-ratio:390/224;overflow:hidden;background:#D8CBAF}
+.raster-scene .scene-bg{position:absolute;inset:0;width:100%!important;height:100%!important}
+.raster-scene .pose-sprite{position:absolute;z-index:1;left:34%;bottom:2%;width:32%!important;height:76%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
+.weather-layer{position:absolute;z-index:2;inset:0;pointer-events:none}
+.wx-pioggia .weather-layer,.wx-temporale .weather-layer{background:repeating-linear-gradient(105deg,transparent 0 18px,rgba(41,65,79,.38) 19px 21px,transparent 22px 34px);animation:rainRaster .55s linear infinite}
+.wx-nebbia .weather-layer{background:linear-gradient(100deg,rgba(238,227,202,.18),rgba(238,227,202,.78),rgba(238,227,202,.25));animation:fogRaster 8s ease-in-out infinite}
+.wx-vento .weather-layer{background:repeating-linear-gradient(170deg,transparent 0 38px,rgba(245,237,220,.38) 40px 42px,transparent 44px 80px);animation:windRaster 2.8s linear infinite}
+.pack-figure{display:flex;align-items:center;gap:12px;max-width:180px;margin:8px auto;font-family:var(--hand);font-size:26px;font-weight:700}
+.pack-figure .pose-sprite{width:90px!important;height:150px!important;flex:none}
+@keyframes rainRaster{to{background-position:-28px 42px}}
+@keyframes fogRaster{0%,100%{opacity:.55;transform:translateX(-5%)}50%{opacity:.9;transform:translateX(5%)}}
+@keyframes windRaster{to{background-position:-90px 0}}
 .bleed{width:calc(100% + 68px);max-width:none;margin:calc(-16px - env(safe-area-inset-top,0px)) -18px 6px -50px;background:#F3EAD6;border-bottom:1.5px solid var(--ink)}
 .item input{accent-color:var(--rust)}
 .card{background:transparent;border:none;padding:0;margin-top:12px}

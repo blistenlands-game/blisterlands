@@ -1,9 +1,13 @@
-/* Blisterlands: funziona anche offline dopo la prima apertura */
-const CACHE='blisterlands-0.1.12';
+/* Blisterborn: funziona anche offline dopo la prima apertura */
+importScripts('./src/config.js');
+const CACHE=`blisterborn-${GAME_CONFIG.version}`;
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
- './src/data.js','./src/state.js','./src/content.js','./src/game.js',
+ './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js',
  './src/visuals.js','./src/home.js','./src/bootstrap.js',
+ './assets/art/protagonists.png','./assets/art/story-cast.png','./assets/art/event-icons.png',
+ './assets/art/gear.png','./assets/art/trail-scenes.png','./assets/art/home-scenes.png',
+ './assets/art/protagonist-poses.png',
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];

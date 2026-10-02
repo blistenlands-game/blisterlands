@@ -1,6 +1,12 @@
 /* =========== STATO =========== */
 let S;
-function newState(){return{screen:'intro',kit:new Set(['zainoClassico','saccoPiuma','matGonfiabile','trail','guscio','pile','fornello']),
+function requestedSeed(){
+ try{const raw=new URLSearchParams(typeof location!=='undefined'?location.search:'').get('seed');if(raw!==null){const n=Number(raw);if(Number.isFinite(n))return (n>>>0)||0x6d2b79f5}}catch(e){}
+ return null}
+function createSeed(){const requested=requestedSeed();if(requested!==null)return requested;
+ if(typeof crypto!=='undefined'&&crypto.getRandomValues){const a=new Uint32Array(1);crypto.getRandomValues(a);return a[0]||0x6d2b79f5}
+ return ((Date.now()^Math.floor(Math.random()*0xffffffff))>>>0)||0x6d2b79f5}
+function newState(){const seed=createSeed();return{screen:'intro',seed,rngState:seed,kit:new Set(['zainoClassico','saccoPiuma','matGonfiabile','trail','guscio','pile','fornello']),
  inv:{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,batteria:100,powerbank:1},bat:{orologio:100,faro:100},mese:'luglio',
  energia:100,morale:65,soldi:220,ferie:8,xp:0,stati:new Set(),timbri:[],flags:{},mem:new Set(),
  tappa:0,seg:0,gseg:0,clock:630,start:630,wx:'nuvole',forecast:null,later:[],notes:[],
@@ -14,7 +20,8 @@ function attBase(k){let v=0;for(const id of S.kit){const it=ITEMS.find(i=>i.id==
 const devOn=id=>has(id)&&S.bat[id]>0;
 const inv=id=>S.inv[id]||0;
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
-const rnd=Math.random,chance=p=>rnd()<p;
+function rnd(){let x=(S&&S.rngState)>>>0;if(!x)x=0x6d2b79f5;x^=x<<13;x^=x>>>17;x^=x<<5;S.rngState=x>>>0;return S.rngState/0x100000000}
+const chance=p=>rnd()<p;
 function pickW(o){let t=0;for(const k in o)t+=o[k];let r=rnd()*t;for(const k in o){r-=o[k];if(r<=0)return k}return Object.keys(o)[0]}
 const nextWx=c=>chance(0.55)?c:pickW(wxW());
 const hhmm=m=>{m=Math.round(m);return `${Math.floor(m/60)%24}:${String(m%60).padStart(2,'0')}`};

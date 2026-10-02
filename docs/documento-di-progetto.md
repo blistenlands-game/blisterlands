@@ -1,4 +1,4 @@
-# Blisterlands: A Wanderer's Tale — Documento di progetto
+# Blisterborn — Documento di progetto
 
 > **Stato:** documento di visione e storico delle revisioni. Le sezioni “Nel prototipo” e “Da decidere” contengono anche decisioni superate; per lo stato corrente consultare il README della cartella `docs`.
 
@@ -352,10 +352,10 @@ Queste note non sostituiscono il parere di un legale.
 
 ## Da decidere
 
-- **Stile grafico scelto: il taccuino con carattere** (strada A). Inchiostro dal tratto irregolare, acquerello che sbava, carta a righe consumata. Il protagonista è **l'escursionista**: cappuccio a punta buio dentro, due occhi chiari, naso lungo, zaino più grande di lui. Personaggi ricorrenti disegnati come carte, anche nel ciclo di casa: il capo, Marta, Paolo, il negoziante, Giulia l'istruttrice, il gatto; sul cammino il custode, Jonas, la renna.
-- **Da fare più avanti: scelta del personaggio** all'inizio della partita, tra 4 o 5 escursionisti diversi solo nell'aspetto.
+- **Stile grafico scelto: taccuino illustrato raster.** Inchiostro secco e irregolare, campiture piatte ad acquerello leggermente fuori registro, carta a righe consumata e palette limitata. I personaggi adulti hanno teste geometriche, occhi a punto, nasi lunghi e zaini volutamente enormi: semplici e leggibili in piccolo, ma non infantili. L'identità non appartiene a una singola area geografica, così da poter accompagnare cammini in tutto il mondo.
+- **Scelta del personaggio implementata:** quattro aspetti puramente visivi; nessun nome prestabilito viene mostrato sotto le figure e il giocatore scrive il nome nel campo dedicato.
 
-* [ ] Nome del gioco: Blisterlands: A Wanderer's Tale, provvisorio; sottotitolo store "Long-distance hiking RPG"; da verificare su store e marchi
+* [ ] Nome del gioco: **Blisterborn**, provvisorio e centralizzato in `src/config.js`; da verificare su store e marchi
 * [ ] Stile grafico dell'omino, degli eventi e della linea del sentiero
 * [ ] Numeri di bilanciamento: energia per chilometro, valore dei livelli, stipendio, prezzi dell'attrezzatura
 * [ ] Tetto massimo dei giorni di ferie e velocità di calo della forma fisica

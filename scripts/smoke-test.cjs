@@ -57,7 +57,31 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.12').waitFor();
+  await page.getByText('Prototipo · versione 0.1.14').waitFor();
+  if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
+
+  await page.evaluate(() => {
+    localStorage.setItem('blisterlands', JSON.stringify({
+      screen: 'casa', mese: 7, anno: 1, soldi: 300, ferie: 8, forma: 60, voglia: 70,
+      xp: 0, punti: 0, abil: { resistenza: 0 }, owned: ['sGita'], scorte: { pasti: 2 },
+      timbri: [], storia: [], fila: 0, sconto: 0, completati: 0, vette: 0,
+      carta: null, esito: null, ritorno: null, scelta: 'luglio',
+    }));
+  });
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.getByRole('heading', { name: 'Luglio, anno 1' }).waitFor();
+  await page.getByRole('button', { name: /Lavoro normale/ }).click();
+  const migratedSave = await page.evaluate(() => ({
+    current: JSON.parse(localStorage.getItem('blisterlands')),
+    backup: JSON.parse(localStorage.getItem('blisterlands-backup-v0')),
+  }));
+  if (migratedSave.current.saveVersion !== 1 || !migratedSave.backup || 'saveVersion' in migratedSave.backup) {
+    throw new Error('Migrazione del salvataggio precedente non riuscita');
+  }
+
+  await page.evaluate(() => localStorage.clear());
+  await page.reload({ waitUntil: 'networkidle' });
+  await page.getByLabel('Come ti chiamano lungo il cammino?').fill('Nico');
   await page.getByRole('button', { name: /Comincia ad aprile/ }).click();
   await page.getByRole('heading', { name: 'Aprile, anno 1' }).waitFor();
 
@@ -69,7 +93,7 @@ const server = http.createServer((request, response) => {
   await context.setOffline(false);
 
   if (errors.length) throw new Error(errors.join('\n'));
-  console.log('Smoke test: UI iniziale, ciclo di casa e avvio offline OK');
+  console.log('Smoke test: migrazione salvataggio, UI iniziale, ciclo di casa e avvio offline OK');
 
   await browser.close();
   server.close();

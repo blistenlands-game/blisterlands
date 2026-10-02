@@ -1,10 +1,10 @@
 {
-  "id": "./?app=blisterlands-proto-2",
-  "name": "Blisterlands: A Wanderer's Tale",
-  "short_name": "Blisterlands",
+  "id": "./?app=blisterborn-proto-3",
+  "name": "Blisterborn",
+  "short_name": "Blisterborn",
   "description": "Prototipo del gioco di trekking a scelte: la Via delle Renne.",
   "lang": "it",
-  "start_url": "./index.html?app=2",
+  "start_url": "./index.html?app=3",
   "scope": "./",
   "display": "fullscreen",
   "display_override": [

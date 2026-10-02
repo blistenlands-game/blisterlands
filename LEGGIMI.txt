@@ -12,7 +12,7 @@ Con GitHub Pages:
 Sul telefono:
 5. Apri quell'indirizzo con Chrome.
 6. Menu (tre puntini) > "Installa app" oppure "Aggiungi a schermata Home" > Installa.
-7. Apri Blisterlands dall'icona: parte a tutto schermo, anche senza connessione.
+7. Apri Blisterborn dall'icona: parte a tutto schermo, anche senza connessione.
 
 Per aggiornare il gioco basta ricaricare i file nuovi nel repository:
 l'app installata prende la nuova versione alla prossima apertura con internet.

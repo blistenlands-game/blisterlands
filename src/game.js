@@ -162,22 +162,12 @@ function hud(){const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b
  <div class="top"><span class="wx">${WX[S.wx]}</span><span class="sub">zaino ${packKg().toFixed(1)} kg · passo ${speed().toFixed(1)} km/h</span></div>
  <div class="inv">Pasti ${inv('pasti')} · barrette ${inv('barrette')} · gas ${inv('gas')} · cerotti ${inv('cerotti')} · repellente ${inv('repellente')} · calze ${inv('calze')} · telefono ${inv('batteria')}%${has('orologio')?' · orologio '+S.bat.orologio+'%':''}${has('faro')?' · faro '+S.bat.faro+'%':''} · powerbank ${inv('powerbank')}</div>
  ${S.stati.size||S.fame?`<div class="tags">${[...S.stati].map(s=>`<span class="tag">${STATO[s]}</span>`).join('')}${S.fame?`<span class="tag">${['','Appetito','Affamato','Molto affamato','Sfinito dalla fame'][S.fame]}</span>`:''}</div>`:''}`}
-function trailSvg(t){const n=t.terr.length,pct=S.seg/n,x=5+90*pct,ticks=[];
- for(let k=0;k<=t.km;k+=2){const tx_=5+90*(k/t.km);ticks.push(`<line x1="${tx_}%" y1="38" x2="${tx_}%" y2="${k%10===0?28:33}" stroke="var(--soft)" stroke-width="1"/>`)}
- const f='font-family="Barlow Condensed, Arial Narrow, sans-serif"';
- return `<div class="trail"><svg role="img" aria-label="${Math.round(pct*t.km)} di ${t.km} km">
- <line x1="5%" y1="38" x2="95%" y2="38" stroke="var(--line)" stroke-width="4" stroke-linecap="round"/>
- <line x1="5%" y1="38" x2="${x}%" y2="38" stroke="var(--lake)" stroke-width="4" stroke-linecap="round"/>${ticks.join('')}
- <circle cx="${x}%" cy="38" r="9" fill="var(--lichen)" stroke="var(--ink)" stroke-width="2"/>
- <text x="5%" y="56" ${f} font-size="13" fill="var(--soft)">${esc(t.from)}</text>
- <text x="95%" y="56" text-anchor="end" ${f} font-size="13" fill="var(--soft)">${esc(t.to)}</text>
- <text x="${x}%" y="18" text-anchor="middle" ${f} font-size="14" fill="var(--ink)">${Math.round(pct*t.km)} km${S.seg>0&&S.seg<=n?' · '+esc(TERR[t.terr[S.seg-1]]):''}</text></svg></div>`}
 function lab(l){if(!has('mappa')&&devOn('orologio'))return l.replace(/[Mm]appa e bussola/,'Orologio GPS').replace(/sulla tua mappa/,"sull'orologio GPS").replace(/sulla mappa/,"sull'orologio GPS").replace(/la mappa/,"l'orologio GPS").replace(/la bussola/,"l'orologio GPS");return l}
 function optMeta(op){const p=[];if(op.min>0)p.push(`+${op.min} min`);if(op.min<0)p.push(`${op.min} min`);
  if(op.use)for(const k in op.use){const c=CONSUM.find(c=>c.id===k);p.push(`usa ${op.use[k]} ${c?c.name.toLowerCase():k}`)}return p.join(' · ')}
 function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tappa'||S.screen==='sera'||S.screen==='mattino'||S.screen==='fine')&&!(typeof H!=='undefined'&&H&&H.screen));
  if(S.screen==='intro'){
-  a.innerHTML=`<h1>Blisterlands</h1><p class="sub">Prototipo · La Via delle Renne completa: 7 tappe e la vetta del Gáisi</p>
+  a.innerHTML=`<h1>${esc(GAME_CONFIG.name)}</h1><p class="sub">Prototipo · La Via delle Renne completa: 7 tappe e la vetta del Gáisi</p>
   <div class="card"><p>Lapponia. Otto giorni di ferie, 220 euro e uno zaino da preparare. Il treno ti lascia a Lavvuby alle 10:30.</p>
   <p>Ogni scelta costa qualcosa, e nessuna ha un esito sicuro. Dopo le 16 i letti dei rifugi iniziano a riempirsi, e la sauna chiude alle 17. Le persone che incontri si ricordano di te.</p></div>
   <div class="card"><h3>In che mese parti?</h3>${Object.entries(MESI).map(([k,v])=>`<button class="btn ${S.mese===k?'primary':''}" onclick="S.mese='${k}';render()">${v.label}<span class="meta" ${S.mese===k?'style="color:#fff"':''}>${esc(v.note)}</span></button>`).join('')}</div>
@@ -221,7 +211,8 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
   const T={completo:`Ce l'hai fatta, ${pgName()}!`,energia:'Il corpo ha detto basta',morale:'La testa ha detto basta',ferie:'Le ferie sono finite',altro:'Fine del cammino'}[k];
   a.innerHTML=`${hdr(endScene(),T,win?'La Via delle Renne è tua':'Il cammino finisce qui',S.clock)}
   <p>${esc(tx(S.end))}</p>
-  <div class="sum"><div><b>${km}</b><span>km percorsi</span></div><div><b>${days}</b><span>${days===1?'giorno':'giorni'}</span></div><div><b>${S.xp}</b><span>esperienza</span></div><div><b>${S.timbri.length}</b><span>timbri</span></div></div>
+   <div class="sum"><div><b>${km}</b><span>km percorsi</span></div><div><b>${days}</b><span>${days===1?'giorno':'giorni'}</span></div><div><b>${S.xp}</b><span>esperienza</span></div><div><b>${S.timbri.length}</b><span>timbri</span></div></div>
+   <p class="sub">Seed della partita: ${S.seed}. Per rigiocarla usa <code>?seed=${S.seed}</code> nell'indirizzo.</p>
   ${win?'':`<p class="sub">${k==='energia'?'Prossima volta: mangia regolarmente, riposa un giorno quando l\'energia scende, alleggerisci lo zaino.':k==='morale'?'Prossima volta: proteggiti da pioggia e zanzare, concediti la sauna, parti con più voglia.':k==='ferie'?'Prossima volta: parti con più giorni di ferie, o riposa meno lungo la strada.':''}</p>`}
   <div class="card"><h3>Diario</h3><p>${S.timbri.length?S.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join(''):'<span class="sub">Nessun timbro.</span>'}</p></div>
   <button class="btn primary" onclick="S=newState();render()">Ricomincia</button>${logHtml()}`}

@@ -8,13 +8,21 @@ const CPRICE={pasti:7,barrette:2,gas:3,cerotti:1,repellente:3,calze:15,powerbank
 const SALARY=70,FERIE_MESE=2,FERIE_MAX=20,TREK_DAYS=8;
 const ABIL={resistenza:'Resistenza',orientamento:'Orientamento',tecnica:'Tecnica di montagna',adattamento:'Adattamento'};
 const ABIL_NOTE={resistenza:'Meno fatica a ogni chilometro',orientamento:'Un punto di orientamento in più ogni due livelli',tecnica:'Aderenza e appoggio in più ogni due livelli',adattamento:'Meteo, insetti e acciacchi pesano meno sul morale'};
+const SAVE_KEY=GAME_CONFIG.storageKey,SAVE_VERSION=1;
 let H=null;
 function newHome(){return{mese:4,anno:1,soldi:300,ferie:8,forma:60,voglia:70,xp:0,punti:0,abil:{resistenza:0,orientamento:0,tecnica:0,adattamento:0},
  owned:new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']),catalogo:true,scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
- timbri:[],storia:[],fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio'}}
+ timbri:[],storia:[],fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio',pg:'marco',nome:'',saveVersion:SAVE_VERSION}}
 const lvl=()=>Math.floor(H.xp/100);
-function save(){try{const o=Object.assign({},H,{owned:[...H.owned]});localStorage.setItem('blisterlands',JSON.stringify(o))}catch(e){}}
-function load(){try{const t=localStorage.getItem('blisterlands');if(!t)return null;const o=JSON.parse(t);o.owned=new Set(o.owned);return o}catch(e){return null}}
+function migrateHome(o){const d=newHome(),defaultOwned=[...d.owned],m=Object.assign(d,o||{});
+ m.saveVersion=SAVE_VERSION;m.owned=new Set(Array.isArray(o&&o.owned)?o.owned:defaultOwned);
+ m.abil=Object.assign({},newHome().abil,o&&o.abil||{});m.scorte=Object.assign({},newHome().scorte,o&&o.scorte||{});
+ m.timbri=Array.isArray(m.timbri)?m.timbri:[];m.storia=Array.isArray(m.storia)?m.storia:[];m.ordini=Array.isArray(m.ordini)?m.ordini:[];
+ return m}
+function save(){try{const o=Object.assign({},H,{saveVersion:SAVE_VERSION,owned:[...H.owned]});localStorage.setItem(SAVE_KEY,JSON.stringify(o))}catch(e){}}
+function load(){try{const t=localStorage.getItem(SAVE_KEY);if(!t)return null;const o=JSON.parse(t),v=Number(o.saveVersion)||0;
+  if(v<SAVE_VERSION&&!localStorage.getItem(`${SAVE_KEY}-backup-v${v}`))localStorage.setItem(`${SAVE_KEY}-backup-v${v}`,t);
+  return migrateHome(o)}catch(e){return null}}
 const hc=(v,a,b)=>Math.max(a,Math.min(b,v));
 function hfx(f){if(!f)return;if(f.soldi)H.soldi+=f.soldi;if(f.ferie)H.ferie=hc(H.ferie+f.ferie,0,FERIE_MAX);if(f.forma)H.forma=hc(H.forma+f.forma,0,100);if(f.voglia)H.voglia=hc(H.voglia+f.voglia,0,100);if(f.xp)H.xp+=f.xp;
  if(f.gift&&!H.owned.has(f.gift))H.owned.add(f.gift);if(f.scorte)for(const k in f.scorte)H.scorte[k]=(H.scorte[k]||0)+f.scorte[k];if(f.sconto)H.sconto=f.sconto;if(f.abil)H.abil[f.abil]=Math.min(5,H.abil[f.abil]+1)}
@@ -91,7 +99,7 @@ function packQty(id,d){const c=CONSUM.find(c=>c.id===id);const cur=inv(id),stock
 function homeDepart(){for(const k in S.inv)if(k!=='batteria')H.scorte[k]=Math.max(0,(H.scorte[k]||0)-inv(k));
  const has_=g=>ITEMS.some(i=>i.group===g&&S.kit.has(i.id));if(!['zaino','sacco','materassino','scarpe'].every(has_)){alert('Ti servono zaino, sacco a pelo, materassino e scarpe.');return}
  S.ferie0=S.ferie;S.wx=pickW(wxW());S.tappa=0;S.start=630;if(has('faro')){S.soldi-=15;S.log.unshift('Abbonamento del faro satellitare: 15 euro.')}H.trekking=true;save();startTappa()}
-function goHome(){const r={xp:S.xp,timbri:S.timbri.filter(t=>!H.timbri.includes(t)),fine:S.end,completo:S.timbri.includes('Via delle Renne completata'),vetta:S.timbri.includes('La vetta del Gáisi'),livPrima:lvl()};
+function goHome(){const r={xp:S.xp,seed:S.seed,timbri:S.timbri.filter(t=>!H.timbri.includes(t)),fine:S.end,completo:S.timbri.includes('Via delle Renne completata'),vetta:S.timbri.includes('La vetta del Gáisi'),livPrima:lvl()};
  for(const k in S.inv)if(k!=='batteria')H.scorte[k]=(H.scorte[k]||0)+inv(k);
  H.soldi=S.soldi;H.ferie=Math.max(0,S.ferie);H.xp+=S.xp;H.timbri.push(...r.timbri);
  const lost=ITEMS.filter(i=>H.owned.has(i.id)&&!i.group&&!S.kit.has(i.id)&&S.log.some(l=>l.includes('Perso: '+i.name)));lost.forEach(i=>H.owned.delete(i.id));
@@ -106,19 +114,22 @@ function spendPoint(k){if(H.punti<1||H.abil[k]>=5)return;H.punti--;H.abil[k]++;s
 
 /* schermate di casa */
 let lastHome=null;
-function pickPg(k){const def=Object.values(PG).some(p=>p.name===H.nome);H.pg=k;if(!H.nome||def)H.nome=PG[k].name;save();render()}
+function pickPg(k){H.pg=k;save();render()}
+function beginGame(){const input=$('#nome'),name=((input&&input.value)||H.nome||'').trim();
+ if(!name){if(input){input.focus();input.setCustomValidity('Scrivi il nome del personaggio.');input.reportValidity();input.setCustomValidity('')}return}
+ H.nome=name;H.screen='casa';save();render()}
 const baseRender=render;
 render=function(){const a=$('#app');
  if(H&&H.screen){a.classList.toggle('flush',H.screen==='casa'||H.screen==='ritorno');let html='';
   const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
   const top=`<div class="top"><h2>${MONTHS[H.mese-1]}, anno ${H.anno}</h2><span class="sub">Livello ${lvl()} · esperienza ${H.xp}</span></div>
    <div class="hud">${st(H.soldi+'€','Soldi',H.soldi<100)}${st(H.ferie,'Ferie',H.ferie<TREK_DAYS)}${st(H.forma,'Forma',H.forma<40)}${st(H.voglia,'Voglia',H.voglia<30)}${st(H.completati,'Cammini')}</div>`;
-  if(H.screen==='intro'){H.pg=H.pg||'marco';if(H.nome==null)H.nome=PG[H.pg].name;
-   html=`<h1>Blisterlands</h1><p class="sub">Prototipo · versione ${VERSION}</p>
+  if(H.screen==='intro'){H.pg=H.pg||'marco';if(H.nome==null)H.nome='';
+   html=`<h1>${esc(GAME_CONFIG.name)}</h1><p class="sub">Prototipo · versione ${VERSION}</p>
    <div class="card"><p>Hai un lavoro, uno stipendio e un sogno: la Via delle Renne, in Lapponia. I rifugi aprono da giugno a settembre.</p></div>
-   <h3>Chi sei?</h3>${pdefs()}<div class="pgpick">${Object.entries(PG).map(([k,p])=>`<button class="pgcard ${H.pg===k?'on':''}" onclick="pickPg('${k}')" aria-pressed="${H.pg===k}">${portraitSvg('pg_'+k,120,130)}<span>${esc(p.name)}</span></button>`).join('')}</div>
-   <label class="namefield">Come ti chiamano lungo il cammino?<input id="nome" type="text" maxlength="18" value="${esc(H.nome)}" oninput="H.nome=this.value.trim()||PG[H.pg].name"></label>
-   <button class="btn primary" onclick="H.screen='casa';save();render()">Comincia ad aprile</button>`}
+   <h3>Chi sei?</h3><div class="pgpick">${Object.entries(PG).map(([k,p])=>`<button class="pgcard ${H.pg===k?'on':''}" onclick="pickPg('${k}')" aria-label="Scegli ${esc(p.label)}" aria-pressed="${H.pg===k}">${portraitSvg('pg_'+k,120,130)}</button>`).join('')}</div>
+   <label class="namefield">Come ti chiamano lungo il cammino?<input id="nome" type="text" maxlength="18" required autocomplete="nickname" placeholder="Scrivi il tuo nome" value="${esc(H.nome)}" oninput="H.nome=this.value"></label>
+   <button class="btn primary" onclick="beginGame()">Comincia ad aprile</button>`}
   else if(H.screen==='casa'){const ok=inSeason();eqInit();
    html=homeHdr(H.scena||'ufficio',`${MONTHS[H.mese-1]}, anno ${H.anno}`,`livello ${lvl()} · esperienza ${H.xp}`)+`<p class="note">${formaTxt()} ${vogliaTxt()}</p>`+(H.esito?`<div class="out">${esc(H.esito)}</div>`:'')+`
    <div class="tiles">
@@ -168,7 +179,7 @@ render=function(){const a=$('#app');
    <p>Esperienza guadagnata: ${r.xp}.${r.up?` <b>Sali di livello!</b> Hai ${H.punti} punti abilità da spendere.`:''}</p>
    ${r.timbri.length?`<p>Nuovi timbri: ${r.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join('')}</p>`:'<p class="sub">Nessun timbro nuovo.</p>'}
    ${r.usura&&r.usura.length?`<div class="out">${r.usura.map(esc).join('<br>')}</div>`:''}${r.lost.length?`<p class="sub">Perso lungo il cammino: ${esc(r.lost.join(', '))}.</p>`:''}${r.gained.length?`<p class="sub">Trovato lungo il cammino: ${esc(r.gained.join(', '))}.</p>`:''}
-   <p class="sub">Il cammino ti ha rimesso in forma. ${r.completo?'E la voglia di partire è alle stelle.':'La voglia di riprovarci resta.'}</p></div>
+    <p class="sub">Il cammino ti ha rimesso in forma. ${r.completo?'E la voglia di partire è alle stelle.':'La voglia di riprovarci resta.'}</p><p class="sub">Seed della partita: ${r.seed}.</p></div>
    <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button>`}
   a.innerHTML=html;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
  lastHome=null;
@@ -202,7 +213,7 @@ function buyItem(id){eqInit();const it=ITEM_BY[id];if(!it||H.owned.has(id)||H.so
  if(it.brand!=='D'&&!H.stock.includes(id))return;if(H.ordini.some(o=>o.id===id))return;
  H.soldi-=price(id);
  if(it.brand==='D'){H.ordini.push({id,m:3});H.esitoNeg=`Ordinato: ${it.name}. Arriverà tra tre mesi.`}
- else{H.owned.add(id);H.wear[id]=0;delete H.warr[id];if(it.brand==='Sh'){const r=Math.random();H.qual[id]=r<0.18?'difetto':r<0.28?'gioiello':'normale';H.known[id]=false}
+ else{H.owned.add(id);H.wear[id]=0;delete H.warr[id];if(it.brand==='Sh'){const r=rnd();H.qual[id]=r<0.18?'difetto':r<0.28?'gioiello':'normale';H.known[id]=false}
   H.esitoNeg=`Comprato: ${it.name}.`}
  save();render()}
 function sellValue(id){const it=ITEM_BY[id];const base=itPrice(id)*(it&&it.brand==='A'?0.65:0.5);return Math.round(base*Math.max(0.15,cond(id)))}
