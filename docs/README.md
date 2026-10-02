@@ -8,7 +8,7 @@ Questa cartella raccoglie le specifiche di sviluppo versionate insieme al gioco.
 - `registro-eventi.md`: inventario corrente dei 439 eventi presenti nel prototipo.
 - `documento-di-progetto.md`: visione del gioco e cronologia delle decisioni. Non tutti i numeri descritti sono ancora correnti.
 
-## Stato del prototipo 0.1.16
+## Stato del prototipo 0.1.17
 
 ### Implementato
 
@@ -16,7 +16,8 @@ Questa cartella raccoglie le specifiche di sviluppo versionate insieme al gioco.
 - Via delle Renne completa, inclusa la vetta facoltativa e la traversata del lago.
 - 439 eventi, stagioni, meteo, stati persistenti e conseguenze ritardate.
 - Catalogo iniziale di 51 prodotti con quattro marchi, usura, qualità, garanzie e ordini.
-- Aspetto dinamico del protagonista: cappello e bastoncini equipaggiati, colori di vestiti e zaino legati al marchio, emblemi raster dei quattro marchi.
+- Due cicli di camminata per protagonista, senza bastoncini o con bastoncini realmente impugnati; emblemi raster dei quattro marchi.
+- Ventisette paesaggi dedicati collegati alle carte di luogo, oltre ai fondali generici per terreno e alle condizioni atmosferiche animate.
 - Progressione, abilità, diario, timbri e quattro protagonisti.
 - PWA installabile con supporto offline.
 

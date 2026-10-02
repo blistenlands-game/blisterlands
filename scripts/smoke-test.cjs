@@ -57,7 +57,9 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.16').waitFor();
+  await page.getByText('Prototipo · versione 0.1.17').waitFor();
+  const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
+  if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
 
   await page.evaluate(() => {
@@ -94,9 +96,19 @@ const server = http.createServer((request, response) => {
   const equipmentLook = await page.evaluate(() => {
     S.kit = new Set(['aFjellvind', 'shStorm', 'sCappello', 'aStav']);
     const host = document.createElement('div'); host.innerHTML = poseSprite('walk', 'prova'); const pose = host.firstElementChild;
-    return { pack: pose.dataset.packBrand, clothes: pose.dataset.clothesBrand, hat: !!pose.querySelector('.wearable-hat'), poles: !!pose.querySelector('.wearable-poles') };
+    const withPoles = { poles: pose.querySelector('.walk-art')?.dataset.poles, source: pose.querySelector('.walk-art')?.style.backgroundImage, overlays: pose.querySelectorAll('.wearable,.gear-tint').length };
+    const standing = document.createElement('div'); standing.innerHTML = poseSprite('stand', 'prova');
+    S.kit = new Set();
+    const plain = document.createElement('div'); plain.innerHTML = poseSprite('walk', 'prova');
+    S.current = EV.find((event) => event.id === 'cascata');
+    const landscape = scene(TAPPE[0]);
+    S.current = null;
+    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape };
   });
-  if (JSON.stringify(equipmentLook) !== JSON.stringify({ pack: 'A', clothes: 'Sh', hat: true, poles: true })) throw new Error(`Aspetto equipaggiamento errato: ${JSON.stringify(equipmentLook)}`);
+  if (equipmentLook.withPoles.poles !== 'yes' || !equipmentLook.withPoles.source.includes('walk-poles/sara.png') || equipmentLook.withPoles.overlays) throw new Error(`Animazione bastoncini errata: ${JSON.stringify(equipmentLook)}`);
+  if (!equipmentLook.standing.includes('pose-poles/sara.png')) throw new Error(`Posa ferma con bastoncini errata: ${equipmentLook.standing}`);
+  if (!equipmentLook.plain.includes('walk/sara.png')) throw new Error(`Animazione senza bastoncini errata: ${equipmentLook.plain}`);
+  if (!equipmentLook.landscape.includes('scene/waterfall.png')) throw new Error('Paesaggio della cascata non coerente');
   await page.reload({ waitUntil: 'networkidle' });
 
   await page.evaluate(() => navigator.serviceWorker.ready);
@@ -107,7 +119,7 @@ const server = http.createServer((request, response) => {
   await context.setOffline(false);
 
   if (errors.length) throw new Error(errors.join('\n'));
-  console.log('Smoke test: migrazione salvataggio, UI iniziale, ciclo di casa e avvio offline OK');
+  console.log(`Smoke test: migrazione salvataggio, UI iniziale, ${sceneCoverage.scenes} paesaggi per ${sceneCoverage.events} eventi e avvio offline OK`);
 
   await browser.close();
   server.close();

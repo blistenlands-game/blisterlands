@@ -14,14 +14,10 @@ function sprite(file,cols,rows,index,cls,label,w,h){
  const col=index%cols,row=Math.floor(index/cols),x=cols===1?0:col*100/(cols-1),y=rows===1?0:row*100/(rows-1);
  return `<span class="sprite ${cls||''}" role="img" aria-label="${esc(label||'')}" style="width:${w||'100%'};height:${h||'100%'};background-image:url('${ART_ROOT+file}');background-size:${cols*100}% ${rows*100}%;background-position:${x}% ${y}%"></span>`
 }
-function equippedBrand(base,fallback='S'){if(typeof S==='undefined'||!S||!S.kit)return fallback;for(const id of S.kit){const it=ITEM_BY[id];if(it&&(it.base||it.id)===base&&it.brand)return it.brand}return fallback}
-function equippedLook(){if(typeof S==='undefined'||!S||!S.kit)return{pack:'S',clothes:'S',hat:false,poles:false};const pack=equippedBrand('zainoClassico',equippedBrand('zainoUL','S'));let clothes='S';if(has('pile'))clothes=equippedBrand('pile','S');if(has('guscio'))clothes=equippedBrand('guscio',clothes);return{pack,clothes,hat:has('cappello'),poles:has('bastoncini')}}
-function poseSprite(pose,label){const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco',look=equippedLook(),pack=BRANDS[look.pack]||BRANDS.S,clothes=BRANDS[look.clothes]||BRANDS.S;
- const base=pose==='walk'?`<span class="pose-art walk-art" style="background-image:url('${SPRITE_ROOT}walk/${who}.png')"></span>`:`<img class="pose-art" src="${SPRITE_ROOT}pose/${who}-${pose}.png" alt="">`;
- const maskRoot=pose==='walk'?`${SPRITE_ROOT}mask/walk/${who}`:`${SPRITE_ROOT}mask/pose/${who}-${pose}`;
- const poles=look.poles?`<img class="wearable wearable-poles" src="${SPRITE_ROOT}gear/bastoncini.png" alt="">`:'';
- const hat=look.hat?`<img class="wearable wearable-hat" src="${SPRITE_ROOT}gear/cappello.png" alt="">`:'';
- return `<span class="pose-sprite pose-figure pose-${pose}" role="img" aria-label="${esc(label||'')}" data-pack-brand="${look.pack}" data-clothes-brand="${look.clothes}" style="--pack-color:${pack.color2};--jacket-color:${clothes.color}">${poles}${base}<i class="gear-tint pack-tint ${pose==='walk'?'walk-mask':''}" style="--mask:url('${maskRoot}-pack.png')"></i><i class="gear-tint jacket-tint ${pose==='walk'?'walk-mask':''}" style="--mask:url('${maskRoot}-jacket.png')"></i>${hat}</span>`}
+function poseSprite(pose,label){const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco',withPoles=pose==='walk'&&typeof S!=='undefined'&&S&&S.kit&&has('bastoncini');
+ const heldPoles=pose==='stand'&&typeof S!=='undefined'&&S&&S.kit&&has('bastoncini');
+ const base=pose==='walk'?`<span class="pose-art walk-art" data-poles="${withPoles?'yes':'no'}" style="background-image:url('${SPRITE_ROOT}${withPoles?'walk-poles':'walk'}/${who}.png')"></span>`:`<img class="pose-art" data-poles="${heldPoles?'yes':'no'}" src="${SPRITE_ROOT}${heldPoles?'pose-poles/'+who+'.png':'pose/'+who+'-'+pose+'.png'}" alt="">`;
+ return `<span class="pose-sprite pose-figure pose-${pose}" role="img" aria-label="${esc(label||'')}">${base}</span>`}
 
 const PORTRAIT={
  pg_marco:{name:'Aspetto 1',sheet:'protagonists.png',cols:2,rows:2,index:0},
@@ -63,9 +59,42 @@ function brandLogo(k,size=34){const b=BRANDS[k];return b?`<img class="brand-logo
 
 function weatherLayer(weather){const w=weather||'sole';if(w==='sole')return '<span class="weather-layer"><i class="weather-sun"></i></span>';if(w==='nuvole')return '<span class="weather-layer"><i class="cloud c1"></i><i class="cloud c2"></i></span>';if(w==='pioggia')return '<span class="weather-layer"><i class="cloud c1"></i><i class="cloud c2"></i>'+Array.from({length:15},(_,i)=>`<i class="rain-drop" style="--i:${i}"></i>`).join('')+'</span>';if(w==='vento')return '<span class="weather-layer">'+Array.from({length:7},(_,i)=>`<i class="wind-mark" style="--i:${i}"></i>`).join('')+'<i class="wind-leaf l1"></i><i class="wind-leaf l2"></i></span>';if(w==='nebbia')return '<span class="weather-layer"><i class="fog f1"></i><i class="fog f2"></i><i class="fog f3"></i></span>';return '<span class="weather-layer"></span>'}
 function atlasScene(file,cols,rows,index,label,pose,weather){return `<div class="scene raster-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${sprite(file,cols,rows,index,'scene-bg','',null,null)}${pose?poseSprite(pose,label):''}${weatherLayer(weather)}</div>`}
+const EVENT_SCENE={};
+for(const [scene,ids] of Object.entries({
+ waterfall:['cascata','cascatella','dietrocascata','bagnopozza'],
+ 'suspension-bridge':['ponte','ponteTibetano','passerella'],
+ ford:['guado','ruscello','pietrespostate','guadogelido','guadocorda','guadoTreBracci','pienaDisgelo','torrenteLatte','torrenteRombante','torrenteGuovda'],
+ spring:['sorgente','sorgenteFerrosa','sorgentesecca','ultimaacqua'],
+ 'fisherman-lake':['pescatore','pescatoreSami','pesciSalto','lontra','aquilaMare'],
+ 'stream-camp':['tendate','tendacrollata','bivaccoAbbandonato'],
+ 'lake-boat':['barca','barcaLago','traversataLago','saunaLago','isolaLago','alceBagno','ghiacciolago'],
+ 'double-rainbow':['arcobaleno','riverbero','specchioLago','panorama','brezza'],
+ 'broken-bridge':['chiuso','pontePortato','pontesosta','tronco','offertaPonte'],
+ 'deep-mud':['fango','fangoprofondo','sentieroruscello','impronte'],
+ 'bog-boardwalk':['passerelle','assebagnate','treccia'],
+ 'boulder-field':['pietraia','sassoappuntito','lastricato','greto'],
+ landslide:['frana','franaattiva','franalontana'],
+ 'flower-meadow':['prato','eriofori','fioriArtici','valleFiori','pausainterrotta'],
+ 'blueberry-slope':['mirtilli','camemoro','raccoglitori','ruska'],
+ snowfield:['nevaio','nevaioGrande','nevaioZanzare','ultimoNevaio','ghiacciaio','pontedineve'],
+ 'moose-birches':['alce','scricciolo','civetta','ultimaRenna'],
+ 'forest-smoke':['fuoco'],
+ 'reindeer-corral':['allevatore','recinto','marchiatura','renne','renneCorsa','caneRenne','vitellino','nebbiaRenne'],
+ 'sacred-boulder':['sieidi','licheni','corna','muschioRenna'],
+ 'turf-hut':['kata','duodji','rovina','bivacco','cartecapanna','scambiolibri','pioggiaPerfetta','capannaRossa','legna','scatolasoccorso','biscotti','fantasmi','solitariocarte','caffeprivato'],
+ 'ridge-routes':['duesentieri','cresta','vettaCresta','scorciatoia'],
+ 'summit-panorama':['cima','vettaCima','vistaGaisi','discesaPasso','cartelloGaisi','partenzaGuovda'],
+ 'narrow-canyon':['eco','golaGaisi','rondoni'],
+ 'evening-refuge':['rifugioinvista','menu','fumolegna','rifugioPieno','staffetta','bieggaVista','salitaFinale','rifugioPienoRenne'],
+ 'aurora-camp':['aurora'],
+ 'trail-station':['treno','bilancia','stazioneArrivo','vettaRitorno','colazioneStazione','genteDelGiorno','escursionistiGiornalieri']
+}))for(const id of ids)EVENT_SCENE[id]=scene;
+const SCENE_X={waterfall:20,'suspension-bridge':49,ford:53,spring:76,'fisherman-lake':58,'stream-camp':24,'lake-boat':48,'double-rainbow':50,'broken-bridge':76,'deep-mud':48,'bog-boardwalk':49,'boulder-field':55,landslide:48,'flower-meadow':52,'blueberry-slope':55,snowfield:50,'moose-birches':52,'forest-smoke':57,'reindeer-corral':52,'sacred-boulder':45,'turf-hut':62,'ridge-routes':52,'summit-panorama':49,'narrow-canyon':52,'evening-refuge':54,'aurora-camp':18,'trail-station':76};
+function eventLandscape(ev){return ev&&EVENT_SCENE[ev.id]}
+function trekScene(background,label,weather,x=50,size=18){return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}" style="--walker-x:${x}%;--walker-size:${size}%">${background}${poseSprite('walk',label)}${weatherLayer(weather)}</div>`}
 function sceneMode(){const ev=S.current;if(!ev)return null;if(ev.id==='traversataLago')return 'lago';const k=eventCard(ev);return k==='i_acqua'&&/guado|torrent|ruscell|fium|corrente/i.test((ev.title||'')+' '+(typeof ev.text==='string'?ev.text:''))?'guado':null}
 const TERR_SCENE={valle:0,betulle:1,torbiera:2,lago:3,altopiano:4,passo:5,gola:6};
-function scene(t){const i=Math.max(0,Math.min(S.seg-1,t.terr.length-1)),mode=sceneMode(),terrain=mode==='guado'?'guado':mode==='lago'?'lago':t.terr[i],index=terrain==='guado'?7:(TERR_SCENE[terrain]??0);return atlasScene('trail-scenes.png',4,3,index,`Sentiero: ${TERR[terrain]||terrain}`,'walk',S.wx)}
+function scene(t){const special=eventLandscape(S.current);if(special)return trekScene(`<img class="scene-bg" src="${SPRITE_ROOT}scene/${special}.png" alt="">`,S.current.title,S.wx,SCENE_X[special]||50);const i=Math.max(0,Math.min(S.seg-1,t.terr.length-1)),mode=sceneMode(),terrain=mode==='guado'?'guado':mode==='lago'?'lago':t.terr[i],index=terrain==='guado'?7:(TERR_SCENE[terrain]??0),x=[48,53,50,36,51,55,53,56][index]||50;return trekScene(sprite('trail-scenes.png',4,3,index,'scene-bg','',null,null),`Sentiero: ${TERR[terrain]||terrain}`,S.wx,x)}
 function hutScene(t){return atlasScene('trail-scenes.png',4,3,8,`${t.to}, la sera`,'stand',S.wx)}
 function morningScene(){return atlasScene('trail-scenes.png',4,3,9,'Il mattino dopo','stand',S.forecast.shown)}
 function endKind(){if(S.endKind)return S.endKind;if(S.timbri.includes('Via delle Renne completata'))return 'completo';return 'altro'}

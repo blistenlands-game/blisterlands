@@ -7,10 +7,13 @@ const SPRITE_GROUPS={
  event:['rifugio','impronte','sole','cerotto','zanzara','scarpone','pioggia','vento','bussola','acqua','cibo','tenda','zaino','bivio','soldi','meraviglia','taccuino','persona','lemming','corvo'],
  gear:['zainoClassico','zainoUL','saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma','trail','scarponi','basse','guscio','pile','ghette','bastoncini','sandali','rete','cappello','filtro','mappa','orologio','faro','kit','fornello','tenda','carte','pasti','barrette','gas','calze'],
  brand:['A','S','Sh','D'],
- walk:['marco','davide','sara','elena']
+ walk:['marco','davide','sara','elena'],
+ 'walk-poles':['marco','davide','sara','elena'],
+ 'pose-poles':['marco','davide','sara','elena'],
+ scene:['waterfall','suspension-bridge','ford','spring','fisherman-lake','stream-camp','lake-boat','double-rainbow','broken-bridge','deep-mud','bog-boardwalk','boulder-field','landslide','flower-meadow','blueberry-slope','snowfield','moose-birches','forest-smoke','reindeer-corral','sacred-boulder','turf-hut','ridge-routes','summit-panorama','narrow-canyon','evening-refuge','aurora-camp','trail-station']
 };
 const SPRITES=Object.entries(SPRITE_GROUPS).flatMap(([folder,names])=>names.map(name=>`./assets/sprites/${folder}/${name}.png`));
-for(const person of SPRITE_GROUPS.portrait){for(const pose of ['walk','stand','sit','victory']){SPRITES.push(`./assets/sprites/pose/${person}-${pose}.png`);for(const kind of ['jacket','pack'])SPRITES.push(`./assets/sprites/mask/pose/${person}-${pose}-${kind}.png`)}for(const kind of ['jacket','pack'])SPRITES.push(`./assets/sprites/mask/walk/${person}-${kind}.png`)}
+for(const person of SPRITE_GROUPS.portrait)for(const pose of ['walk','stand','sit','victory'])SPRITES.push(`./assets/sprites/pose/${person}-${pose}.png`);
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js',

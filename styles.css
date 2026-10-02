@@ -143,20 +143,15 @@ main.flush{padding-top:0}
 .raster-scene{position:relative;aspect-ratio:390/224;overflow:hidden;background:#D8CBAF}
 .raster-scene .scene-bg{position:absolute;inset:0;width:100%!important;height:100%!important}
 .raster-scene .pose-sprite{position:absolute;z-index:1;left:37%;bottom:20%;width:26%!important;height:57%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
+.trek-scene .scene-bg{object-fit:cover}
+.trek-scene .pose-sprite{left:calc(var(--walker-x,50%) - 9%);bottom:6%;width:var(--walker-size,18%)!important;height:48%!important;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.22))}
 .raster-scene .pose-sit{left:39%;bottom:19%;width:23%!important;height:48%!important}
 .raster-scene .pose-victory{left:38%;bottom:19%;width:24%!important;height:56%!important}
 .pose-figure{position:relative;display:block}
-.pose-art,.gear-tint,.wearable{position:absolute;inset:0;width:100%;height:100%}
+.pose-art{position:absolute;inset:0;width:100%;height:100%}
 .pose-art{z-index:1;object-fit:contain}
 .walk-art{background-repeat:no-repeat;background-size:400% 100%;background-position:0 0;animation:walkFrames .72s steps(4,jump-none) infinite}
 .pose-walk{animation:walkBob .36s ease-in-out infinite alternate}
-.gear-tint{z-index:2;background:var(--jacket-color);-webkit-mask-image:var(--mask);mask-image:var(--mask);-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat;-webkit-mask-size:100% 100%;mask-size:100% 100%;mix-blend-mode:color;opacity:.9}
-.pack-tint{background:var(--pack-color)}
-.walk-mask{-webkit-mask-size:400% 100%;mask-size:400% 100%;-webkit-mask-position:0 0;mask-position:0 0;animation:walkMask .72s steps(4,jump-none) infinite}
-.wearable{object-fit:contain;pointer-events:none}
-.wearable-poles{z-index:3;left:10%;top:5%;width:92%;height:100%;transform:rotate(-8deg);filter:drop-shadow(1px 2px 0 rgba(46,38,32,.22))}
-.wearable-hat{z-index:4;left:35%;top:8%;width:38%;height:30%;object-position:center top;filter:drop-shadow(1px 2px 0 rgba(46,38,32,.25))}
-.pose-stand .wearable-hat{left:45%;top:10%;width:37%}.pose-sit .wearable-hat{left:45%;top:13%;width:34%}.pose-victory .wearable-hat{left:47%;top:8%;width:34%}
 .weather-layer{position:absolute;z-index:2;inset:0;pointer-events:none}
 .weather-layer i{position:absolute;display:block}
 .weather-sun{right:7%;top:8%;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,#E6A947 0 43%,rgba(230,169,71,.38) 46% 58%,transparent 61%);filter:drop-shadow(0 0 8px rgba(230,169,71,.5));animation:sunPulse 3.4s ease-in-out infinite}
@@ -169,7 +164,6 @@ main.flush{padding-top:0}
 .pack-figure{display:flex;align-items:center;gap:12px;max-width:180px;margin:8px auto;font-family:var(--hand);font-size:26px;font-weight:700}
 .pack-figure .pose-sprite{width:90px!important;height:150px!important;flex:none}
 @keyframes walkFrames{to{background-position:100% 0}}
-@keyframes walkMask{to{-webkit-mask-position:100% 0;mask-position:100% 0}}
 @keyframes walkBob{to{transform:translateY(-3px)}}
 @keyframes sunPulse{50%{transform:scale(1.09);filter:drop-shadow(0 0 13px rgba(230,169,71,.7))}}
 @keyframes cloudDrift{to{left:112%}}

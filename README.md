@@ -28,9 +28,9 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.1.16`.
+Prototipo `0.1.17`.
 
-Il personaggio conserva il protagonista scelto e riflette l'equipaggiamento indossato: cappello e bastoncini compaiono sulla figura, mentre vestiti e zaino assumono i colori del relativo marchio. I quattro marchi hanno emblemi raster dedicati nel negozio e nel catalogo.
+Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Ventisette paesaggi specifici accompagnano le carte che descrivono luoghi riconoscibili.
 
 Ogni cambiamento al gioco incrementa la versione visibile nella home e il nome della cache nel service worker. Il validatore dei contenuti controlla che i due valori coincidano.
 

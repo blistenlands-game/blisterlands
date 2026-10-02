@@ -15,6 +15,11 @@ const sheets = [
 ];
 const people = ['marco','davide','sara','elena'];
 const poses = ['walk','stand','sit','victory'];
+const sceneSheets = [
+  ['event-scenes-water.png', ['waterfall','suspension-bridge','ford','spring','fisherman-lake','stream-camp','lake-boat','double-rainbow','broken-bridge']],
+  ['event-scenes-terrain.png', ['deep-mud','bog-boardwalk','boulder-field','landslide','flower-meadow','blueberry-slope','snowfield','moose-birches','forest-smoke']],
+  ['event-scenes-places.png', ['reindeer-corral','sacred-boulder','turf-hut','ridge-routes','summit-panorama','narrow-canyon','evening-refuge','aurora-camp','trail-station']],
+];
 
 async function removeTinyComponents(buffer){const {data,info}=await sharp(buffer).ensureAlpha().raw().toBuffer({resolveWithObject:true});const seen=new Uint8Array(info.width*info.height),groups=[];for(let p=0;p<seen.length;p++){if(seen[p]||data[p*4+3]<20)continue;const stack=[p],group=[];seen[p]=1;while(stack.length){const q=stack.pop();group.push(q);const x=q%info.width,y=Math.floor(q/info.width);for(const n of [q-1,q+1,q-info.width,q+info.width])if(n>=0&&n<seen.length&&!seen[n]&&data[n*4+3]>=20&&Math.abs(n%info.width-x)+Math.abs(Math.floor(n/info.width)-y)===1){seen[n]=1;stack.push(n)}}groups.push(group)}const largest=Math.max(1,...groups.map(g=>g.length));for(const group of groups){const ys=group.map(p=>Math.floor(p/info.width)),minY=Math.min(...ys),maxY=Math.max(...ys),edgeScrap=(minY===0&&maxY<info.height*.18)||(maxY===info.height-1&&minY>info.height*.82);if(group.length<largest*.035||edgeScrap)for(const p of group)data[p*4+3]=0}return sharp(data,{raw:{width:info.width,height:info.height,channels:4}}).png().toBuffer()}
 async function cell(file, cols, rows, index, destination, size, clean=false) {
@@ -74,22 +79,32 @@ async function colorMask(input,destination,person,pose,kind,isStrip=false){
       await cell('protagonist-poses.png', 4, 4, row * 4 + col, path.join(poseDir, `${people[row]}-${poses[col]}.png`), 320);
     }
   }
+  const posePolesDir = path.join(out, 'pose-poles');
+  fs.mkdirSync(posePolesDir, { recursive: true });
+  for (let row = 0; row < people.length; row++) await cell('walk-cycle-poles.png', 4, 4, row * 4, path.join(posePolesDir, `${people[row]}.png`), 320);
 
   const walkDir = path.join(out, 'walk');
   fs.mkdirSync(walkDir, { recursive: true });
-  const walk = sharp(path.join(art, 'walk-cycle-v2.png'));
-  const meta = await walk.metadata();
-  for (let row = 0; row < people.length; row++) {
-    const top = Math.round(meta.height * row / people.length);
-    const bottom = Math.round(meta.height * (row + 1) / people.length);
-    await sharp(path.join(art, 'walk-cycle-v2.png'))
-      .extract({ left: 0, top, width: meta.width, height: bottom - top })
-      .resize({ width: 1024, height: 256, fit: 'fill' })
-      .png().toFile(path.join(walkDir, `${people[row]}.png`));
+  for (const [source, folder] of [['walk-cycle-v2.png','walk'],['walk-cycle-poles.png','walk-poles']]) {
+    const sourcePath = path.join(art, source), meta = await sharp(sourcePath).metadata(), dir = path.join(out, folder);
+    fs.mkdirSync(dir, { recursive: true });
+    for (let row = 0; row < people.length; row++) {
+      const top = Math.round(meta.height * row / people.length);
+      const bottom = Math.round(meta.height * (row + 1) / people.length);
+      await sharp(sourcePath).extract({ left: 0, top, width: meta.width, height: bottom - top })
+        .resize({ width: 1024, height: 256, fit: 'fill' }).png().toFile(path.join(dir, `${people[row]}.png`));
+    }
   }
-  for(const person of people){
-    for(const pose of poses){const input=path.join(poseDir,`${person}-${pose}.png`);for(const kind of ['jacket','pack'])await colorMask(input,path.join(out,'mask','pose',`${person}-${pose}-${kind}.png`),person,pose,kind)}
-    for(const kind of ['jacket','pack'])await colorMask(path.join(walkDir,`${person}.png`),path.join(out,'mask','walk',`${person}-${kind}.png`),person,'walk',kind,true);
+
+  const sceneDir = path.join(out, 'scene');
+  fs.mkdirSync(sceneDir, { recursive: true });
+  for (const [source, names] of sceneSheets) {
+    const sourcePath = path.join(art, source), meta = await sharp(sourcePath).metadata();
+    for (let i = 0; i < names.length; i++) {
+      const col=i%3,row=Math.floor(i/3),x0=Math.round(meta.width*col/3),x1=Math.round(meta.width*(col+1)/3),y0=Math.round(meta.height*row/3),y1=Math.round(meta.height*(row+1)/3),pad=8;
+      await sharp(sourcePath).extract({left:x0+pad,top:y0+pad,width:x1-x0-pad*2,height:y1-y0-pad*2})
+        .resize({width:780,height:448,fit:'cover',position:'centre'}).png().toFile(path.join(sceneDir,`${names[i]}.png`));
+    }
   }
   console.log('Sprite raster individuali rigenerati.');
 })().catch((error) => { console.error(error); process.exitCode = 1; });
