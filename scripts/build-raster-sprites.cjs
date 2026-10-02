@@ -92,7 +92,7 @@ async function colorMask(input,destination,person,pose,kind,isStrip=false){
       const top = Math.round(meta.height * row / people.length);
       const bottom = Math.round(meta.height * (row + 1) / people.length);
       await sharp(sourcePath).extract({ left: 0, top, width: meta.width, height: bottom - top })
-        .resize({ width: 1024, height: 256, fit: 'fill' }).png().toFile(path.join(dir, `${people[row]}.png`));
+        .resize({ width: 1024, height: 256, fit: 'fill' }).png({compressionLevel:9,palette:true,quality:90,effort:10}).toFile(path.join(dir, `${people[row]}.png`));
     }
   }
 
@@ -103,7 +103,7 @@ async function colorMask(input,destination,person,pose,kind,isStrip=false){
     for (let i = 0; i < names.length; i++) {
       const col=i%3,row=Math.floor(i/3),x0=Math.round(meta.width*col/3),x1=Math.round(meta.width*(col+1)/3),y0=Math.round(meta.height*row/3),y1=Math.round(meta.height*(row+1)/3),pad=8;
       await sharp(sourcePath).extract({left:x0+pad,top:y0+pad,width:x1-x0-pad*2,height:y1-y0-pad*2})
-        .resize({width:780,height:448,fit:'cover',position:'centre'}).png().toFile(path.join(sceneDir,`${names[i]}.png`));
+        .resize({width:780,height:448,fit:'cover',position:'centre'}).png({compressionLevel:9,palette:true,quality:82,effort:10}).toFile(path.join(sceneDir,`${names[i]}.png`));
     }
   }
   console.log('Sprite raster individuali rigenerati.');
