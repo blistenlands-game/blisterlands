@@ -120,6 +120,7 @@ function beginGame(){const input=$('#nome'),name=((input&&input.value)||H.nome||
  H.nome=name;H.screen='casa';save();render()}
 const baseRender=render;
 render=function(){const a=$('#app');
+ updatePaperWear();
  if(H&&H.screen){a.classList.toggle('flush',H.screen==='casa'||H.screen==='ritorno');let html='';
   const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
   const top=`<div class="top"><h2>${MONTHS[H.mese-1]}, anno ${H.anno}</h2><span class="sub">Livello ${lvl()} · esperienza ${H.xp}</span></div>

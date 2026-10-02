@@ -47,6 +47,7 @@ const server = http.createServer((request, response) => {
   const browser = await chromium.launch(launchOptions);
   const context = await browser.newContext();
   const page = await context.newPage();
+  await page.setViewportSize({ width: 390, height: 844 });
   const errors = [];
 
   page.on('pageerror', (error) => errors.push(error.message));
@@ -57,7 +58,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.18').waitFor();
+  await page.getByText('Prototipo · versione 0.1.19').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
@@ -109,6 +110,20 @@ const server = http.createServer((request, response) => {
   if (!equipmentLook.standing.includes('pose-poles/sara.png')) throw new Error(`Posa ferma con bastoncini errata: ${equipmentLook.standing}`);
   if (!equipmentLook.plain.includes('walk/sara.png')) throw new Error(`Animazione senza bastoncini errata: ${equipmentLook.plain}`);
   if (!equipmentLook.landscape.includes('scene/waterfall.png')) throw new Error('Paesaggio della cascata non coerente');
+  const trekLayout = await page.evaluate(() => {
+    H.screen = null;
+    S = newState();
+    S.screen = 'tappa';
+    S.gseg = Math.ceil(TAPPE.reduce((sum, t) => sum + t.terr.length, 0) * .75);
+    render();
+    const pose = document.querySelector('.trek-scene .pose-sprite').getBoundingClientRect();
+    const stats = document.querySelector('.ov-bot').getBoundingClientRect();
+    return { poseBottom: pose.bottom, statsTop: stats.top, wear: document.body.dataset.paperWear };
+  });
+  if (trekLayout.poseBottom > trekLayout.statsTop - 6) throw new Error(`Il personaggio invade la barra dei valori: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.wear !== 'worn') throw new Error(`Il taccuino non si sporca con il cammino: ${JSON.stringify(trekLayout)}`);
+  const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return document.body.dataset.paperWear; });
+  if (cleanAtHome !== 'clean') throw new Error(`Il taccuino a casa non e pulito: ${cleanAtHome}`);
   await page.reload({ waitUntil: 'networkidle' });
 
   await page.evaluate(() => navigator.serviceWorker.ready);

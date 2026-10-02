@@ -2,6 +2,15 @@
 const VERSION=GAME_CONFIG.version;
 const ART_ROOT='assets/art/';
 const SPRITE_ROOT='assets/sprites/';
+function updatePaperWear(){
+ const atHome=typeof H!=='undefined'&&H&&H.screen;
+ const walked=!atHome&&typeof S!=='undefined'&&S?Math.max(0,S.gseg||0):0;
+ const total=typeof TAPPE!=='undefined'?TAPPE.reduce((sum,t)=>sum+(t.terr?t.terr.length:0),0):36;
+ const progress=Math.min(1,walked/Math.max(1,total));
+ document.documentElement.style.setProperty('--paper-dirt',(progress*.16).toFixed(3));
+ document.documentElement.style.setProperty('--paper-edge',(progress*.22).toFixed(3));
+ document.body.dataset.paperWear=progress===0?'clean':progress<.34?'light':progress<.67?'travelled':'worn';
+}
 const PG={
  marco:{sex:'m',label:'Aspetto 1',row:0},
  davide:{sex:'m',label:'Aspetto 2',row:1},

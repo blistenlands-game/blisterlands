@@ -28,7 +28,7 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.1.18`.
+Prototipo `0.1.19`.
 
 Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Ventisette paesaggi specifici accompagnano le carte che descrivono luoghi riconoscibili.
 
