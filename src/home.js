@@ -162,13 +162,13 @@ render=function(){const a=$('#app');
     else if(lock)act=`<span class="tagline">dal livello ${it.lvl}</span>`;
     else if(!avail)act=`<span class="tagline">non c'è questo mese</span>`;
     else act=`<button class="btn mini" ${H.soldi<p?'disabled':''} onclick="buyItem('${it.id}')">${it.brand==='D'?'Ordina':'Compra'} ${p} €</button>`;
-    return `<div class="prod ${lock?'locked':''}"><div class="pthumb">${gearSvg(it.id,78)}</div><div class="pbody"><div class="pbrand" style="border-color:${BRANDS[it.brand].color};color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</div>
+    return `<div class="prod ${lock?'locked':''}"><div class="pthumb">${gearSvg(it.id,78)}</div><div class="pbody"><div class="pbrandline">${brandLogo(it.brand)}<div class="pbrand" style="border-color:${BRANDS[it.brand].color};color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</div></div>
      <div class="pname">${esc(it.model)} <span class="pline">${it.line}</span></div>
      <div class="pmeta">${it.kg.toString().replace('.',',')} kg${it.dur<9999?` · dura ${it.dur} km`:''}${own&&it.dur<9999?` · <b>${condLabel(c)} ${Math.round(c*100)}%</b>`:''}${q}</div>
      ${attrs?`<div class="pattr">${attrs}</div>`:''}${it.trait?`<div class="ptrait">${esc(TRAITS[it.trait])}</div>`:''}${act}</div></div>`};
    html=pdefs()+top+`<button class="btn" onclick="H.screen='casa';H.esitoNeg=null;render()">Torna a casa<span class="meta">Livello ${lvl()}: gli oggetti migliori si sbloccano salendo di livello</span></button>
    ${H.esitoNeg?`<div class="out">${esc(H.esitoNeg)}</div>`:''}
-   <details class="log"><summary>I quattro marchi</summary>${Object.values(BRANDS).map(b=>`<p><b style="color:${b.color}">${esc(b.name)}</b>: ${esc(b.rule)}</p>`).join('')}</details>
+   <details class="log"><summary>I quattro marchi</summary>${Object.entries(BRANDS).map(([k,b])=>`<div class="brand-rule">${brandLogo(k,46)}<p><b style="color:${b.color}">${esc(b.name)}</b>: ${esc(b.rule)}</p></div>`).join('')}</details>
    <p class="sub">L'assortimento cambia ogni mese.${H.sconto?` Saldi: -${H.sconto}% su tutto.`:''} Le scorte si comprano preparando lo zaino.</p>
    ${SEZ.map(([t,bases])=>{const its=ITEMS.filter(i=>i.brand&&bases.includes(i.base));return its.length?`<h3>${t}</h3>`+its.map(row).join(''):''}).join('')}`}
   else if(H.screen==='abilita'){
@@ -208,7 +208,7 @@ function effAttrs(id){const it=ITEM_BY[id];if(!it||!it.a)return {};let a={...it.
  if(H.qual[id]==='difetto'&&ks[0])a[ks[0]]=Math.max(0,a[ks[0]]-1);if(H.qual[id]==='gioiello'&&ks[0])a[ks[0]]=Math.min(3,a[ks[0]]+1);
  const c=cond(id);if(c<=0)return {};if(c<=0.33)for(const k in a)a[k]=Math.max(0,a[k]-1);return a}
 function rollStock(){H.stock=ITEMS.filter(i=>i.brand).filter(i=>i.brand==='S'||i.brand==='D'||(i.brand==='Sh'&&chance(0.7))||(i.brand==='A'&&chance(0.6))).map(i=>i.id)}
-const price=id=>Math.round(itPrice(id)*(1-H.sconto/100));
+function price(id){return Math.round(itPrice(id)*(1-H.sconto/100))}
 function buyItem(id){eqInit();const it=ITEM_BY[id];if(!it||H.owned.has(id)||H.soldi<price(id)||(it.lvl||0)>lvl())return;
  if(it.brand!=='D'&&!H.stock.includes(id))return;if(H.ordini.some(o=>o.id===id))return;
  H.soldi-=price(id);

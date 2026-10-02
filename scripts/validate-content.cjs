@@ -117,6 +117,16 @@ if (/<svg\b/i.test(visuals)) errors.push('La nuova identità visiva deve usare r
 for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','protagonist-poses.png']) {
   if (!fs.existsSync(path.join(root, 'assets/art', relative))) errors.push(`Risorsa grafica mancante: ${relative}`);
 }
+for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 30, pose: 16, walk: 4, brand: 4 })) {
+  const directory = path.join(root, 'assets', 'sprites', folder);
+  const count = fs.existsSync(directory) ? fs.readdirSync(directory).filter((name) => name.endsWith('.png')).length : 0;
+  if (count !== expected) errors.push(`Sprite ${folder}: attesi ${expected}, trovati ${count}`);
+}
+for (const [folder, expected] of [['pose', 32], ['walk', 8]]) {
+  const directory = path.join(root, 'assets', 'sprites', 'mask', folder);
+  const count = fs.existsSync(directory) ? fs.readdirSync(directory).filter((name) => name.endsWith('.png')).length : 0;
+  if (count !== expected) errors.push(`Maschere ${folder}: attese ${expected}, trovate ${count}`);
+}
 
 context.location.search = '?seed=123456789';
 const firstSequence = vm.runInContext('S=newState();[rnd(),rnd(),rnd(),rnd()]', context);

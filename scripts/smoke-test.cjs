@@ -57,7 +57,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.14').waitFor();
+  await page.getByText('Prototipo · versione 0.1.16').waitFor();
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
 
   await page.evaluate(() => {
@@ -81,9 +81,23 @@ const server = http.createServer((request, response) => {
 
   await page.evaluate(() => localStorage.clear());
   await page.reload({ waitUntil: 'networkidle' });
+  await page.locator('.pgcard').nth(2).click();
   await page.getByLabel('Come ti chiamano lungo il cammino?').fill('Nico');
   await page.getByRole('button', { name: /Comincia ad aprile/ }).click();
   await page.getByRole('heading', { name: 'Aprile, anno 1' }).waitFor();
+  const selectedPose = await page.locator('.pose-sprite .pose-art').getAttribute('src');
+  if (!selectedPose || !selectedPose.includes('sara-sit.png')) throw new Error(`Personaggio scelto non conservato: ${selectedPose}`);
+  await page.getByRole('button', { name: /Negozio/ }).click();
+  await page.getByText('I quattro marchi').waitFor();
+  if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
+  await page.getByRole('button', { name: /Torna a casa/ }).click();
+  const equipmentLook = await page.evaluate(() => {
+    S.kit = new Set(['aFjellvind', 'shStorm', 'sCappello', 'aStav']);
+    const host = document.createElement('div'); host.innerHTML = poseSprite('walk', 'prova'); const pose = host.firstElementChild;
+    return { pack: pose.dataset.packBrand, clothes: pose.dataset.clothesBrand, hat: !!pose.querySelector('.wearable-hat'), poles: !!pose.querySelector('.wearable-poles') };
+  });
+  if (JSON.stringify(equipmentLook) !== JSON.stringify({ pack: 'A', clothes: 'Sh', hat: true, poles: true })) throw new Error(`Aspetto equipaggiamento errato: ${JSON.stringify(equipmentLook)}`);
+  await page.reload({ waitUntil: 'networkidle' });
 
   await page.evaluate(() => navigator.serviceWorker.ready);
   await page.reload({ waitUntil: 'networkidle' });

@@ -1,6 +1,7 @@
 /* =========== IDENTITA VISIVA RASTER =========== */
 const VERSION=GAME_CONFIG.version;
 const ART_ROOT='assets/art/';
+const SPRITE_ROOT='assets/sprites/';
 const PG={
  marco:{sex:'m',label:'Aspetto 1',row:0},
  davide:{sex:'m',label:'Aspetto 2',row:1},
@@ -13,7 +14,14 @@ function sprite(file,cols,rows,index,cls,label,w,h){
  const col=index%cols,row=Math.floor(index/cols),x=cols===1?0:col*100/(cols-1),y=rows===1?0:row*100/(rows-1);
  return `<span class="sprite ${cls||''}" role="img" aria-label="${esc(label||'')}" style="width:${w||'100%'};height:${h||'100%'};background-image:url('${ART_ROOT+file}');background-size:${cols*100}% ${rows*100}%;background-position:${x}% ${y}%"></span>`
 }
-function poseSprite(pose,label){const col={walk:0,stand:1,sit:2,victory:3}[pose]||0;return sprite('protagonist-poses.png',4,4,pg().row*4+col,'pose-sprite',label||'',null,null)}
+function equippedBrand(base,fallback='S'){if(typeof S==='undefined'||!S||!S.kit)return fallback;for(const id of S.kit){const it=ITEM_BY[id];if(it&&(it.base||it.id)===base&&it.brand)return it.brand}return fallback}
+function equippedLook(){if(typeof S==='undefined'||!S||!S.kit)return{pack:'S',clothes:'S',hat:false,poles:false};const pack=equippedBrand('zainoClassico',equippedBrand('zainoUL','S'));let clothes='S';if(has('pile'))clothes=equippedBrand('pile','S');if(has('guscio'))clothes=equippedBrand('guscio',clothes);return{pack,clothes,hat:has('cappello'),poles:has('bastoncini')}}
+function poseSprite(pose,label){const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco',look=equippedLook(),pack=BRANDS[look.pack]||BRANDS.S,clothes=BRANDS[look.clothes]||BRANDS.S;
+ const base=pose==='walk'?`<span class="pose-art walk-art" style="background-image:url('${SPRITE_ROOT}walk/${who}.png')"></span>`:`<img class="pose-art" src="${SPRITE_ROOT}pose/${who}-${pose}.png" alt="">`;
+ const maskRoot=pose==='walk'?`${SPRITE_ROOT}mask/walk/${who}`:`${SPRITE_ROOT}mask/pose/${who}-${pose}`;
+ const poles=look.poles?`<img class="wearable wearable-poles" src="${SPRITE_ROOT}gear/bastoncini.png" alt="">`:'';
+ const hat=look.hat?`<img class="wearable wearable-hat" src="${SPRITE_ROOT}gear/cappello.png" alt="">`:'';
+ return `<span class="pose-sprite pose-figure pose-${pose}" role="img" aria-label="${esc(label||'')}" data-pack-brand="${look.pack}" data-clothes-brand="${look.clothes}" style="--pack-color:${pack.color2};--jacket-color:${clothes.color}">${poles}${base}<i class="gear-tint pack-tint ${pose==='walk'?'walk-mask':''}" style="--mask:url('${maskRoot}-pack.png')"></i><i class="gear-tint jacket-tint ${pose==='walk'?'walk-mask':''}" style="--mask:url('${maskRoot}-jacket.png')"></i>${hat}</span>`}
 
 const PORTRAIT={
  pg_marco:{name:'Aspetto 1',sheet:'protagonists.png',cols:2,rows:2,index:0},
@@ -37,7 +45,8 @@ const ICON_NAMES={rifugio:'Il rifugio',impronte:'Tracce',sole:'Il caldo',cerotto
 const ICON_ORDER=Object.keys(ICON_NAMES);
 ICON_ORDER.forEach((k,i)=>PORTRAIT['i_'+k]={name:ICON_NAMES[k],sheet:'event-icons.png',cols:5,rows:4,index:i});
 PORTRAIT.inga=PORTRAIT.custode;PORTRAIT.fotografo=PORTRAIT.erik;PORTRAIT.alce=PORTRAIT.renna;PORTRAIT.lemming=PORTRAIT.i_lemming;PORTRAIT.corvo=PORTRAIT.i_corvo;
-function portraitSvg(k,w,h){const p=PORTRAIT[k];if(!p)return '';return sprite(p.sheet,p.cols,p.rows,p.index,'portrait-sprite',p.name,(w||120)+'px',(h||130)+'px')}
+function portraitFile(k){const alias={inga:'custode',fotografo:'erik',alce:'renna',lemming:'lemming',corvo:'corvo'};if(k.startsWith('pg_'))return `portrait/${k.slice(3)}.png`;if(k.startsWith('i_'))return `event/${k.slice(2)}.png`;return PORTRAIT['i_'+k]?`event/${k}.png`:`cast/${alias[k]||k}.png`}
+function portraitSvg(k,w,h){const p=PORTRAIT[k];if(!p)return '';return `<img class="sprite portrait-sprite" src="${SPRITE_ROOT+portraitFile(k)}" alt="${esc(p.name)}" style="width:${w||120}px;height:${h||130}px">`}
 function pdefs(){return ''}
 function tapedCard(k,w,h,cls){const p=PORTRAIT[k];if(!p)return '';return `<figure class="${cls}">${portraitSvg(k,w,h)}<figcaption>${esc(p.name)}</figcaption></figure>`}
 
@@ -49,9 +58,11 @@ const ICON_KEYS=[[/rifugio|baita|capanna|stazione/i,'rifugio'],[/ghiotton|cane|z
 function eventCard(ev){const p=eventPortrait(ev);if(p)return p;if(ev._icon&&PORTRAIT[ev._icon])return ev._icon;let txt='';try{txt=tx(ev.text)}catch(e){}for(const [re,k] of ICON_KEYS)if(re.test(ev.title||'')||re.test(txt))return 'i_'+k;return 'i_taccuino'}
 
 const GEAR_BASE=['zainoClassico','zainoUL','saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma','trail','scarponi','basse','guscio','pile','ghette','bastoncini','sandali','rete','cappello','filtro','mappa','orologio','faro','kit','fornello','tenda','carte'];
-function gearSvg(id,size){const it=ITEM_BY[id],base=it?(it.base||it.id):id,index=GEAR_BASE.indexOf(base);if(index<0)return '';return sprite('gear.png',6,5,index,'gear-sprite',it?(it.model||it.name):base,(size||56)+'px',(size||56)+'px')}
+function gearSvg(id,size){const it=ITEM_BY[id],base=it?(it.base||it.id):id,index=GEAR_BASE.indexOf(base);if(index<0)return '';return `<img class="sprite gear-sprite" src="${SPRITE_ROOT}gear/${base}.png" alt="${esc(it?(it.model||it.name):base)}" style="width:${size||56}px;height:${size||56}px">`}
+function brandLogo(k,size=34){const b=BRANDS[k];return b?`<img class="brand-logo" src="${SPRITE_ROOT}brand/${k}.png" alt="Logo ${esc(b.name)}" width="${size}" height="${size}">`:''}
 
-function atlasScene(file,cols,rows,index,label,pose,weather){return `<div class="scene raster-scene wx-${weather||'sereno'}" role="img" aria-label="${esc(label||'')}">${sprite(file,cols,rows,index,'scene-bg','',null,null)}${pose?poseSprite(pose,label):''}<span class="weather-layer" aria-hidden="true"></span></div>`}
+function weatherLayer(weather){const w=weather||'sole';if(w==='sole')return '<span class="weather-layer"><i class="weather-sun"></i></span>';if(w==='nuvole')return '<span class="weather-layer"><i class="cloud c1"></i><i class="cloud c2"></i></span>';if(w==='pioggia')return '<span class="weather-layer"><i class="cloud c1"></i><i class="cloud c2"></i>'+Array.from({length:15},(_,i)=>`<i class="rain-drop" style="--i:${i}"></i>`).join('')+'</span>';if(w==='vento')return '<span class="weather-layer">'+Array.from({length:7},(_,i)=>`<i class="wind-mark" style="--i:${i}"></i>`).join('')+'<i class="wind-leaf l1"></i><i class="wind-leaf l2"></i></span>';if(w==='nebbia')return '<span class="weather-layer"><i class="fog f1"></i><i class="fog f2"></i><i class="fog f3"></i></span>';return '<span class="weather-layer"></span>'}
+function atlasScene(file,cols,rows,index,label,pose,weather){return `<div class="scene raster-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${sprite(file,cols,rows,index,'scene-bg','',null,null)}${pose?poseSprite(pose,label):''}${weatherLayer(weather)}</div>`}
 function sceneMode(){const ev=S.current;if(!ev)return null;if(ev.id==='traversataLago')return 'lago';const k=eventCard(ev);return k==='i_acqua'&&/guado|torrent|ruscell|fium|corrente/i.test((ev.title||'')+' '+(typeof ev.text==='string'?ev.text:''))?'guado':null}
 const TERR_SCENE={valle:0,betulle:1,torbiera:2,lago:3,altopiano:4,passo:5,gola:6};
 function scene(t){const i=Math.max(0,Math.min(S.seg-1,t.terr.length-1)),mode=sceneMode(),terrain=mode==='guado'?'guado':mode==='lago'?'lago':t.terr[i],index=terrain==='guado'?7:(TERR_SCENE[terrain]??0);return atlasScene('trail-scenes.png',4,3,index,`Sentiero: ${TERR[terrain]||terrain}`,'walk',S.wx)}
