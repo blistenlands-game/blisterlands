@@ -58,7 +58,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.19').waitFor();
+  await page.getByText('Prototipo · versione 0.1.20').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
@@ -88,8 +88,7 @@ const server = http.createServer((request, response) => {
   await page.getByLabel('Come ti chiamano lungo il cammino?').fill('Nico');
   await page.getByRole('button', { name: /Comincia ad aprile/ }).click();
   await page.getByRole('heading', { name: 'Aprile, anno 1' }).waitFor();
-  const selectedPose = await page.locator('.pose-sprite .pose-art').getAttribute('src');
-  if (!selectedPose || !selectedPose.includes('sara-sit.png')) throw new Error(`Personaggio scelto non conservato: ${selectedPose}`);
+  if (await page.locator('.hdr .pose-sprite').count()) throw new Error('Il personaggio non deve comparire nelle scene di casa');
   await page.getByRole('button', { name: /Negozio/ }).click();
   await page.getByText('I quattro marchi').waitFor();
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
@@ -103,13 +102,19 @@ const server = http.createServer((request, response) => {
     const plain = document.createElement('div'); plain.innerHTML = poseSprite('walk', 'prova');
     S.current = EV.find((event) => event.id === 'cascata');
     const landscape = scene(TAPPE[0]);
+    S.current = EV.find((event) => event.id === 'recinto');
+    const corral = scene(TAPPE[0]);
+    S.current = EV.find((event) => event.id === 'golaGaisi');
+    const canyon = scene(TAPPE[0]);
     S.current = null;
-    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape };
+    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape, corral, canyon };
   });
   if (equipmentLook.withPoles.poles !== 'yes' || !equipmentLook.withPoles.source.includes('walk-poles/sara.png') || equipmentLook.withPoles.overlays) throw new Error(`Animazione bastoncini errata: ${JSON.stringify(equipmentLook)}`);
   if (!equipmentLook.standing.includes('pose-poles/sara.png')) throw new Error(`Posa ferma con bastoncini errata: ${equipmentLook.standing}`);
   if (!equipmentLook.plain.includes('walk/sara.png')) throw new Error(`Animazione senza bastoncini errata: ${equipmentLook.plain}`);
   if (!equipmentLook.landscape.includes('scene/waterfall.png')) throw new Error('Paesaggio della cascata non coerente');
+  if (!equipmentLook.corral.includes('--walker-x:62%;--walker-size:10%')) throw new Error('Scala o posizione del personaggio errata nel recinto');
+  if (!equipmentLook.canyon.includes('--walker-x:55%;--walker-size:11%')) throw new Error('Scala o posizione del personaggio errata nel canyon');
   const trekLayout = await page.evaluate(() => {
     H.screen = null;
     S = newState();
@@ -118,9 +123,12 @@ const server = http.createServer((request, response) => {
     render();
     const pose = document.querySelector('.trek-scene .pose-sprite').getBoundingClientRect();
     const stats = document.querySelector('.ov-bot').getBoundingClientRect();
-    return { poseBottom: pose.bottom, statsTop: stats.top, wear: document.body.dataset.paperWear };
+    const title = getComputedStyle(document.querySelector('.ov-top'));
+    const weather = getComputedStyle(document.querySelector('.weather-layer'));
+    return { poseBottom: pose.bottom, statsTop: stats.top, wear: document.body.dataset.paperWear, titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
   });
-  if (trekLayout.poseBottom > trekLayout.statsTop - 6) throw new Error(`Il personaggio invade la barra dei valori: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.poseBottom > trekLayout.statsTop - 2) throw new Error(`Il personaggio invade la barra dei valori: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.wear !== 'worn') throw new Error(`Il taccuino non si sporca con il cammino: ${JSON.stringify(trekLayout)}`);
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return document.body.dataset.paperWear; });
   if (cleanAtHome !== 'clean') throw new Error(`Il taccuino a casa non e pulito: ${cleanAtHome}`);

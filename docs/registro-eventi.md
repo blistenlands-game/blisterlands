@@ -1,6 +1,6 @@
 # Registro eventi
 
-> **Stato:** registro implementato nel prototipo 0.1.19.
+> **Stato:** registro implementato nel prototipo 0.1.20.
 
 Avanzamento verso i 650 contenuti della Via delle Renne: 439 eventi scritti. Ogni riga è un evento già presente nel prototipo.
 
