@@ -1,0 +1,43 @@
+{
+  "id": "./?app=blisterlands-proto-2",
+  "name": "Blisterlands: A Wanderer's Tale",
+  "short_name": "Blisterlands",
+  "description": "Prototipo del gioco di trekking a scelte: la Via delle Renne.",
+  "lang": "it",
+  "start_url": "./index.html?app=2",
+  "scope": "./",
+  "display": "fullscreen",
+  "display_override": [
+    "fullscreen",
+    "standalone"
+  ],
+  "orientation": "portrait",
+  "background_color": "#EEE3CA",
+  "theme_color": "#EEE3CA",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icons/maskable-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "icons/maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
