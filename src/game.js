@@ -185,7 +185,7 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
     return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${esc(lab(op.l))}<span class="meta">${r&&ok?`<span class="risk ${r[1]}">${r[0]}</span>`:''}<span>${ok?(meta||'nessun costo immediato'):'Non hai quello che serve'}</span></span></button>`}).join('')}</div>`}
   else{if(S.outcome)body+=`<div class="out ${S.outcome.bad?'bad':''}">${esc(tx(S.outcome.txt))}</div>`;
    body+=`<button class="btn primary" onclick="step()">${S.seg>=t.terr.length?'Arrivi al rifugio':'Cammini'}</button>`}
-  a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${t.from} → ${t.to} · ${t.km} km · ${progressDots(t)}`,S.clock)}${body}${logHtml()}`}
+  a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
   a.innerHTML=`${hdr(hutScene(t),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
   ${S.arrMsg.map(m=>`<div class="out">${esc(m)}</div>`).join('')}

@@ -58,7 +58,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.20').waitFor();
+  await page.getByText('Prototipo · versione 0.1.21').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
@@ -102,32 +102,40 @@ const server = http.createServer((request, response) => {
     const plain = document.createElement('div'); plain.innerHTML = poseSprite('walk', 'prova');
     S.current = EV.find((event) => event.id === 'cascata');
     const landscape = scene(TAPPE[0]);
-    S.current = EV.find((event) => event.id === 'recinto');
-    const corral = scene(TAPPE[0]);
-    S.current = EV.find((event) => event.id === 'golaGaisi');
-    const canyon = scene(TAPPE[0]);
     S.current = null;
-    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape, corral, canyon };
+    const routes = TAPPE.map((stage, index) => {
+      S.tappa = index; S.seg = 2;
+      const routeHost = document.createElement('div'); routeHost.innerHTML = scene(stage);
+      const route = routeHost.querySelector('.route-overlay');
+      return { src: route?.getAttribute('src'), stage: route?.dataset.stage, events: route?.dataset.events, done: route?.dataset.done };
+    });
+    S.tappa = 0; S.seg = 0;
+    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape, routes };
   });
   if (equipmentLook.withPoles.poles !== 'yes' || !equipmentLook.withPoles.source.includes('walk-poles/sara.png') || equipmentLook.withPoles.overlays) throw new Error(`Animazione bastoncini errata: ${JSON.stringify(equipmentLook)}`);
   if (!equipmentLook.standing.includes('pose-poles/sara.png')) throw new Error(`Posa ferma con bastoncini errata: ${equipmentLook.standing}`);
   if (!equipmentLook.plain.includes('walk/sara.png')) throw new Error(`Animazione senza bastoncini errata: ${equipmentLook.plain}`);
   if (!equipmentLook.landscape.includes('scene/waterfall.png')) throw new Error('Paesaggio della cascata non coerente');
-  if (!equipmentLook.corral.includes('--walker-x:62%;--walker-size:10%')) throw new Error('Scala o posizione del personaggio errata nel recinto');
-  if (!equipmentLook.canyon.includes('--walker-x:55%;--walker-size:11%')) throw new Error('Scala o posizione del personaggio errata nel canyon');
+  if (equipmentLook.routes.length !== 8 || new Set(equipmentLook.routes.map((route) => route.src)).size !== 8) throw new Error('Le otto tappe devono avere tracce differenti');
+  if (equipmentLook.routes.some((route, index) => !route.src?.startsWith('data:image/png') || route.stage !== String(index + 1) || route.events !== '6' || route.done !== '2')) throw new Error(`Punti delle tracce errati: ${JSON.stringify(equipmentLook.routes.map(({ stage, events, done }) => ({ stage, events, done })))}`);
   const trekLayout = await page.evaluate(() => {
     H.screen = null;
     S = newState();
     S.screen = 'tappa';
+    S.seg = 3;
     S.gseg = Math.ceil(TAPPE.reduce((sum, t) => sum + t.terr.length, 0) * .75);
     render();
     const pose = document.querySelector('.trek-scene .pose-sprite').getBoundingClientRect();
+    const sceneBox = document.querySelector('.trek-scene').getBoundingClientRect();
     const stats = document.querySelector('.ov-bot').getBoundingClientRect();
+    const route = document.querySelector('.route-overlay');
     const title = getComputedStyle(document.querySelector('.ov-top'));
     const weather = getComputedStyle(document.querySelector('.weather-layer'));
-    return { poseBottom: pose.bottom, statsTop: stats.top, wear: document.body.dataset.paperWear, titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
+    return { poseBottom: pose.bottom, statsTop: stats.top, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, routeDone: route?.dataset.done, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
   });
   if (trekLayout.poseBottom > trekLayout.statsTop - 2) throw new Error(`Il personaggio invade la barra dei valori: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.poseLeft > .04 || trekLayout.routeDone !== '3') throw new Error(`Personaggio o avanzamento fuori dalla partenza della traccia: ${JSON.stringify(trekLayout)}`);
+  if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
   if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.wear !== 'worn') throw new Error(`Il taccuino non si sporca con il cammino: ${JSON.stringify(trekLayout)}`);
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return document.body.dataset.paperWear; });

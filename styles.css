@@ -149,7 +149,8 @@ main.flush{padding-top:0}
 .raster-scene .scene-bg{position:absolute;inset:0;width:100%!important;height:100%!important}
 .raster-scene .pose-sprite{position:absolute;z-index:1;left:37%;bottom:20%;width:26%!important;height:57%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
 .trek-scene .scene-bg{object-fit:cover}
-.trek-scene .pose-sprite{left:calc(var(--walker-x,50%) - 6%);bottom:32%;width:var(--walker-size,12%)!important;height:var(--walker-height,27.6%)!important;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.22))}
+.route-overlay{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
+.trek-scene .pose-sprite{z-index:3;left:2%;bottom:32%;width:12%!important;height:27.6%!important;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.32))}
 .raster-scene .pose-sit{left:39%;bottom:19%;width:23%!important;height:48%!important}
 .raster-scene .pose-victory{left:38%;bottom:19%;width:24%!important;height:56%!important}
 .pose-figure{position:relative;display:block}
