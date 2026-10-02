@@ -3140,8 +3140,71 @@ function endScene(){const k=endKind(),wx=S.wx;
   ${big(walker(214,186,false),214,186,1.5)}${weatherFx(wx)}</svg>`}
  return `<svg class="scene" viewBox="0 8 390 224" role="img" aria-label="Fine del cammino">${land(wx,S.clock,12)}${walker(195,186,false)}</svg>`}
 function trekKm(){let km=0;for(let i=0;i<S.tappa;i++){if(TAPPE[i].extra&&!S.timbri.includes('La vetta del Gáisi'))continue;km+=TAPPE[i].km}const t=TAPPE[S.tappa];if(t){km+=endKind()==='completo'?t.km:Math.round(t.km*Math.min(S.seg,t.terr.length)/t.terr.length)}return km}
+/* =========== SCENE DI CASA: la vita di tutti i giorni =========== */
+function seasonOf(m){return m===12||m<=2?'inverno':m<=5?'primavera':m<=8?'estate':'autunno'}
+function windowView(x,y,w,h,night,rainy){const se=seasonOf(H.mese);const sky=night?'#2F3E52':rainy?'#A9B2B8':'#BFD6E4';
+ let s=`<rect x="${x}" y="${y}" width="${w}" height="${h}" fill="${sky}" opacity=".85"></rect>`;
+ s+=`<path d="M${x} ${y+h*.72} L${x+w*.3} ${y+h*.45} L${x+w*.5} ${y+h*.6} L${x+w*.75} ${y+h*.35} L${x+w} ${y+h*.6} V${y+h} H${x} Z" fill="${se==='inverno'?'#E9EEF0':'#8FA9B8'}" opacity=".8"></path>`;
+ if(se==='autunno')s+=`<circle cx="${x+w*.2}" cy="${y+h*.85}" r="${w*.12}" fill="#D9842E" opacity=".85"></circle><circle cx="${x+w*.8}" cy="${y+h*.88}" r="${w*.1}" fill="#B5452E" opacity=".8"></circle>`;
+ if(se==='primavera'||se==='estate')s+=`<circle cx="${x+w*.2}" cy="${y+h*.86}" r="${w*.13}" fill="#7E9A5B" opacity=".85"></circle><circle cx="${x+w*.82}" cy="${y+h*.88}" r="${w*.11}" fill="#9DB27A" opacity=".85"></circle>`;
+ if(night)s+=`<circle cx="${x+w*.75}" cy="${y+h*.22}" r="${w*.08}" fill="#F2E6CC"></circle>`;
+ else if(se==='estate'&&!rainy)s+=`<circle cx="${x+w*.78}" cy="${y+h*.2}" r="${w*.09}" fill="#EDB447"></circle>`;
+ if(rainy)s+=`<g stroke="#4F6B80" stroke-width="1" opacity=".8"><path class="goccia" d="M${x+6} ${y} L${x} ${y+h} M${x+w*.3} ${y} L${x+w*.3-6} ${y+h} M${x+w*.6} ${y} L${x+w*.6-6} ${y+h} M${x+w*.9} ${y} L${x+w*.9-6} ${y+h}"></path></g>`;
+ if(se==='inverno')s+=`<g fill="#FFFFFF"><circle cx="${x+w*.2}" cy="${y+h*.3}" r="1.6"></circle><circle cx="${x+w*.5}" cy="${y+h*.2}" r="1.4"></circle><circle cx="${x+w*.7}" cy="${y+h*.5}" r="1.6"></circle><circle cx="${x+w*.35}" cy="${y+h*.6}" r="1.3"></circle></g>`;
+ s+=`<path d="M${x} ${y} H${x+w} V${y+h} H${x} Z M${x+w/2} ${y} V${y+h} M${x} ${y+h/2} H${x+w}" fill="none" stroke-width="3" class="k" filter="url(#inkS)"></path>`;
+ return s}
+function roomBase(wall){return `<rect x="0" y="0" width="390" height="240" fill="${wall}" opacity=".55" filter="url(#washS)"></rect><rect x="0" y="0" width="390" height="240" fill="url(#hatchS)" opacity=".18"></rect>
+ <path d="M0 190 H390 V240 H0 Z" fill="#B59A74" opacity=".6" filter="url(#washS)"></path><path d="M0 190 H390" stroke-width="2.2" class="k" filter="url(#inkS)"></path><path d="M0 210 H390 M0 226 H390" stroke="#8C6A4A" stroke-width="1" opacity=".5"></path>`}
+function plant(x,y,sad){return `<g transform="translate(${x} ${y})" filter="url(#inkS)"><path d="M-10 0 H10 L8 18 H-8 Z" fill="#B5654A" stroke-width="1.4" class="k"></path>${sad?`<path d="M0 0 C-2 -10 -12 -12 -18 -6 M0 0 C2 -12 12 -14 16 -4 M0 0 C0 -14 -4 -20 -8 -18" fill="none" stroke="#9A8F5E" stroke-width="2.2"></path>`:`<path d="M0 0 C-4 -16 -14 -22 -18 -30 M0 0 C2 -18 10 -26 18 -32 M0 0 C0 -16 2 -30 0 -38" fill="none" stroke="#5E7B3A" stroke-width="2.4"></path><ellipse cx="-16" cy="-30" rx="5" ry="3" fill="#7E9A5B"></ellipse><ellipse cx="16" cy="-32" rx="5" ry="3" fill="#7E9A5B"></ellipse><ellipse cx="0" cy="-38" rx="4" ry="5" fill="#7E9A5B"></ellipse>`}</g>`}
+function figDesk(x,y,slump){/* seduto alla scrivania, di profilo verso destra */
+ return `<g transform="translate(${x} ${y})"><path d="M-14 0 V-30 M-14 -30 H8 M-14 0 H8 V10 M-14 0 V10" fill="none" stroke="#5C4E42" stroke-width="2.4"></path>
+ <path d="M-12 -34 C-8 -40 4 -40 6 -34 L6 -62 C4 -66 -8 -66 -12 -62 Z" fill="${kitColor(['pile'],'#8C8478')}" stroke-width="1.4" class="k"></path>
+ <path d="M4 -52 L22 ${slump?-40:-46}" stroke-width="2.4" stroke-linecap="round" class="k"></path><path d="M-6 -34 L18 -34 L20 -6" fill="none" stroke-width="2.6" stroke-linecap="round" class="k"></path>
+ ${hoodHead(slump?2:0,slump?-68:-72,1)}</g>`}
+function homeScene(kind){const v=H.voglia,sat=(0.2+0.8*v/100).toFixed(2),sad=v<40,rainy=v<30;let s='',wall='#E6D3A8',night=false;
+ if(kind==='straordinari'){night=true;wall='#8C8C9E'}
+ const desk=(lamp)=>`<g filter="url(#inkS)"><path d="M150 140 H340 V148 H150 Z M162 148 V190 M328 148 V190" fill="#8C6A4A" stroke-width="1.8" class="k"></path>
+  <path d="M232 92 H300 V134 H232 Z" fill="#3D4652" stroke-width="2" class="k"></path><path d="M238 98 H294 V128 H238 Z" fill="${night?'#9DB8C8':'#C9DCE6'}"></path><path d="M242 104 H276 M242 110 H286 M242 116 H270 M242 122 H282" stroke="#5C6B73" stroke-width="1.2"></path><path d="M262 134 V140 M250 140 H274" stroke-width="2" class="k"></path>
+  <path d="M306 132 H320 V140 H306 Z" fill="#F3EAD6" stroke-width="1.2" class="k"></path>
+  ${lamp?`<path d="M190 140 L196 108 L214 100" fill="none" stroke-width="2" class="k"></path><path d="M206 92 L224 100 L214 110 Z" fill="#E9B04C" stroke-width="1.4" class="k"></path><path class="luce" d="M214 106 L180 140 H250 Z" fill="#F2C35E" opacity=".35"></path><path d="M160 140 V96 H184 V140 M164 104 H180 M164 112 H180 M164 120 H180" fill="#F3EAD6" stroke-width="1.4" class="k"></path>`:''}</g>`;
+ if(kind==='ufficio'||kind==='straordinari'){
+  s=roomBase(wall)+windowView(30,40,90,80,night,rainy&&!night)+`<g filter="url(#inkS)"><circle cx="190" cy="54" r="16" fill="#F3EAD6" stroke-width="2" class="k"></circle><path d="M190 54 V44 M190 54 L${night?182:198} ${night?58:50}" stroke-width="2" class="k"></path></g>`+desk(night)+big(figDesk(214,190,sad),214,190,1.35)+plant(352,140,sad);
+  if(night)s+=`<text x="150" y="80" font-family="Caveat, cursive" font-size="18" fill="#F2E6CC">21:40</text>`}
+ else if(kind==='palestra'){
+  s=roomBase('#D9CDB8')+`<g filter="url(#inkS)"><path d="M60 40 H200 V150 H60 Z" fill="#C9DCE6" opacity=".7" stroke-width="2" class="k"></path><path d="M70 50 L90 140 M120 46 L150 146" stroke="#FFFFFF" stroke-width="4" opacity=".6"></path>
+  <path d="M120 186 L250 178 L262 188 L128 196 Z" fill="#3D4652" stroke-width="1.8" class="k"></path><path d="M246 178 L256 120 L276 116" fill="none" stroke-width="3" class="k"></path><path d="M266 106 H290 V122 H266 Z" fill="#9DB8C8" stroke-width="1.6" class="k"></path>
+  <path d="M300 190 V120 M340 190 V120 M296 140 H344 M296 166 H344" stroke-width="3" class="k"></path><circle cx="300" cy="140" r="6" fill="#3D3530"></circle><circle cx="344" cy="140" r="6" fill="#3D3530"></circle><circle cx="300" cy="166" r="7" fill="#3D3530"></circle><circle cx="344" cy="166" r="7" fill="#3D3530"></circle></g>
+  ${big(walker(190,184,true),190,184,1.5)}<path d="M150 120 l-10 -4 M148 132 l-12 0" stroke="#5C4E42" stroke-width="1.6" stroke-linecap="round"></path>`}
+ else if(kind==='gita'){
+  s=`${SDEFS}${sky(660,rainy?'nuvole':'sole')}<path d="M0 150 L70 110 L120 128 L190 54 L216 70 L238 60 L300 112 L350 100 L390 118 V240 H0 Z" fill="#8FA9B8" opacity=".45" filter="url(#washS)"></path><path d="M0 150 L70 110 L120 128 L190 54 L216 70 L238 60 L300 112 L350 100 L390 118 V240 H0 Z" fill="url(#hatchS)" opacity=".4"></path><path d="M0 150 L70 110 L120 128 L190 54 L216 70 L238 60 L300 112 L350 100 L390 118" fill="none" stroke-width="2" class="k" filter="url(#inkS)"></path>
+  <path d="M180 64 L190 54 L200 64 L194 62 L188 66 Z M232 64 L238 60 L246 68 Z" fill="#FFFFFF" opacity=".9"></path>
+  <path d="M0 196 C100 186 260 190 390 180 V240 H0 Z" fill="#9DB27A" opacity=".6" filter="url(#washS)"></path><path d="M0 196 C100 186 260 190 390 180" fill="none" stroke-width="2.4" class="k" filter="url(#inkS)"></path>
+  <path d="M20 204 C120 196 240 200 370 190" fill="none" stroke="#5C4E42" stroke-width="1.3" stroke-dasharray="5 6"></path>
+  ${big(walker(170,196,true),170,196,1.3)}<g transform="translate(230 194) scale(1.25) translate(-230 -194)"><g transform="translate(230 150)"><path d="M-4 4 C2 1 8 3 9 8 L10 30 C6 32 -2 32 -4 29 Z" fill="#B5654A" stroke-width="1.3" class="k"></path><path d="M-15 -8 H-3 V26 H-15 Z" fill="#3D5A6C" stroke-width="1.2" class="k"></path><circle cx="2" cy="-3" r="7" fill="#E2B48C" stroke-width="1.3" class="k"></circle><path d="M-5 -6 C-4 -14 8 -14 9 -6 Z" fill="#3D5A6C" stroke-width="1" class="k"></path><path d="M-3 0 C-2 8 6 8 7 0" fill="#4A3A2E"></path><path d="M3 28 L-1 43 M-1 28 L3 43" stroke-width="2.2" stroke-linecap="round" class="k"></path></g></g>
+  <text x="246" y="112" font-family="Caveat, cursive" font-size="15" text-anchor="middle" class="kf">Paolo</text><text x="205" y="44" font-family="Caveat, cursive" font-size="15" text-anchor="middle" class="kf">Gran Sasso</text>`}
+ else if(kind==='divano'){
+  s=roomBase('#C9BBA0')+windowView(36,36,80,74,false,rainy)+`<g filter="url(#inkS)"><path d="M250 112 H352 V170 H250 Z" fill="#2F3540" stroke-width="2.2" class="k"></path><path class="luce" d="M256 118 H346 V164 H256 Z" fill="#7FA6BE" opacity=".7"></path><path d="M290 170 L282 190 M312 170 L320 190" stroke-width="2" class="k"></path>
+  <path d="M60 190 V146 C60 134 70 130 80 130 H196 C206 130 214 134 214 146 V190 Z" fill="${sad?'#8C8478':'#B5654A'}" opacity=".85" stroke-width="2" class="k"></path></g>
+  ${big(figSit(140,176,sad),140,176,1.25)}<g filter="url(#inkS)"><path d="M54 166 H220 V184 H54 Z" fill="${sad?'#7A7268':'#9A4E3A'}" stroke-width="1.8" class="k"></path></g>
+  <g transform="translate(206 146)" filter="url(#inkS)"><path d="M-12 0 C-14 -14 10 -16 12 0 Z" fill="#4A4540" stroke-width="1.4" class="k"></path><path d="M-8 -12 L-10 -20 L-4 -14 M4 -14 L8 -20 L8 -12" fill="#4A4540" stroke-width="1.2" class="k"></path><circle cx="-3" cy="-8" r="1.4" fill="#C9D16A"></circle><circle cx="4" cy="-8" r="1.4" fill="#C9D16A"></circle></g>`}
+ else if(kind==='letto'){
+  s=roomBase('#D9CDB8')+windowView(250,36,90,76,false,true)+`<g filter="url(#inkS)"><path d="M40 190 V120 M40 150 H300 V190 M300 150 V134" stroke-width="3" fill="none" class="k"></path><path d="M60 150 C60 136 80 130 100 132 H290 C298 132 300 140 300 150 Z" fill="#9DB8C8" opacity=".85" stroke-width="2" class="k"></path><path d="M44 138 C44 124 76 124 76 138 V150 H44 Z" fill="#F3EAD6" stroke-width="1.8" class="k"></path>
+  <path d="M320 190 V160 H360 V190 M318 160 H362" fill="none" stroke-width="2" class="k"></path><path d="M330 150 H346 V160 H330 Z" fill="#F3EAD6" stroke-width="1.4" class="k"></path><path d="M334 146 C332 140 338 136 336 130" fill="none" stroke-width="1.2" class="k"></path></g>
+  ${hoodHead(64,128,1)}<path d="M80 118 L96 104" stroke="#9A3A22" stroke-width="2.4" stroke-linecap="round"></path><text x="104" y="102" font-family="Caveat, cursive" font-size="16" class="kf">38,7°</text>`}
+ else if(kind==='ritorno'){
+  s=roomBase('#E6D3A8')+`<g filter="url(#inkS)"><path d="M40 40 H180 V120 H40 Z" fill="#E6D3A8" stroke-width="2" class="k"></path><path d="M60 100 C80 80 100 96 120 70 C134 54 150 66 166 52" fill="none" stroke="#9A3A22" stroke-width="2.4" stroke-dasharray="4 4"></path><circle cx="166" cy="52" r="4" fill="#9A3A22"></circle><path d="M100 36 V44" stroke-width="2" class="k"></path></g>
+  <g filter="url(#inkS)"><path d="M238 140 C238 128 290 128 290 140 L294 190 H234 Z" fill="${packColor()}" stroke-width="2" class="k"></path><path d="M240 140 C250 130 278 130 288 140" fill="none" stroke-width="1.6" class="k"></path>
+  <path d="M300 186 C310 176 330 176 340 186 Z" fill="#6E8B5B" stroke-width="1.4" class="k"></path><path d="M196 186 h22 v-6 h-22 Z" fill="#B5654A" stroke-width="1.2" class="k"></path><path d="M350 188 C356 178 368 178 372 188 Z" fill="#7A5A3A" stroke-width="1.4" class="k"></path></g>
+  ${big(figArms(150,190),150,190,1.4)}`}
+ const mood=`<filter id="mood"><feColorMatrix type="saturate" values="${sat}"></feColorMatrix></filter>`;
+ return `<svg class="scene" viewBox="0 8 390 224" role="img" aria-label="${esc(HOME_LABEL[kind]||'')}">${SDEFS}<defs>${mood}</defs><g filter="url(#mood)">${s}</g>${v<50?`<rect x="0" y="0" width="390" height="240" fill="#7C8088" opacity="${((50-v)/50*0.28).toFixed(2)}"></rect>`:''}${rainy&&kind!=='gita'?`<g transform="translate(300 40)"><path d="M-24 10 C-26 0 -14 -6 -6 -2 C-2 -12 14 -10 16 0 C26 0 28 10 20 14 H-20 C-28 14 -28 10 -24 10 Z" fill="#9A9EA4" stroke-width="1.2" class="k"></path></g>`:''}</svg>`}
+const HOME_LABEL={ufficio:'In ufficio',straordinari:'Straordinari, la sera tardi',palestra:'In palestra',gita:'Weekend in montagna con Paolo',divano:'Sul divano davanti alla televisione',letto:'A letto con la febbre',ritorno:'Di ritorno dal cammino'};
+function homeHdr(kind,title,sub){const st=(v,l,low)=>`<div class="ostat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
+ return `<div class="hdr"><div class="pic">${homeScene(kind)}<div class="ov-top"><h2>${esc(title)}</h2>${sub?`<span>${esc(sub)}</span>`:''}</div>
+ <div class="ov-bot">${st(H.soldi+' €','soldi',H.soldi<100)}${st(H.ferie,'ferie',H.ferie<TREK_DAYS)}${st(H.forma,'forma',H.forma<40)}${st(H.voglia,'voglia',H.voglia<30)}${st(H.completati,'cammini')}</div></div>
+ <div class="info"><div class="irow"><span class="wx">${esc(HOME_LABEL[kind])}</span><span>${H.voglia<30?'tutto sembra grigio':H.voglia<55?'la testa è altrove':'hai voglia di partire'}</span></div></div></div>`}
 /* =========== PROTAGONISTI, PAESAGGI v2 =========== */
-const VERSION='0.1.10';
+const VERSION='0.1.11';
 const PG={marco:{name:'Marco',sex:'m',skin:'#E2B48C',hair:'#3B2A20',style:'short',beard:true},
  davide:{name:'Davide',sex:'m',skin:'#B07A55',hair:'#1E1A18',style:'curly',glasses:true},
  sara:{name:'Sara',sex:'f',skin:'#EBC7A6',hair:'#6B3E22',style:'braid'},
@@ -3323,7 +3386,7 @@ const PLANS={
  straordinari:{l:'Straordinari',soldi:SALARY+80,forma:-9,voglia:-11,fila:1,note:'Molti più soldi, ma ti consumano. Troppi mesi di fila portano al burnout.'},
  allenamento:{l:'Lavoro e allenamento',soldi:SALARY-35,forma:9,voglia:-3,note:'Palestra e corse la sera: costa, ma arrivi in forma.'},
  gite:{l:'Lavoro e gite nel weekend',soldi:SALARY-70,forma:5,voglia:9,note:'Tutti i risparmi vanno in benzina e rifugi, ma la voglia di partire torna.'}};
-function liveMonth(plan){const P=PLANS[plan]||PLANS.normale;
+function liveMonth(plan){const P=PLANS[plan]||PLANS.normale;H.scena={normale:'ufficio',straordinari:'straordinari',allenamento:'palestra',gite:'gita'}[plan]||'ufficio';
  const msg=[];H.soldi+=P.soldi;msg.push(`${P.l}: ${P.soldi>=0?'+':''}${P.soldi} €.`);H.fila=P.fila?H.fila+1:0;
  const before=H.ferie;H.ferie=Math.min(FERIE_MAX,H.ferie+FERIE_MESE);if(before+FERIE_MESE>FERIE_MAX)msg.push(`Hai raggiunto il tetto di ${FERIE_MAX} giorni: le ferie nuove si perdono.`);else msg.push(`Maturano ${FERIE_MESE} giorni di ferie.`);
  H.forma=hc(H.forma+P.forma,0,100);H.voglia=hc(H.voglia+P.voglia,0,100);msg.push(`Forma ${P.forma>=0?'+':''}${P.forma}, voglia ${P.voglia>=0?'+':''}${P.voglia}.`);
@@ -3331,7 +3394,8 @@ function liveMonth(plan){const P=PLANS[plan]||PLANS.normale;
  if(H.ordine){H.ordine.m--;if(H.ordine.m<=0){H.owned.add(H.ordine.id);msg.push('È arrivato lo zaino artigianale!');H.ordine=null}}
  H.sconto=0;
  H.carta=pickCard();H.cartaMsg=msg;H.screen='carta';save();render()}
-function chooseCard(i){const c=H.carta,o=c.o[i];
+const CARD_SCENE={malanno:'letto',burnout:'divano',pioggia:'divano',documentario:'divano',appennino:'gita'};
+function chooseCard(i){const c=H.carta,o=c.o[i];if(c.id==='appennino')H.scena=i===0?'gita':'divano';else if(CARD_SCENE[c.id]&&!(c.id==='pioggia'&&i===0))H.scena=CARD_SCENE[c.id];
  if(o.f&&o.f.gift&&H.owned.has(o.f.gift)&&o.giftAlt){hfx(o.giftAlt)}else hfx(o.f);
  let txt=o.txt;
  if(o.sell){const cand=[...H.owned].filter(id=>PRICE[id]).sort((a,b)=>PRICE[a]-PRICE[b]);if(cand.length){const id=cand[0];H.owned.delete(id);const v=Math.round(PRICE[id]/2);H.soldi+=v;txt=`Vendi ${ITEMS.find(x=>x.id===id).name} per ${v} €.`}}
@@ -3365,7 +3429,7 @@ function goHome(){const r={xp:S.xp,timbri:S.timbri.filter(t=>!H.timbri.includes(
  H.forma=hc(H.forma+15,0,100);H.voglia=r.completo?95:60;if(r.completo)H.completati++;if(r.vetta)H.vette++;
  H.storia.unshift(`${MONTHS[H.mese-1]} anno ${H.anno}: ${r.completo?'Via delle Renne completata':'cammino interrotto'}${r.vetta?', vetta del Gáisi':''}.`);
  H.mese++;if(H.mese>12){H.mese=1;H.anno++}
- H.trekking=false;H.ritorno=r;H.screen='ritorno';S.screen=null;save();render()}
+ H.scena='ritorno';H.trekking=false;H.ritorno=r;H.screen='ritorno';S.screen=null;save();render()}
 function spendPoint(k){if(H.punti<1||H.abil[k]>=5)return;H.punti--;H.abil[k]++;save();render()}
 
 /* schermate di casa */
@@ -3373,7 +3437,7 @@ let lastHome=null;
 function pickPg(k){const def=Object.values(PG).some(p=>p.name===H.nome);H.pg=k;if(!H.nome||def)H.nome=PG[k].name;save();render()}
 const baseRender=render;
 render=function(){const a=$('#app');
- if(H&&H.screen){a.classList.remove('flush');let html='';
+ if(H&&H.screen){a.classList.toggle('flush',H.screen==='casa'||H.screen==='ritorno');let html='';
   const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
   const top=`<div class="top"><h2>${MONTHS[H.mese-1]}, anno ${H.anno}</h2><span class="sub">Livello ${lvl()} · esperienza ${H.xp}</span></div>
    <div class="hud">${st(H.soldi+'€','Soldi',H.soldi<100)}${st(H.ferie,'Ferie',H.ferie<TREK_DAYS)}${st(H.forma,'Forma',H.forma<40)}${st(H.voglia,'Voglia',H.voglia<30)}${st(H.completati,'Cammini')}</div>`;
@@ -3384,7 +3448,7 @@ render=function(){const a=$('#app');
    <label class="namefield">Come ti chiamano lungo il cammino?<input id="nome" type="text" maxlength="18" value="${esc(H.nome)}" oninput="H.nome=this.value.trim()||PG[H.pg].name"></label>
    <button class="btn primary" onclick="H.screen='casa';save();render()">Comincia ad aprile</button>`}
   else if(H.screen==='casa'){const ok=inSeason();eqInit();
-   html=calendar()+top+`<p class="note">${formaTxt()} ${vogliaTxt()}</p>`+(H.esito?`<div class="out">${esc(H.esito)}</div>`:'')+`
+   html=homeHdr(H.scena||'ufficio',`${MONTHS[H.mese-1]}, anno ${H.anno}`,`livello ${lvl()} · esperienza ${H.xp}`)+`<p class="note">${formaTxt()} ${vogliaTxt()}</p>`+(H.esito?`<div class="out">${esc(H.esito)}</div>`:'')+`
    <div class="tiles">
     <button class="tile ${ok?'go':''}" ${ok?'':'disabled'} onclick="prepareTrek()"><b>Parti</b><span>${ok?(H.ferie<TREK_DAYS?'poche ferie: '+H.ferie+' giorni':'la Via delle Renne'):'da giugno a settembre'}</span></button>
     <button class="tile" onclick="H.screen='negozio';render()"><b>Negozio</b><span>${H.sconto?'saldi −'+H.sconto+'%':'compra, ripara, vendi'}</span></button>
@@ -3428,7 +3492,7 @@ render=function(){const a=$('#app');
    html=top+`<button class="btn" onclick="H.screen='casa';render()">← Torna a casa</button><p class="sub">Ogni 100 punti di esperienza sali di livello e guadagni un punto. Punti disponibili: ${H.punti}.</p>
    ${Object.entries(ABIL).map(([k,v])=>`<div class="qrow"><span>${v} ${H.abil[k]}/5<small>${ABIL_NOTE[k]}</small></span><button class="btn" style="width:auto;margin:0" ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">+1</button></div>`).join('')}`}
   else if(H.screen==='ritorno'){const r=H.ritorno;
-   html=`<h2>Di nuovo a casa</h2><p>${esc(r.fine)}</p><div class="card">
+   html=homeHdr('ritorno','Di nuovo a casa',r.completo?'con il diario pieno':'con qualche rimpianto')+`<p>${esc(r.fine)}</p><div class="card">
    <p>Esperienza guadagnata: ${r.xp}.${r.up?` <b>Sali di livello!</b> Hai ${H.punti} punti abilità da spendere.`:''}</p>
    ${r.timbri.length?`<p>Nuovi timbri: ${r.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join('')}</p>`:'<p class="sub">Nessun timbro nuovo.</p>'}
    ${r.usura&&r.usura.length?`<div class="out">${r.usura.map(esc).join('<br>')}</div>`:''}${r.lost.length?`<p class="sub">Perso lungo il cammino: ${esc(r.lost.join(', '))}.</p>`:''}${r.gained.length?`<p class="sub">Trovato lungo il cammino: ${esc(r.gained.join(', '))}.</p>`:''}
