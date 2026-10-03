@@ -1,6 +1,10 @@
 # Blisterborn
 
-Prototipo mobile di un gioco di ruolo a scelte sul trekking a lunga distanza. La prima avventura disponibile è **La Via delle Renne**, un cammino di sette tappe ispirato alla Lapponia svedese.
+Gioco di ruolo a scelte sul trekking a lunga distanza. La nuova linea di sviluppo usa **Godot 2D 4.7.2**; il prototipo web precedente resta disponibile come riferimento per regole e contenuti.
+
+## Godot 2D
+
+Aprire `project.godot` dalla radice della repository. La vertical slice `0.2.0` comprende schermata iniziale, preparazione, salvataggio nativo e la prima tappa con sei POI animati. I dettagli sono in `godot/README.md`.
 
 ## Avvio locale
 
@@ -26,9 +30,11 @@ Il progetto è una PWA statica e non richiede una compilazione. Per provarlo cor
 
 GitHub Pages può pubblicare direttamente la radice del branch `main`. Il service worker mantiene in cache tutti i file necessari al funzionamento offline.
 
-## Versione
+## Versioni
 
-Prototipo `0.1.27`.
+Godot `0.2.0`.
+
+Prototipo `0.1.28` (web legacy).
 
 Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Le otto tratte dispongono di 48 POI nominati e di 48 sfondi distinti; arrivi serali, mattine dopo il rifugio o la tenda e traguardo di Njalla hanno scene dedicate. Ogni tappa ha inoltre una mappa piegata semplificata con una curva incorporata nel raster e coerente con i sei landmark; l'avanzamento colora la stessa curva. Il taccuino ha quattro livelli di usura raster per tappa. Ventisette paesaggi specifici restano disponibili per futuri sfondi legati agli imprevisti.
 

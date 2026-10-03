@@ -8,7 +8,7 @@ Questa cartella raccoglie le specifiche di sviluppo versionate insieme al gioco.
 - `registro-eventi.md`: inventario corrente dei 439 eventi presenti nel prototipo.
 - `documento-di-progetto.md`: visione del gioco e cronologia delle decisioni. Non tutti i numeri descritti sono ancora correnti.
 
-## Stato del prototipo 0.1.27
+## Stato del prototipo web 0.1.28
 
 ### Implementato
 
