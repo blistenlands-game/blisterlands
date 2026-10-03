@@ -184,7 +184,7 @@ render=function(){const a=$('#app');
    <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button>`}
   a.innerHTML=html;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
  lastHome=null;
- baseRender();
+ baseRender();positionTrekMap();
  if(S.screen==='zaino')homeZainoPatch(a);
  if(S.screen==='fine'){const b=a.querySelector('.btn.primary');if(b){b.textContent='Torna a casa';b.onclick=goHome}}
 };

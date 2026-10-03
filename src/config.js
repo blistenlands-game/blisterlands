@@ -1,5 +1,5 @@
 globalThis.GAME_CONFIG=Object.freeze({
  name:'Blisterborn',
- version:'0.1.24',
+ version:'0.1.25',
  storageKey:'blisterlands'
 });

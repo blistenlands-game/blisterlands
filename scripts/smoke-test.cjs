@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.24').waitFor();
+  await page.getByText('Prototipo · versione 0.1.25').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -143,10 +143,11 @@ const server = http.createServer((request, response) => {
     const route = document.querySelector('.route-progress');
     const title = getComputedStyle(document.querySelector('.ov-top'));
     const weather = getComputedStyle(document.querySelector('.weather-layer'));
-    return { poseBottom: pose.bottom, poseRight: pose.right, mapBottom: mapBox.bottom, mapRight: mapBox.right, sceneRight: sceneBox.right, statsTop: stats.top, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, routeDone: route?.dataset.done, map: document.querySelector('.stage-map-bg')?.getAttribute('src'), walking: document.querySelector('.map-hiker')?.className, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, paperStage: document.body.dataset.paperStage, paperLevel: document.body.dataset.paperLevel, paperImage: getComputedStyle(document.documentElement).getPropertyValue('--paper-image'), titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
+    const alphaGap = Number.parseFloat(getComputedStyle(document.querySelector('.stage-map')).getPropertyValue('--map-alpha-gap')) || 0;
+    return { poseBottom: pose.bottom, poseRight: pose.right, mapBottom: mapBox.bottom, visibleMapBottom: mapBox.bottom-alphaGap, mapRight: mapBox.right, sceneRight: sceneBox.right, statsTop: stats.top, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, poseRatio: pose.width/pose.height, routeDone: route?.dataset.done, map: document.querySelector('.stage-map-bg')?.getAttribute('src'), walking: document.querySelector('.map-hiker')?.className, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, paperStage: document.body.dataset.paperStage, paperLevel: document.body.dataset.paperLevel, paperImage: getComputedStyle(document.documentElement).getPropertyValue('--paper-image'), titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
   });
-  if (Math.abs(trekLayout.poseBottom - trekLayout.mapBottom) > 1 || Math.abs(trekLayout.poseRight - trekLayout.mapRight) > 1) throw new Error(`Il personaggio non è allineato alla cartina: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.statsTop - trekLayout.mapBottom < 2 || trekLayout.statsTop - trekLayout.mapBottom > 6 || trekLayout.sceneRight - trekLayout.mapRight < 2 || trekLayout.sceneRight - trekLayout.mapRight > 6) throw new Error(`La cartina non è accostata ai bordi richiesti: ${JSON.stringify(trekLayout)}`);
+  if (Math.abs(trekLayout.poseBottom - trekLayout.visibleMapBottom) > 1 || Math.abs(trekLayout.poseRatio - 1) > .02) throw new Error(`Il personaggio non è allineato o mantiene proporzioni errate: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.statsTop - trekLayout.visibleMapBottom < 2 || trekLayout.statsTop - trekLayout.visibleMapBottom > 5 || trekLayout.sceneRight - trekLayout.mapRight < 2 || trekLayout.sceneRight - trekLayout.mapRight > 6) throw new Error(`La cartina non è accostata ai bordi richiesti: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.poseLeft < .75 || trekLayout.routeDone !== '3' || !trekLayout.map?.includes('stage-map-1.png') || !trekLayout.walking?.includes('is-still')) throw new Error(`Mappa, personaggio o avanzamento fuori posizione: ${JSON.stringify(trekLayout)}`);
   if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
   if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
