@@ -58,7 +58,7 @@ function step(){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
  if(fail())return render();
  S.current=S.force?draw():(chance(0.1)?null:draw());S.walking=true;
  if(!S.current)S.notes.push(QUIET[Math.floor(rnd()*QUIET.length)]);
- render();clearTimeout(walkTimer);walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking){S.walking=false;render()}},900)}
+ render();clearTimeout(walkTimer);walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking){S.walking=false;render()}},1800)}
 /* variazione: gli stessi effetti non sono mai identici */
 function vary(f){const g=Object.assign({},f);
  ['e','m'].forEach(k=>{if(g[k])g[k]=Math.round(g[k]*(0.6+rnd()*0.8))||Math.sign(g[k])});

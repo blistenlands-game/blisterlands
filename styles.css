@@ -144,10 +144,10 @@ main.flush{padding-top:0}
 .raster-scene .pose-sprite{position:absolute;z-index:1;left:37%;bottom:20%;width:26%!important;height:57%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
 .trek-scene{aspect-ratio:390/244}
 .trek-scene .scene-bg{object-fit:cover}
-.stage-map{position:absolute;z-index:2;right:4px;bottom:40px;width:57%;aspect-ratio:780/520;filter:drop-shadow(2px 4px 3px rgba(35,28,20,.34));pointer-events:none}
+.stage-map{position:absolute;z-index:2;right:4px;bottom:40px;width:40%;aspect-ratio:780/520;filter:drop-shadow(2px 4px 3px rgba(35,28,20,.34));pointer-events:none}
 .stage-map-bg,.stage-map .route-progress{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .stage-map .route-progress{z-index:2;pointer-events:none}
-.map-hiker{position:absolute;z-index:3;right:-5px;bottom:var(--map-alpha-gap,8px);width:29%;height:auto;aspect-ratio:1;transform:scaleX(-1);transform-origin:center;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.36));pointer-events:none}
+.map-hiker{position:absolute;z-index:3;right:-5px;bottom:var(--map-alpha-gap,8px);width:41.3%;height:auto;aspect-ratio:1;transform:scaleX(-1);transform-origin:center;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.36));pointer-events:none}
 .map-hiker .pose-sprite{position:relative;left:auto;bottom:auto;width:100%!important;height:100%!important;filter:none}
 .raster-scene .pose-sit{left:39%;bottom:19%;width:23%!important;height:48%!important}
 .raster-scene .pose-victory{left:38%;bottom:19%;width:24%!important;height:56%!important}
@@ -159,14 +159,20 @@ main.flush{padding-top:0}
 .weather-layer{position:absolute;z-index:2;inset:0;pointer-events:none}
 .weather-layer i{position:absolute;display:block}
 .weather-sun{right:7%;top:8%;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,#E6A947 0 43%,rgba(230,169,71,.38) 46% 58%,transparent 61%);filter:drop-shadow(0 0 8px rgba(230,169,71,.5));animation:sunPulse 3.4s ease-in-out infinite}
+.evening-scene .weather-sun{display:none}
 .cloud{width:105px;height:32px;border-radius:50%;background:rgba(239,233,215,.82);filter:drop-shadow(12px -8px 0 rgba(239,233,215,.76)) drop-shadow(30px 1px 0 rgba(239,233,215,.72));animation:cloudDrift 15s linear infinite}
 .cloud.c1{top:12%;left:-32%}.cloud.c2{top:27%;left:-42%;transform:scale(.72);animation-duration:21s;animation-delay:-8s;opacity:.72}
 .rain-drop{top:-18%;left:calc(4% + var(--i)*6.4%);width:2px;height:18px;border-radius:50%;background:rgba(47,74,90,.58);transform:rotate(13deg);animation:rainFall .8s linear infinite;animation-delay:calc(var(--i)*-.11s)}
 .wind-mark{top:calc(15% + var(--i)*9%);left:-30%;width:64px;height:3px;border-radius:50%;background:rgba(245,237,220,.7);animation:windFly 1.9s ease-in infinite;animation-delay:calc(var(--i)*-.27s)}
 .wind-leaf{width:12px;height:7px;border-radius:80% 10% 80% 10%;background:#8C6A3D;animation:leafFly 2.8s linear infinite}.wind-leaf.l1{top:26%;left:-10%}.wind-leaf.l2{top:57%;left:-15%;animation-delay:-1.3s;background:#69724A}
 .fog{left:-35%;width:70%;height:20%;border-radius:50%;background:rgba(238,227,202,.52);filter:blur(10px);animation:fogDrift 12s ease-in-out infinite}.fog.f1{top:18%}.fog.f2{top:43%;animation-delay:-5s}.fog.f3{top:68%;animation-delay:-9s}
-.sauna-glow{position:absolute;z-index:2;right:12%;bottom:22%;width:11%;height:12%;border-radius:45%;background:radial-gradient(circle,rgba(246,174,74,.9),rgba(198,84,34,.38) 45%,transparent 72%);filter:blur(3px);animation:saunaGlow 2.3s ease-in-out infinite}
-.sauna-smoke{position:absolute;z-index:2;right:15%;bottom:35%;width:8%;height:12%;border-radius:50%;background:rgba(242,234,214,.58);filter:blur(5px);animation:saunaSmoke 3.4s ease-out infinite}.sauna-smoke.s2{right:12%;animation-delay:-1.7s}
+.evening-scene{--sauna-glow-x:88%;--sauna-glow-y:39%;--sauna-smoke-x:89%;--sauna-smoke-y:25%}
+.evening-scene.stage-2{--sauna-glow-x:88%;--sauna-glow-y:35%;--sauna-smoke-x:89%;--sauna-smoke-y:23%}
+.evening-scene.stage-5{--sauna-glow-x:7%;--sauna-glow-y:45%;--sauna-smoke-x:9%;--sauna-smoke-y:34%}
+.evening-scene.stage-6{--sauna-glow-x:91%;--sauna-glow-y:49%;--sauna-smoke-x:92%;--sauna-smoke-y:35%}
+.evening-scene.stage-7{--sauna-glow-x:34%;--sauna-glow-y:59%;--sauna-smoke-x:36%;--sauna-smoke-y:46%}
+.sauna-glow{position:absolute;z-index:3;left:var(--sauna-glow-x);top:var(--sauna-glow-y);width:5%;height:8%;border-radius:28%;background:radial-gradient(ellipse,rgba(255,207,112,.98),rgba(222,103,38,.66) 45%,transparent 76%);filter:blur(1px);mix-blend-mode:screen;animation:saunaGlow 2.3s ease-in-out infinite}
+.sauna-smoke{position:absolute;z-index:3;left:var(--sauna-smoke-x);top:var(--sauna-smoke-y);width:5%;height:10%;border-radius:50%;background:rgba(244,239,224,.82);filter:blur(4px);animation:saunaSmoke 3.4s ease-out infinite}.sauna-smoke.s2{margin-left:2%;animation-delay:-1.7s}
 .pack-figure{display:flex;align-items:center;gap:12px;max-width:180px;margin:8px auto;font-family:var(--hand);font-size:26px;font-weight:700}
 .pack-figure .pose-sprite{width:90px!important;height:150px!important;flex:none}
 @keyframes walkFrames{to{background-position:100% 0}}
