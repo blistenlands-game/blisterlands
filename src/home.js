@@ -2,7 +2,7 @@
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const SEASON={6:'giugno',7:'luglio',8:'agosto',9:'settembre'};
 const PRICE={zainoClassico:140,zainoUL:250,saccoPiuma:280,saccoSint:110,quiltPiuma:230,quiltSint:90,matGonfiabile:120,matSchiuma:30,
- trail:130,scarponi:230,basse:150,guscio:220,pile:60,ghette:40,bastoncini:80,sandali:45,rete:12,cappello:30,filtro:50,mappa:25,
+ trail:130,scarponi:230,basse:150,guscio:220,pile:60,ghette:40,bastoncini:80,sandali:45,rete:12,cappello:30,cappelloLana:22,guanti:24,filtro:50,mappa:25,
  orologio:350,faro:400,kit:20,fornello:45,tenda:320,carte:5};
 const CPRICE={pasti:7,barrette:2,gas:3,cerotti:1,repellente:3,calze:15,powerbank:15};
 const SALARY=70,FERIE_MESE=2,FERIE_MAX=20,TREK_DAYS=8;
@@ -120,6 +120,7 @@ function beginGame(){const input=$('#nome'),name=((input&&input.value)||H.nome||
  H.nome=name;H.screen='casa';save();render()}
 const baseRender=render;
 render=function(){const a=$('#app');
+ stopStageDiorama();
  updatePaperWear();
  if(H&&H.screen){a.classList.toggle('flush',H.screen==='casa'||H.screen==='ritorno');let html='';
   const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
@@ -153,7 +154,7 @@ render=function(){const a=$('#app');
   else if(H.screen==='carta'){const c=H.carta;
    html=top+H.cartaMsg.map(m=>`<p class="note">${esc(m)}</p>`).join('')+`<div class="card">${tapedCard(CARD_PORTRAIT[c.id],190,196,'ritratto grande')}<h2>${esc(c.title)}</h2><p>${esc(c.text)}</p>${c.o.map((o,i)=>`<button class="btn" onclick="chooseCard(${i})">${esc(o.l)}</button>`).join('')}</div>`}
   else if(H.screen==='negozio'){eqInit();
-   const SEZ=[['Zaini',['zainoClassico','zainoUL']],['Sacchi a pelo e quilt',['saccoPiuma','saccoSint','quiltPiuma','quiltSint']],['Materassini',['matGonfiabile','matSchiuma']],['Scarpe',['trail','basse','scarponi']],['Gusci',['guscio']],['Strato caldo',['pile']],['Tende e ripari',['tenda']],['Bastoncini e ghette',['bastoncini','ghette','sandali']],['Cucina e acqua',['fornello','filtro']],['Orientamento e sicurezza',['mappa','orologio','faro','kit']],['Testa e svago',['rete','cappello','carte']]];
+   const SEZ=[['Zaini',['zainoClassico','zainoUL']],['Sacchi a pelo e quilt',['saccoPiuma','saccoSint','quiltPiuma','quiltSint']],['Materassini',['matGonfiabile','matSchiuma']],['Scarpe',['trail','basse','scarponi']],['Gusci',['guscio']],['Strato caldo',['pile']],['Tende e ripari',['tenda']],['Bastoncini e ghette',['bastoncini','ghette','sandali']],['Cucina e acqua',['fornello','filtro']],['Orientamento e sicurezza',['mappa','orologio','faro','kit']],['Testa, mani e svago',['rete','cappello','cappelloLana','guanti','carte']]];
    const row=it=>{const own=H.owned.has(it.id),p=price(it.id),lock=(it.lvl||0)>lvl(),ord=H.ordini.find(o=>o.id===it.id),avail=it.brand==='D'||H.stock.includes(it.id);
     const c=own?cond(it.id):1,q=own&&it.brand==='Sh'?(H.known[it.id]?{difetto:' · difettoso',gioiello:' · esemplare eccellente',normale:''}[H.qual[it.id]]:' · qualità da scoprire'):'';
     const attrs=Object.entries(own?effAttrs(it.id):it.a).filter(([k,v])=>v>0).map(([k,v])=>ATTR[k]+' '+v).join(' · ');
@@ -184,7 +185,7 @@ render=function(){const a=$('#app');
    <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button>`}
   a.innerHTML=html;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
  lastHome=null;
- baseRender();positionTrekMap();
+ baseRender();positionTrekMap();mountStageDiorama();
  if(S.screen==='zaino')homeZainoPatch(a);
  if(S.screen==='fine'){const b=a.querySelector('.btn.primary');if(b){b.textContent='Torna a casa';b.onclick=goHome}}
 };
@@ -224,7 +225,8 @@ function repairItem(id){eqInit();const it=ITEM_BY[id];if(!it||!H.wear[id]||H.sol
 function prepareTrek(){eqInit();S=newState();S.mese=SEASON[H.mese];S.kit=new Set();
  const best=list=>list.sort((x,y)=>(cond(y.id)>0)-(cond(x.id)>0)||itPrice(y.id)-itPrice(x.id))[0];
  for(const g of ['zaino','sacco','materassino','scarpe']){const own=ITEMS.filter(i=>i.group===g&&H.owned.has(i.id));if(own.length)S.kit.add(best(own).id)}
- const seen=new Set();ITEMS.filter(i=>!i.group&&H.owned.has(i.id)&&!['carte','faro','tenda','orologio'].includes(i.base||i.id)).sort((x,y)=>itPrice(y.id)-itPrice(x.id)).forEach(i=>{const b=i.base||i.id;if(!seen.has(b)&&cond(i.id)>0){seen.add(b);S.kit.add(i.id)}});
+ const seen=new Set();ITEMS.filter(i=>!i.group&&!i.slot&&H.owned.has(i.id)&&!['carte','faro','tenda','orologio'].includes(i.base||i.id)).sort((x,y)=>itPrice(y.id)-itPrice(x.id)).forEach(i=>{const b=i.base||i.id;if(!seen.has(b)&&cond(i.id)>0){seen.add(b);S.kit.add(i.id)}});
+ for(const slot of new Set(ITEMS.filter(i=>i.slot).map(i=>i.slot))){const own=ITEMS.filter(i=>i.slot===slot&&H.owned.has(i.id)&&cond(i.id)>0);if(own.length)S.kit.add(best(own).id)}
  S.eff={};H.owned.forEach(id=>S.eff[id]=effAttrs(id));
  for(const k in S.inv)if(k!=='batteria')S.inv[k]=Math.min(H.scorte[k]||0,{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,powerbank:1}[k]);
  S.soldi=H.soldi;S.ferie=H.ferie;S.morale=startMorale();S.screen='zaino';H.screen=null;render()}

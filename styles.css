@@ -144,6 +144,9 @@ main.flush{padding-top:0}
 .raster-scene .pose-sprite{position:absolute;z-index:1;left:37%;bottom:20%;width:26%!important;height:57%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
 .trek-scene{aspect-ratio:390/244}
 .trek-scene .scene-bg{object-fit:cover}
+.diorama-canvas{position:absolute;z-index:1;inset:0;overflow:hidden;pointer-events:none}
+.diorama-canvas canvas{display:block;width:100%!important;height:100%!important}
+.diorama-ready>.scene-bg{opacity:0}
 .stage-map{position:absolute;z-index:2;right:4px;bottom:40px;width:40%;aspect-ratio:780/520;filter:drop-shadow(2px 4px 3px rgba(35,28,20,.34));pointer-events:none}
 .stage-map-bg,.stage-map .route-progress{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
 .stage-map .route-progress{z-index:2;pointer-events:none}
@@ -156,6 +159,12 @@ main.flush{padding-top:0}
 .pose-art{z-index:1;object-fit:contain}
 .walk-art{background-repeat:no-repeat;background-size:400% 100%;background-position:0 0;animation:walkFrames .72s steps(4,jump-none) infinite}
 .pose-walk{animation:walkBob .36s ease-in-out infinite alternate}
+.rig-character{overflow:visible;isolation:isolate}
+.rig-strip{position:absolute;inset:0;background-repeat:no-repeat;background-size:400% 100%;background-position:0 0;transform:translateY(12%) scale(1.18);transform-origin:50% 100%;pointer-events:none}
+.rig-base{z-index:1}.rig-shoes{z-index:2}.rig-shell{z-index:3}.rig-gloves{z-index:4}.rig-hat{z-index:5}.rig-net{z-index:6}.rig-pack{z-index:7}.rig-poles{z-index:8}
+.pose-walk .rig-strip{animation:rigFrames 1.08s steps(4,jump-none) infinite}
+.rig-strip.is-tinted::after{content:"";position:absolute;inset:0;background:var(--rig-tint);opacity:.72;mix-blend-mode:color;-webkit-mask-image:var(--rig-mask);mask-image:var(--rig-mask);-webkit-mask-size:400% 100%;mask-size:400% 100%;-webkit-mask-position:0 0;mask-position:0 0;-webkit-mask-repeat:no-repeat;mask-repeat:no-repeat}
+.pose-walk .rig-strip.is-tinted::after{animation:rigMaskFrames 1.08s steps(4,jump-none) infinite}
 .weather-layer{position:absolute;z-index:2;inset:0;pointer-events:none}
 .weather-layer i{position:absolute;display:block}
 .weather-sun{right:7%;top:8%;width:54px;height:54px;border-radius:50%;background:radial-gradient(circle,#E6A947 0 43%,rgba(230,169,71,.38) 46% 58%,transparent 61%);filter:drop-shadow(0 0 8px rgba(230,169,71,.5));animation:sunPulse 3.4s ease-in-out infinite}
@@ -176,6 +185,8 @@ main.flush{padding-top:0}
 .pack-figure{display:flex;align-items:center;gap:12px;max-width:180px;margin:8px auto;font-family:var(--hand);font-size:26px;font-weight:700}
 .pack-figure .pose-sprite{width:90px!important;height:150px!important;flex:none}
 @keyframes walkFrames{to{background-position:100% 0}}
+@keyframes rigFrames{to{background-position:100% 0}}
+@keyframes rigMaskFrames{to{-webkit-mask-position:100% 0;mask-position:100% 0}}
 @keyframes walkBob{to{transform:translateY(-3px)}}
 @keyframes sunPulse{50%{transform:scale(1.09);filter:drop-shadow(0 0 13px rgba(230,169,71,.7))}}
 @keyframes cloudDrift{to{left:112%}}

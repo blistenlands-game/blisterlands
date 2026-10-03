@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.26').waitFor();
+  await page.getByText('Prototipo · versione 0.1.27').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -105,12 +105,12 @@ const server = http.createServer((request, response) => {
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
   await page.getByRole('button', { name: /Torna a casa/ }).click();
   const equipmentLook = await page.evaluate(() => {
-    S.kit = new Set(['aFjellvind', 'shStorm', 'sCappello', 'aStav']);
+    S.kit = new Set(['aFjellvind', 'shStorm', 'sCappello', 'sGuanti', 'aStav']);
     const host = document.createElement('div'); host.innerHTML = poseSprite('walk', 'prova'); const pose = host.firstElementChild;
-    const withPoles = { poles: pose.querySelector('.walk-art')?.dataset.poles, source: pose.querySelector('.walk-art')?.style.backgroundImage, overlays: pose.querySelectorAll('.wearable,.gear-tint').length };
+    const withPoles = { poles: pose.dataset.poles, pack: pose.dataset.pack, packBrand: pose.dataset.packBrand, shoes: pose.dataset.shoes, hat: pose.dataset.hat, shell: pose.dataset.shell, gloves: pose.dataset.gloves, layers: [...pose.querySelectorAll('.rig-strip')].map((layer) => layer.className) };
     const standing = document.createElement('div'); standing.innerHTML = poseSprite('stand', 'prova');
-    S.kit = new Set();
-    const plain = document.createElement('div'); plain.innerHTML = poseSprite('walk', 'prova');
+    S.kit = new Set(['shAirpeak','sCresta','sBerretto','sRete']);
+    const alternate = document.createElement('div'); alternate.innerHTML = poseSprite('walk', 'prova'); const altPose=alternate.firstElementChild;
     S.current = EV.find((event) => event.id === 'cascata');
     const landscape = scene(TAPPE[0]);
     S.current = null;
@@ -121,11 +121,11 @@ const server = http.createServer((request, response) => {
       return { src: route?.getAttribute('src'), stage: route?.dataset.stage, events: route?.dataset.events, done: route?.dataset.done };
     });
     S.tappa = 0; S.seg = 0;
-    return { withPoles, standing: standing.querySelector('.pose-art')?.getAttribute('src'), plain: plain.querySelector('.walk-art')?.style.backgroundImage, landscape, routes };
+    return { withPoles, standing: standing.querySelectorAll('.rig-strip').length, alternate:{pack:altPose.dataset.pack,shoes:altPose.dataset.shoes,hat:altPose.dataset.hat,net:altPose.dataset.net,poles:altPose.dataset.poles,layers:[...altPose.querySelectorAll('.rig-strip')].map(layer=>layer.className)}, landscape, routes };
   });
-  if (equipmentLook.withPoles.poles !== 'yes' || !equipmentLook.withPoles.source.includes('walk-poles/sara.png') || equipmentLook.withPoles.overlays) throw new Error(`Animazione bastoncini errata: ${JSON.stringify(equipmentLook)}`);
-  if (!equipmentLook.standing.includes('pose-poles/sara.png')) throw new Error(`Posa ferma con bastoncini errata: ${equipmentLook.standing}`);
-  if (!equipmentLook.plain.includes('walk/sara.png')) throw new Error(`Animazione senza bastoncini errata: ${equipmentLook.plain}`);
+  if (equipmentLook.withPoles.poles !== 'yes' || equipmentLook.withPoles.pack !== 'classic' || equipmentLook.withPoles.packBrand !== 'A' || equipmentLook.withPoles.hat !== 'sun' || equipmentLook.withPoles.shell !== 'yes' || equipmentLook.withPoles.gloves !== 'yes' || !equipmentLook.withPoles.layers.some(layer=>layer.includes('rig-poles'))) throw new Error(`Composizione equipaggiamento errata: ${JSON.stringify(equipmentLook)}`);
+  if (equipmentLook.standing < 7) throw new Error(`Posa ferma incompleta: ${equipmentLook.standing} strati`);
+  if (equipmentLook.alternate.pack !== 'ul' || equipmentLook.alternate.shoes !== 'low' || equipmentLook.alternate.hat !== 'wool' || equipmentLook.alternate.net !== 'yes' || equipmentLook.alternate.poles !== 'no' || !equipmentLook.alternate.layers.some(layer=>layer.includes('rig-net'))) throw new Error(`Varianti equipaggiamento errate: ${JSON.stringify(equipmentLook.alternate)}`);
   if (!equipmentLook.landscape.includes('scene/waterfall.png')) throw new Error('Paesaggio della cascata non coerente');
   if (equipmentLook.routes.length !== 8 || new Set(equipmentLook.routes.map((route) => route.src)).size !== 8) throw new Error('Le otto tappe devono avere tracce differenti');
   if (equipmentLook.routes.some((route, index) => !route.src?.startsWith('data:image/png') || route.stage !== String(index + 1) || route.events !== '6' || route.done !== '2')) throw new Error(`Punti delle tracce errati: ${JSON.stringify(equipmentLook.routes.map(({ stage, events, done }) => ({ stage, events, done })))}`);
@@ -153,6 +153,16 @@ const server = http.createServer((request, response) => {
   if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
   if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.wear !== 'light' || trekLayout.paperStage !== '1' || trekLayout.paperLevel !== '3' || !trekLayout.paperImage.includes('paper-stage-1-3.jpg')) throw new Error(`Il taccuino non segue tappa e avanzamento: ${JSON.stringify(trekLayout)}`);
+  await page.locator('.trek-scene .diorama-canvas canvas').waitFor();
+  await page.waitForFunction(() => document.querySelector('.trek-scene')?.classList.contains('diorama-ready'));
+  const diorama = await page.evaluate(() => {
+    const first = document.querySelector('.diorama-canvas');
+    S.tappa = 1;
+    const secondStage = scene(TAPPE[1]);
+    S.tappa = 0;
+    return { ready: document.querySelector('.trek-scene')?.classList.contains('diorama-ready'), poi: first?.dataset.poi, src: first?.dataset.src, secondStageHasDiorama: secondStage.includes('diorama-canvas') };
+  });
+  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('moose-birches.png') || diorama.secondStageHasDiorama) throw new Error(`Diorama della prima tappa errato: ${JSON.stringify(diorama)}`);
   const walkingPose = await page.evaluate(() => { S.walking = true; render(); return document.querySelector('.map-hiker')?.className; });
   if (!walkingPose?.includes('is-walking')) throw new Error(`L'omino non cammina durante l'avanzamento: ${walkingPose}`);
   const lodgingScenes = await page.evaluate(() => {
@@ -189,7 +199,7 @@ const server = http.createServer((request, response) => {
   await context.setOffline(false);
 
   if (errors.length) throw new Error(errors.join('\n'));
-  console.log(`Smoke test: migrazione, UI, 48 POI, 8 mappe, 32 taccuini, arrivi/mattine/finale e avvio offline OK`);
+  console.log(`Smoke test: migrazione, UI, rig equipaggiamento, diorama, 48 POI, 8 mappe, 32 taccuini, arrivi/mattine/finale e avvio offline OK`);
 
   await browser.close();
   server.close();

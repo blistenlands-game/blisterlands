@@ -2355,6 +2355,8 @@ const CATALOG=[
  // testa, piccole cose, orientamento
  ['sRete','rete','S','classica','Rete antizanzare',0.05,10,0,300,{antinsetti:3},null],
  ['sCappello','cappello','S','classica','Cappello a tesa',0.1,25,0,600,{ombra:2},null],
+ ['sBerretto','cappelloLana','S','classica','Berretto di lana',0.08,22,0,800,{calore:1},null],
+ ['sGuanti','guanti','S','classica','Guanti neri',0.09,24,0,700,{calore:1},null],
  ['sSandali','sandali','S','classica','Sandali da guado',0.4,40,0,500,{guado:2},null],
  ['sKit','kit','S','classica','Kit riparazione',0.15,20,0,9999,{riparazione:2},null],
  ['sCarte','carte','S','classica','Mazzo di carte',0.1,5,0,9999,{svago:1},null],
@@ -2362,7 +2364,7 @@ const CATALOG=[
  ['shWatch','orologio','Sh','ultralight','TrailWatch 2',0.07,180,1,9999,{orientamento:2},null],
  ['aFyr','faro','A','classica','Fyr SOS',0.15,350,2,9999,{},null]];
 CATALOG.forEach(([id,base,brand,line,model,kg,price,lvl,dur,a,trait])=>{const b=ITEMS.find(i=>i.id===base);
- ITEMS.push({id,base,brand,line,model,name:BRANDS[brand].name+' '+model,kg,price,lvl,dur,a,trait,dev:b&&b.dev,fragile:b&&b.fragile,group:b&&b.group,
+ ITEMS.push({id,base,brand,line,model,name:BRANDS[brand].name+' '+model,kg,price,lvl,dur,a,trait,dev:b&&b.dev,fragile:b&&b.fragile,group:b&&b.group,slot:b&&b.slot,
   note:(b?b.note:'')+(trait?'. '+TRAITS[trait]:''),color:BRANDS[brand].color});
 });
 const ITEM_BY={};ITEMS.forEach(i=>ITEM_BY[i.id]=i);

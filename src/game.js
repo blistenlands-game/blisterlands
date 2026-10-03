@@ -222,6 +222,6 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
 let lastScreen=null;
 function logHtml(){return S.log.length?`<details class="log"><summary>Taccuino</summary><ul>${S.log.slice(0,20).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></details>`:''}
 const SECTIONS=[['Zaino','zaino'],['Sacco a pelo','sacco'],['Materassino','materassino'],['Scarpe','scarpe'],['Altra attrezzatura',null]];
-function toggleItem(id){const it=ITEMS.find(i=>i.id===id);if(it.group){ITEMS.filter(i=>i.group===it.group).forEach(i=>S.kit.delete(i.id));S.kit.add(id)}else S.kit.has(id)?S.kit.delete(id):S.kit.add(id);render()}
+function toggleItem(id){const it=ITEMS.find(i=>i.id===id);if(it.group){ITEMS.filter(i=>i.group===it.group).forEach(i=>S.kit.delete(i.id));S.kit.add(id)}else if(it.slot){const active=S.kit.has(id);ITEMS.filter(i=>i.slot===it.slot).forEach(i=>S.kit.delete(i.id));if(!active)S.kit.add(id)}else S.kit.has(id)?S.kit.delete(id):S.kit.add(id);render()}
 function qty(id,d){const c=CONSUM.find(c=>c.id===id);S.inv[id]=clamp(inv(id)+d,0,c.max);render()}
 function depart(){S.wx=pickW(wxW());S.tappa=0;S.start=630;if(has('faro')){S.soldi-=15;S.log.unshift('Abbonamento del faro satellitare: 15 euro.')}startTappa()}

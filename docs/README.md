@@ -4,18 +4,18 @@ Questa cartella raccoglie le specifiche di sviluppo versionate insieme al gioco.
 
 ## Fonti di riferimento
 
-- `database-equipaggiamento.md`: fonte corrente per catalogo, marchi, prezzi, usura e caratteristiche. I primi 51 prodotti sono implementati; la tabella estesa è una roadmap.
+- `database-equipaggiamento.md`: fonte corrente per catalogo, marchi, prezzi, usura e caratteristiche. I primi 53 prodotti sono implementati; la tabella estesa è una roadmap.
 - `registro-eventi.md`: inventario corrente dei 439 eventi presenti nel prototipo.
 - `documento-di-progetto.md`: visione del gioco e cronologia delle decisioni. Non tutti i numeri descritti sono ancora correnti.
 
-## Stato del prototipo 0.1.26
+## Stato del prototipo 0.1.27
 
 ### Implementato
 
 - Ciclo mensile di casa con lavoro, forma, voglia, ferie e carte.
 - Via delle Renne completa, inclusa la vetta facoltativa e la traversata del lago.
 - 439 eventi, stagioni, meteo, stati persistenti e conseguenze ritardate.
-- Catalogo iniziale di 51 prodotti con quattro marchi, usura, qualità, garanzie e ordini.
+- Catalogo iniziale di 53 prodotti con quattro marchi, usura, qualità, garanzie e ordini.
 - Due cicli di camminata per protagonista, senza bastoncini o con bastoncini realmente impugnati; emblemi raster dei quattro marchi.
 - Ventisette paesaggi dedicati collegati alle carte di luogo, oltre ai fondali generici per terreno e alle condizioni atmosferiche animate.
 - Otto cartine piegate con percorsi curvi incorporati nei raster, sei POI coerenti con i landmark e avanzamento colorato sulla stessa traccia.

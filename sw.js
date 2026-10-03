@@ -5,7 +5,7 @@ const SPRITE_GROUPS={
  portrait:['marco','davide','sara','elena'],
  cast:['capo','marta','paolo','negoziante','giulia','gatto','custode','jonas','renna','barcaiolo','guardiaparco','erik'],
  event:['rifugio','impronte','sole','cerotto','zanzara','scarpone','pioggia','vento','bussola','acqua','cibo','tenda','zaino','bivio','soldi','meraviglia','taccuino','persona','lemming','corvo'],
- gear:['zainoClassico','zainoUL','saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma','trail','scarponi','basse','guscio','pile','ghette','bastoncini','sandali','rete','cappello','filtro','mappa','orologio','faro','kit','fornello','tenda','carte','pasti','barrette','gas','calze'],
+ gear:['zainoClassico','zainoUL','saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma','trail','scarponi','basse','guscio','pile','ghette','bastoncini','sandali','rete','cappello','cappelloLana','guanti','filtro','mappa','orologio','faro','kit','fornello','tenda','carte','pasti','barrette','gas','calze'],
  brand:['A','S','Sh','D'],
  walk:['marco','davide','sara','elena'],
  'walk-poles':['marco','davide','sara','elena'],
@@ -14,6 +14,8 @@ const SPRITE_GROUPS={
 };
 const SPRITES=Object.entries(SPRITE_GROUPS).flatMap(([folder,names])=>names.map(name=>`./assets/sprites/${folder}/${name}.png`));
 for(const person of SPRITE_GROUPS.portrait)for(const pose of ['walk','stand','sit','victory'])SPRITES.push(`./assets/sprites/pose/${person}-${pose}.png`);
+for(const person of SPRITE_GROUPS.portrait)SPRITES.push(`./assets/sprites/rig/base/${person}.png`);
+for(const gear of ['pack-classic','pack-ul','hat-wool','hat-sun','net','shell','gloves','shoe-trail','shoe-low','shoe-boot','poles'])SPRITES.push(`./assets/sprites/rig/gear/${gear}.png`);
 const BACKGROUNDS=[
  'poi-t1-06-vuolle-overlook','poi-t3-05-mist-cairns','poi-t3-06-biegga-three-roofs',
  'poi-t4-04-raven-teeth','poi-t4-05-green-valley','poi-t4-06-sallo-from-above',
@@ -31,7 +33,7 @@ const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`.
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js','./src/map-routes.js',
- './src/visuals.js','./src/home.js','./src/bootstrap.js',
+ './vendor/pixi.min.js','./src/diorama.js','./src/visuals.js','./src/home.js','./src/bootstrap.js',
  './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,...BACKGROUNDS,...MAPS,...PAPERS,
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'

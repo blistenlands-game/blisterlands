@@ -17,7 +17,9 @@ const ITEMS=[
  {id:'bastoncini',name:'Bastoncini',kg:0.5,note:'Meno fatica, guadi e nevai più sicuri',a:{appoggio:2}},
  {id:'sandali',name:'Sandali da guado',kg:0.4,note:'Guadi senza bagnare le scarpe, ma ci vuole tempo',a:{guado:2}},
  {id:'rete',name:'Rete antizanzare',kg:0.05,note:'Zanzare innocue',a:{antinsetti:3}},
- {id:'cappello',name:'Cappello a tesa larga',kg:0.1,note:'Contro sole e caldo',a:{ombra:2}},
+ {id:'cappello',name:'Cappello a tesa larga',kg:0.1,note:'Contro sole e caldo',a:{ombra:2},slot:'cappello'},
+ {id:'cappelloLana',name:'Cappello di lana',kg:0.08,note:'Verde militare, caldo quando tira vento',a:{calore:1},slot:'cappello'},
+ {id:'guanti',name:'Guanti da trekking',kg:0.09,note:'Neri, proteggono le mani dal freddo',a:{calore:1}},
  {id:'filtro',name:"Filtro per l'acqua",kg:0.1,note:'Acqua sicura dai torrenti',a:{acquaSicura:2}},
  {id:'mappa',name:'Mappa e bussola',kg:0.15,note:'Ritrovi la traccia senza batteria',a:{orientamento:2}},
  {id:'orologio',name:'Orologio GPS',kg:0.07,note:'Orientamento senza tirare fuori il telefono. Ha la sua batteria',a:{orientamento:2},dev:true},
@@ -58,4 +60,3 @@ const wxW=()=>MESI[S.mese].wx;
 const WX_W={sole:2.5,nuvole:3,pioggia:3.5,vento:1.8,nebbia:1.4};
 const STATO={bagnati:'Piedi bagnati',vesciche:'Vesciche',freddo:'Freddo',malessere:'Mal di pancia',storta:'Caviglia dolorante',ginocchio:'Ginocchio dolorante',scottato:'Scottatura'};
 const QUIET=['Un tratto tranquillo. Solo il rumore dei passi e del vento.','Passerelle di legno, una dopo l\'altra.','Il sentiero sale piano tra le betulle nane.','Nessuno in vista per chilometri.','Un ometto di pietra dopo l\'altro, fino all\'orizzonte.'];
-

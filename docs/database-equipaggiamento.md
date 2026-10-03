@@ -1,6 +1,6 @@
 # Database equipaggiamento
 
-> **Stato:** specifica implementata nel prototipo 0.1.26 per il catalogo iniziale di 51 prodotti. La tabella estesa successiva descrive invece categorie previste per versioni future.
+> **Stato:** specifica implementata nel prototipo 0.1.27 per il catalogo iniziale di 53 prodotti. La tabella estesa successiva descrive invece categorie previste per versioni future.
 
 Ogni oggetto ha quattro statistiche: peso, comfort, resistenza, prezzo. Ogni marchio ha una linea classica e una ultralight. Le statistiche numeriche sono da definire in fase di bilanciamento.
 
@@ -8,7 +8,7 @@ Marchi: A = Alvenheim, S = Sentivo, Sh = Shanwu, D = Dirtbag Stitchworks.
 
 ## Catalogo, prima versione
 
-51 prodotti dei quattro marchi, già nel prototipo. Ogni prodotto ha caratteristiche da 0 a 3, peso, prezzo, livello minimo per comprarlo, durata in chilometri ed eventualmente un tratto speciale. I prodotti migliori si sbloccano salendo di livello (un livello ogni 100 di esperienza). La tabella più in basso resta come mappa di tutte le categorie previste, comprese quelle non ancora nel gioco.
+53 prodotti dei quattro marchi, già nel prototipo. Ogni prodotto ha caratteristiche da 0 a 3, peso, prezzo, livello minimo per comprarlo, durata in chilometri ed eventualmente un tratto speciale. I prodotti migliori si sbloccano salendo di livello (un livello ogni 100 di esperienza). La tabella più in basso resta come mappa di tutte le categorie previste, comprese quelle non ancora nel gioco.
 
 **Regole dei marchi**
 
@@ -72,6 +72,8 @@ Marchi: A = Alvenheim, S = Sentivo, Sh = Shanwu, D = Dirtbag Stitchworks.
 | Alvenheim | Klarvann | Acqua | ultralight | 0,1 kg | 55 € | 1 | 1200 km | acqua sicura 3 | — |
 | Sentivo | Rete antizanzare | Rete | classica | 0,05 kg | 10 € | 0 | 300 km | antinsetti 3 | — |
 | Sentivo | Cappello a tesa | Cappello | classica | 0,1 kg | 25 € | 0 | 600 km | ombra 2 | — |
+| Sentivo | Berretto di lana | Cappello | classica | 0,08 kg | 22 € | 0 | 800 km | calore 1 | Verde militare |
+| Sentivo | Guanti neri | Guanti | classica | 0,09 kg | 24 € | 0 | 700 km | calore 1 | Neri |
 | Sentivo | Sandali da guado | Sandali | classica | 0,4 kg | 40 € | 0 | 500 km | guado 2 | — |
 | Sentivo | Kit riparazione | Kit | classica | 0,15 kg | 20 € | 0 | — | riparazione 2 | — |
 | Sentivo | Mazzo di carte | Svago | classica | 0,1 kg | 5 € | 0 | — | svago 1 | — |

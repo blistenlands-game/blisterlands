@@ -96,7 +96,7 @@ for (const [eventId, allowedMonths] of Object.entries(model.MONTH_ONLY)) {
   for (const month of allowedMonths) if (!months.has(month)) errors.push(`${eventId}: mese inesistente ${month}`);
 }
 
-if (model.CATALOG.length !== 51) errors.push(`Catalogo: attesi 51 prodotti, trovati ${model.CATALOG.length}`);
+if (model.CATALOG.length !== 53) errors.push(`Catalogo: attesi 53 prodotti, trovati ${model.CATALOG.length}`);
 if (model.EV.length !== 439) errors.push(`Eventi: attesi 439, trovati ${model.EV.length}`);
 
 const configSource = fs.readFileSync(path.join(root, 'src/config.js'), 'utf8');
@@ -117,11 +117,15 @@ if (/<svg\b/i.test(visuals)) errors.push('La nuova identità visiva deve usare r
 for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','protagonist-poses.png','walk-cycle-v2.png','walk-cycle-poles.png','event-scenes-water.png','event-scenes-terrain.png','event-scenes-places.png']) {
   if (!fs.existsSync(path.join(root, 'assets/art', relative))) errors.push(`Risorsa grafica mancante: ${relative}`);
 }
-for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 30, pose: 16, walk: 4, 'walk-poles': 4, 'pose-poles': 4, brand: 4, scene: 27 })) {
+for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 32, pose: 16, walk: 4, 'walk-poles': 4, 'pose-poles': 4, brand: 4, scene: 27 })) {
   const directory = path.join(root, 'assets', 'sprites', folder);
   const count = fs.existsSync(directory) ? fs.readdirSync(directory).filter((name) => name.endsWith('.png')).length : 0;
   if (count !== expected) errors.push(`Sprite ${folder}: attesi ${expected}, trovati ${count}`);
 }
+for (const relative of [
+  ...['marco','davide','sara','elena'].map((name) => `base/${name}.png`),
+  ...['pack-classic','pack-ul','hat-wool','hat-sun','net','shell','gloves','shoe-trail','shoe-low','shoe-boot','poles'].map((name) => `gear/${name}.png`),
+]) if (!fs.existsSync(path.join(root, 'assets', 'sprites', 'rig', relative))) errors.push(`Strato personaggio mancante: ${relative}`);
 
 context.location.search = '?seed=123456789';
 const firstSequence = vm.runInContext('S=newState();[rnd(),rnd(),rnd(),rnd()]', context);
