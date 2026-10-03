@@ -10,7 +10,7 @@ function newState(){const seed=createSeed();return{screen:'intro',seed,rngState:
  inv:{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,batteria:100,powerbank:1},bat:{orologio:100,faro:100},mese:'luglio',
  energia:100,morale:65,soldi:220,ferie:8,xp:0,stati:new Set(),timbri:[],flags:{},mem:new Set(),
  tappa:0,seg:0,gseg:0,clock:630,start:630,wx:'nuvole',forecast:null,later:[],notes:[],
- current:null,outcome:null,used:new Set(),log:[],end:null,arrive:0,night:[],lastSleep:'letto',extraKg:0}}
+ current:null,outcome:null,used:new Set(),log:[],end:null,arrive:0,night:[],lastSleep:'letto',walking:false,extraKg:0}}
 const has=id=>{if(S.kit.has(id))return true;for(const k of S.kit){const it=typeof ITEM_BY!=='undefined'&&ITEM_BY[k];if(it&&it.base===id)return true}return false};
 /* caratteristiche: gli eventi ragionano su queste, non sui singoli oggetti */
 const ATTR={impermeabile:'Impermeabilità',antivento:'Antivento',calore:'Calore',piediAsciutti:'Piedi asciutti',fango:'Protezione dal fango',asciugatura:'Asciugatura',caviglia:'Protezione caviglia',aderenza:'Aderenza',suola:'Protezione suola',appoggio:'Appoggio',guado:'Guado',antinsetti:'Antinsetti',ombra:'Ombra',acquaSicura:'Acqua sicura',orientamento:'Orientamento',riparazione:'Riparazione',portanza:'Portanza',sonno:'Calore notturno',umido:'Resistenza all\'umido',comfort:'Comfort notturno',cucina:'Cucina',riparo:'Riparo',svago:'Svago'};

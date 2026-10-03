@@ -31,21 +31,27 @@ if (!pairs.length) {
     launchOptions.executablePath = candidates.find((candidate) => fs.existsSync(candidate));
   }
   const browser = await chromium.launch(launchOptions);
-  const page = await browser.newPage({ viewport: { width: 780, height: 448 }, deviceScaleFactor: 1 });
-  await page.setContent('<style>*{box-sizing:border-box}html,body{margin:0;width:780px;height:448px;overflow:hidden}img{display:block;width:780px;height:448px;object-fit:cover}</style><img>');
+  const page = await browser.newPage({ viewport: { width: 780, height: 1170 }, deviceScaleFactor: 1 });
 
   for (const { source, target } of pairs) {
     const absoluteSource = path.resolve(source);
     const absoluteTarget = path.resolve(target);
+    const transparent = path.extname(absoluteTarget).toLowerCase() === '.png';
+    const width = 780;
+    const height = transparent ? 520 : 1170;
+    await page.setViewportSize({ width, height });
+    await page.setContent(`<style>*{box-sizing:border-box}html,body{margin:0;width:${width}px;height:${height}px;overflow:hidden;background:transparent}img{display:block;width:${width}px;height:${height}px;object-fit:${transparent?'contain':'cover'}}</style><img>`);
     fs.mkdirSync(path.dirname(absoluteTarget), { recursive: true });
     const data = fs.readFileSync(absoluteSource).toString('base64');
     await page.locator('img').evaluate((img, src) => { img.src = src; }, `data:image/png;base64,${data}`);
     await page.locator('img').evaluate((img) => img.decode());
-    await page.screenshot({ path: absoluteTarget, type: 'jpeg', quality: 82 });
+    await page.screenshot(transparent
+      ? { path: absoluteTarget, type: 'png', omitBackground: true }
+      : { path: absoluteTarget, type: 'jpeg', quality: 78 });
   }
 
   await browser.close();
-  console.log(`Ottimizzati ${pairs.length} sfondi a 780x448.`);
+  console.log(`Ottimizzati ${pairs.length} asset raster.`);
 })().catch((error) => {
   console.error(error);
   process.exitCode = 1;

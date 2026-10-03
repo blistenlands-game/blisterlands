@@ -1,7 +1,7 @@
 :root{
   --paper:#EEE3CA; --paper2:#F5EDDC; --ink:#2E2620; --soft:#5C4E42; --faint:#8C7B6B;
   --rust:#7A3B1D; --rule:rgba(142,167,188,.38); --margin:rgba(196,124,105,.35);
-  --lake:#3D5A6C; --ok:#5E6B3A; --danger:#9A3A22; --paper-dirt:0; --paper-edge:0;
+  --lake:#3D5A6C; --ok:#5E6B3A; --danger:#9A3A22; --paper-image:url('assets/paper/paper-stage-1-1.jpg');
   --serif:"Spectral", Georgia, "Times New Roman", serif;
   --hand:"Caveat", "Segoe Print", "Bradley Hand", cursive;
   box-sizing:border-box;
@@ -11,17 +11,10 @@
 }
 *,*::before,*::after{box-sizing:inherit}
 html{height:100%;scroll-padding-top:env(safe-area-inset-top,0px);background:var(--paper)}
-body{margin:0;min-height:100%;background:var(--paper);color:var(--ink);font-family:var(--serif);font-size:17px;line-height:28px;
- background-image:repeating-linear-gradient(to bottom,transparent 0 27px,var(--rule) 27px 28px);background-attachment:local}
-/* Il taccuino e pulito a casa e alla partenza. Questi segni crescono con i segmenti percorsi. */
-body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:5;box-shadow:inset 0 0 52px rgba(91,62,31,var(--paper-edge));
- background:
-  radial-gradient(ellipse at 7% 24%,rgba(117,78,37,var(--paper-dirt)) 0 1.5%,transparent 8%),
-  radial-gradient(ellipse at 93% 68%,rgba(96,68,39,var(--paper-dirt)) 0 2%,transparent 10%),
-  radial-gradient(ellipse at 19% 87%,rgba(128,89,45,var(--paper-dirt)) 0 1%,transparent 7%)}
-body::after{content:"";position:fixed;width:74px;height:74px;right:18px;bottom:120px;border-radius:50%;border:5px solid rgba(138,90,43,var(--paper-dirt));pointer-events:none;z-index:5}
+body{margin:0;min-height:100%;background:#D8CBAF;color:var(--ink);font-family:var(--serif);font-size:17px;line-height:28px}
+/* Il raster appartiene al documento: righe, aloni e macchie scorrono tutti insieme. */
 main{position:relative;max-width:560px;overflow-x:clip;margin:0 auto;padding:16px 18px 48px 50px;min-height:100vh;
- background-image:linear-gradient(to right,transparent 33px,var(--margin) 33px,var(--margin) 34.5px,transparent 34.5px);background-repeat:repeat-y}
+ background-color:var(--paper);background-image:var(--paper-image);background-size:560px 840px;background-position:0 0;background-repeat:repeat-y}
 h1,h2,h3{margin:0;line-height:1.1}
 h1{font-family:var(--hand);font-size:52px;font-weight:700}
 h2{font-family:var(--hand);font-size:32px;font-weight:700}
@@ -150,8 +143,11 @@ main.flush{padding-top:0}
 .raster-scene img.scene-bg{object-fit:cover}
 .raster-scene .pose-sprite{position:absolute;z-index:1;left:37%;bottom:20%;width:26%!important;height:57%!important;filter:drop-shadow(1px 3px 1px rgba(46,38,32,.25))}
 .trek-scene .scene-bg{object-fit:cover}
-.route-overlay{position:absolute;z-index:1;inset:0;width:100%;height:100%;object-fit:fill;pointer-events:none}
-.trek-scene .pose-sprite{z-index:3;left:2%;bottom:32%;width:12%!important;height:27.6%!important;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.32))}
+.stage-map{position:absolute;z-index:2;right:5%;bottom:27%;width:61%;height:49%;filter:drop-shadow(2px 4px 3px rgba(35,28,20,.34));pointer-events:none}
+.stage-map-bg,.stage-map .route-overlay{position:absolute;inset:0;width:100%;height:100%;object-fit:contain}
+.stage-map .route-overlay{z-index:2;pointer-events:none}
+.map-hiker{position:absolute;z-index:3;right:1%;bottom:32%;width:17%;height:43%;transform:scaleX(-1);transform-origin:center;filter:drop-shadow(1px 2px 1px rgba(46,38,32,.36));pointer-events:none}
+.map-hiker .pose-sprite{position:relative;left:auto;bottom:auto;width:100%!important;height:100%!important;filter:none}
 .raster-scene .pose-sit{left:39%;bottom:19%;width:23%!important;height:48%!important}
 .raster-scene .pose-victory{left:38%;bottom:19%;width:24%!important;height:56%!important}
 .pose-figure{position:relative;display:block}

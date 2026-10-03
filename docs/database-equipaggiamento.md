@@ -1,6 +1,6 @@
 # Database equipaggiamento
 
-> **Stato:** specifica implementata nel prototipo 0.1.22 per il catalogo iniziale di 51 prodotti. La tabella estesa successiva descrive invece categorie previste per versioni future.
+> **Stato:** specifica implementata nel prototipo 0.1.23 per il catalogo iniziale di 51 prodotti. La tabella estesa successiva descrive invece categorie previste per versioni future.
 
 Ogni oggetto ha quattro statistiche: peso, comfort, resistenza, prezzo. Ogni marchio ha una linea classica e una ultralight. Le statistiche numeriche sono da definire in fase di bilanciamento.
 

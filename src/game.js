@@ -44,10 +44,11 @@ function fail(){
  if(S.energia<=0){S.endKind='energia';S.end='Crolli dalla stanchezza. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  if(S.morale<=0){S.endKind='morale';S.end='Non ne puoi più. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  return false}
-function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:3});S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.screen='tappa';
+function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:3});S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.walking=false;S.screen='tappa';
  const t=TAPPE[S.tappa];const starts=EV.filter(e=>e.first&&e.tappe.includes(t.n)&&!S.used.has(e.id));
  if(starts.length&&chance(0.5)){const f=starts[Math.floor(rnd()*starts.length)];S.used.add(f.id);S.clock+=f.pre||0;S.current=f;render()}
  else{S.current=null;step()}}
+let walkTimer=null;
 function step(){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
  const km=t.km/t.terr.length;S.clock+=km/speed()*60;S.energia=clamp(S.energia-energyCost(km),0,100);
  S.seg++;S.gseg++;S.notes=[...processLater(),...passive()];S.outcome=null;
@@ -55,9 +56,9 @@ function step(){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
  if(t.n===3&&S.seg===4&&!S.used.has('traversataLago'))S.force='traversataLago';
  if(t.extra&&S.seg===6&&!S.used.has('vettaRitorno'))S.force='vettaRitorno';
  if(fail())return render();
- S.current=S.force?draw():(chance(0.1)?null:draw());
+ S.current=S.force?draw():(chance(0.1)?null:draw());S.walking=true;
  if(!S.current)S.notes.push(QUIET[Math.floor(rnd()*QUIET.length)]);
- render()}
+ render();clearTimeout(walkTimer);walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking){S.walking=false;render()}},900)}
 /* variazione: gli stessi effetti non sono mai identici */
 function vary(f){const g=Object.assign({},f);
  ['e','m'].forEach(k=>{if(g[k])g[k]=Math.round(g[k]*(0.6+rnd()*0.8))||Math.sign(g[k])});

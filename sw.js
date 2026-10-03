@@ -26,11 +26,13 @@ const BACKGROUNDS=[
  'morning-sallo-refuge','morning-sallo-tent','morning-guovda-refuge','morning-guovda-tent','morning-gaisi-summit-refuge','morning-gaisi-summit-tent',
  'morning-gaisi-njalla-refuge','morning-gaisi-njalla-tent'
 ].map(name=>`./assets/backgrounds/${name}.jpg`);
+const MAPS=Array.from({length:8},(_,i)=>`./assets/maps/stage-map-${i+1}.png`);
+const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`./assets/paper/paper-stage-${stage+1}-${wear+1}.jpg`)).flat();
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js',
  './src/visuals.js','./src/home.js','./src/bootstrap.js',
- './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,...BACKGROUNDS,
+ './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,...BACKGROUNDS,...MAPS,...PAPERS,
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];

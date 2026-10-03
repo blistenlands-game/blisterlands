@@ -28,9 +28,9 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.1.22`.
+Prototipo `0.1.23`.
 
-Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Le otto tratte dispongono di 48 POI nominati e di 48 sfondi distinti; arrivi serali, mattine dopo il rifugio o la tenda e traguardo di Njalla hanno scene dedicate. Ventisette paesaggi specifici restano disponibili per futuri sfondi legati agli imprevisti.
+Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Le otto tratte dispongono di 48 POI nominati e di 48 sfondi distinti; arrivi serali, mattine dopo il rifugio o la tenda e traguardo di Njalla hanno scene dedicate. Ogni tappa ha inoltre una mappa piegata semplificata con percorso progressivo e quattro livelli di usura raster del taccuino. Ventisette paesaggi specifici restano disponibili per futuri sfondi legati agli imprevisti.
 
 I raster destinati al gioco sono ottimizzati in tavolozza durante la generazione degli sprite, per mantenere più leggeri pubblicazione, cache offline e aggiornamenti della PWA.
 

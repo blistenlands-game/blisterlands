@@ -5,12 +5,16 @@ const SPRITE_ROOT='assets/sprites/';
 const BACKGROUND_ROOT='assets/backgrounds/';
 function updatePaperWear(){
  const atHome=typeof H!=='undefined'&&H&&H.screen;
- const walked=!atHome&&typeof S!=='undefined'&&S?Math.max(0,S.gseg||0):0;
- const total=typeof TAPPE!=='undefined'?TAPPE.reduce((sum,t)=>sum+(t.terr?t.terr.length:0),0):36;
- const progress=Math.min(1,walked/Math.max(1,total));
- document.documentElement.style.setProperty('--paper-dirt',(progress*.16).toFixed(3));
- document.documentElement.style.setProperty('--paper-edge',(progress*.22).toFixed(3));
- document.body.dataset.paperWear=progress===0?'clean':progress<.34?'light':progress<.67?'travelled':'worn';
+ const active=!atHome&&typeof S!=='undefined'&&S&&Number.isInteger(S.tappa);
+ const stage=active?Math.max(1,Math.min(8,S.tappa+1)):1;
+ const t=active&&typeof TAPPE!=='undefined'?TAPPE[S.tappa]:null;
+ const total=t&&t.terr?t.terr.length:6;
+ let wear=active?Math.max(1,Math.min(4,Math.floor(Math.max(0,S.seg||0)*4/Math.max(1,total))+1)):1;
+ if(active&&(S.screen==='sera'||S.screen==='mattino'||S.screen==='fine'))wear=4;
+ document.documentElement.style.setProperty('--paper-image',`url('assets/paper/paper-stage-${stage}-${wear}.jpg')`);
+ document.body.dataset.paperStage=String(stage);
+ document.body.dataset.paperLevel=String(wear);
+ document.body.dataset.paperWear=!active||stage===1&&wear===1?'clean':stage<4?'light':stage<7?'travelled':'worn';
 }
 const PG={
  marco:{sex:'m',label:'Aspetto 1',row:0},
@@ -148,11 +152,13 @@ const ROUTE_SHAPES=[
  [[.08,.68],[.19,.60],[.36,.63],[.47,.45],[.63,.48],[.70,.29],[.86,.20],[.93,.06]]
 ];
 function routePoint(points,t){const seg=[];let total=0;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);seg.push(len);total+=len}let left=t*total;for(let i=0;i<seg.length;i++){if(left<=seg[i]){const q=seg[i]?left/seg[i]:0,a=points[i],b=points[i+1];return[a[0]+(b[0]-a[0])*q,a[1]+(b[1]-a[1])*q]}left-=seg[i]}return points[points.length-1]}
-function routeOverlay(stage,total,done){const c=document.createElement('canvas');c.width=780;c.height=448;const g=c.getContext('2d'),pts=ROUTE_SHAPES[stage%ROUTE_SHAPES.length];
- const xy=p=>[p[0]*c.width,p[1]*c.height];g.lineCap='round';g.lineJoin='round';g.beginPath();pts.forEach((p,i)=>{const [x,y]=xy(p);i?g.lineTo(x,y):g.moveTo(x,y)});g.strokeStyle='rgba(247,239,218,.88)';g.lineWidth=15;g.stroke();g.setLineDash([20,13]);g.strokeStyle='#8F3F20';g.lineWidth=7;g.stroke();g.setLineDash([]);
- for(let i=0;i<total;i++){const p=routePoint(pts,(i+1)/(total+1)),[x,y]=xy(p),passed=i<done;g.beginPath();g.arc(x,y,passed?10:8,0,Math.PI*2);g.fillStyle=passed?'#8F3F20':'#F5EDDC';g.fill();g.strokeStyle='#442F24';g.lineWidth=4;g.stroke()}
+function routeOverlay(stage,total,done){const c=document.createElement('canvas');c.width=780;c.height=520;const g=c.getContext('2d'),pts=ROUTE_SHAPES[stage%ROUTE_SHAPES.length];
+ const xy=p=>[p[0]*c.width,p[1]*c.height],draw=(progress)=>{const p0=xy(pts[0]);g.beginPath();g.moveTo(...p0);if(progress>=1){for(let i=1;i<pts.length;i++)g.lineTo(...xy(pts[i]));return}const stops=120;for(let i=1;i<=stops;i++){const q=i/stops;if(q>progress)break;g.lineTo(...xy(routePoint(pts,q)))}};
+ g.lineCap='round';g.lineJoin='round';draw(1);g.strokeStyle='rgba(250,244,224,.96)';g.lineWidth=18;g.stroke();g.setLineDash([18,12]);draw(1);g.strokeStyle='#3F382F';g.lineWidth=7;g.stroke();g.setLineDash([]);
+ if(done>0){draw(Math.min(1,done/total));g.strokeStyle='#A33E22';g.lineWidth=9;g.stroke()}
+ for(let i=0;i<total;i++){const p=routePoint(pts,(i+1)/(total+1)),[x,y]=xy(p),passed=i<done,current=i===done;g.beginPath();g.arc(x,y,current?14:passed?12:10,0,Math.PI*2);g.fillStyle=passed?'#A33E22':current?'#E8B44F':'#F8F0DD';g.fill();g.strokeStyle='#302720';g.lineWidth=5;g.stroke()}
  return `<img class="route-overlay" src="${c.toDataURL('image/png')}" alt="" data-stage="${stage+1}" data-events="${total}" data-done="${done}">`}
-function trekScene(background,label,weather){const t=TAPPE[S.tappa],route=routeOverlay(S.tappa,t.terr.length,Math.min(S.seg,t.terr.length));return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${background}${route}${poseSprite('walk',label)}${weatherLayer(weather)}</div>`}
+function trekScene(background,label,weather){const t=TAPPE[S.tappa],route=routeOverlay(S.tappa,t.terr.length,Math.min(S.seg,t.terr.length)),moving=!!S.walking;return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${background}<span class="stage-map"><img class="stage-map-bg" src="assets/maps/stage-map-${S.tappa+1}.png" alt="Mappa illustrata della tappa">${route}</span><span class="map-hiker ${moving?'is-walking':'is-still'}">${poseSprite(moving?'walk':'stand',moving?'Escursionista in cammino':'Escursionista al punto di interesse')}</span>${weatherLayer(weather)}</div>`}
 function sceneMode(){const ev=S.current;if(!ev)return null;if(ev.id==='traversataLago')return 'lago';const k=eventCard(ev);return k==='i_acqua'&&/guado|torrent|ruscell|fium|corrente/i.test((ev.title||'')+' '+(typeof ev.text==='string'?ev.text:''))?'guado':null}
 const TERR_SCENE={valle:0,betulle:1,torbiera:2,lago:3,altopiano:4,passo:5,gola:6};
 function scene(t){const start=S.tappa===0&&S.seg<=1&&S.current&&['treno','bilancia','stazioneArrivo'].includes(S.current.id);const row=POI[S.tappa]||POI[0],entry=start?['Lavvuby — Il primo segnavia','scene/trail-station.png']:row[poiIndex(S.tappa,S.seg)];return trekScene(assetImage(entry[1]),entry[0],S.wx)}
