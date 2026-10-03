@@ -1,6 +1,6 @@
 extends Node
 
-const VERSION := "0.2.0"
+const VERSION := "0.2.1"
 const SAVE_PATH := "user://blisterborn-godot.json"
 const PEOPLE := ["marco", "davide", "sara", "elena"]
 const POI_NAMES := [
@@ -68,4 +68,3 @@ func load_game() -> bool:
 		for key in gear:
 			if stored_gear.has(key): gear[key] = stored_gear[key]
 	return true
-

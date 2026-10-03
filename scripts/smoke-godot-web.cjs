@@ -57,7 +57,7 @@ const server = http.createServer((request, response) => {
   }
 
   const browser = await chromium.launch(launchOptions);
-  const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 1 });
+  const page = await browser.newPage({ viewport: { width: 432, height: 926 }, deviceScaleFactor: 1 });
   const errors = [];
   page.on('pageerror', (error) => errors.push(error.message));
   page.on('console', (message) => {
@@ -74,12 +74,19 @@ const server = http.createServer((request, response) => {
     clientWidth: element.clientWidth,
     clientHeight: element.clientHeight,
   }));
-  if (canvas.width < 300 || canvas.height < 600 || canvas.clientWidth !== 390 || canvas.clientHeight !== 844) {
+  if (canvas.width < 400 || canvas.height < 900 || canvas.clientWidth !== 432 || canvas.clientHeight !== 926) {
     throw new Error(`Canvas mobile non valido: ${JSON.stringify(canvas)}`);
   }
   if (errors.length) throw new Error(errors.join('\n'));
 
   await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-mobile.png') });
+  await page.goto(`http://127.0.0.1:${port}/godot-web/?preview=trail`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForFunction(() => !document.getElementById('status'), null, { timeout: 120000 });
+  await page.waitForTimeout(1200);
+  await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-trail.png') });
+  await page.mouse.click(216, 713);
+  await page.waitForTimeout(1100);
+  await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-walking.png') });
   console.log(`Godot Web smoke test OK: ${canvas.width}x${canvas.height}, nessun errore browser`);
   await browser.close();
   server.close();

@@ -1,6 +1,6 @@
 # Blisterborn — Godot 2D
 
-Nuova linea del prototipo, versione `0.2.0`, sviluppata con Godot 4.7.2 e GDScript.
+Nuova linea del prototipo, versione `0.2.1`, sviluppata con Godot 4.7.2 e GDScript.
 
 ## Apertura
 

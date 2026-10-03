@@ -31,9 +31,10 @@ func _process(delta: float) -> void:
 func _draw() -> void:
 	if texture == null: return
 	var source := Rect2(frame * 256, 0, 256, 256)
-	var destination := Rect2(0, 0, size.x, size.y)
+	var side := minf(size.x, size.y)
+	var bob := sin(elapsed * 14.0) * 1.6 if walking else 0.0
+	var destination := Rect2((size.x-side)*.5, size.y-side+bob, side, side)
 	if mirrored:
 		draw_set_transform(Vector2(size.x, 0), 0.0, Vector2(-1, 1))
-		destination = Rect2(0, 0, size.x, size.y)
 	draw_texture_rect_region(texture, destination, source)
 	if mirrored: draw_set_transform(Vector2.ZERO)

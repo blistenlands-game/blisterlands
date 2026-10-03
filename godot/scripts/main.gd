@@ -19,7 +19,14 @@ func _ready() -> void:
 	add_child(background)
 	GameState.load_game()
 	selected_person = GameState.person
-	show_intro()
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search")).contains("preview=trail"):
+		GameState.player_name = "Nico"
+		GameState.person = "marco"
+		GameState.gear.poles = true
+		GameState.reset_trek()
+		show_trail()
+	else:
+		show_intro()
 
 func clear_page() -> VBoxContainer:
 	if page:
@@ -167,19 +174,8 @@ func add_toggle(parent: VBoxContainer, title: String, key: String) -> void:
 
 func show_trail() -> void:
 	var column := clear_page()
-	var title_row := HBoxContainer.new()
-	var title_box := VBoxContainer.new()
-	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	title_box.add_child(heading("Tappa 1", 34))
-	title_box.add_child(label("Lavvuby verso Rifugio Vuolle · 14 km", 15, SOFT))
-	title_row.add_child(title_box)
-	var pack := button("Zaino")
-	pack.custom_minimum_size = Vector2(82,45)
-	pack.pressed.connect(show_pack)
-	title_row.add_child(pack)
-	column.add_child(title_row)
 	trail = TrailView.new()
-	trail.custom_minimum_size = Vector2(346, 270)
+	trail.custom_minimum_size = Vector2(388, 360)
 	trail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	column.add_child(trail)
 	trail.configure(GameState.poi, GameState.walking)
@@ -195,13 +191,17 @@ func show_trail() -> void:
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		box.add_child(value); box.add_child(caption); stats.add_child(box)
 	column.add_child(stats)
+	column.add_child(label("Vento leggero  ·  zaino 9,4 kg  ·  2,5 km/h", 17, RUST))
+	var pack := button("Apri lo zaino")
+	pack.custom_minimum_size.y = 38
+	pack.pressed.connect(show_pack)
+	column.add_child(pack)
 	column.add_child(heading(GameState.POI_NAMES[GameState.poi], 29))
 	column.add_child(label(ambient_description(GameState.poi), 17, SOFT))
-	column.add_child(label("POI  " + progress_dots(), 17, RUST))
+	column.add_child(label("Punto di interesse %d di 6" % (GameState.poi + 1), 16, RUST))
 	walk_button = button("Cammina", true)
 	walk_button.pressed.connect(_walk)
 	column.add_child(walk_button)
-	column.add_child(label("Animazione completa con bastoncini" if GameState.gear.poles else "Animazione completa senza bastoncini", 14, SOFT))
 
 func progress_dots() -> String:
 	var result := ""
@@ -224,7 +224,7 @@ func _walk() -> void:
 	walk_button.disabled = true
 	walk_button.text = "In cammino…"
 	trail.configure(GameState.poi, true)
-	await get_tree().create_timer(1.9).timeout
+	await get_tree().create_timer(4.2).timeout
 	GameState.walking = false
 	GameState.poi = (GameState.poi + 1) % 6
 	GameState.hour_minutes += 45
