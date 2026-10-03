@@ -1,6 +1,6 @@
 # Blisterborn — Godot 2D
 
-Nuova linea del prototipo, versione `0.3.0`, sviluppata con Godot 4.7.2 e GDScript.
+Nuova linea del prototipo, versione `0.3.1`, sviluppata con Godot 4.7.2 e GDScript.
 
 ## Apertura
 
@@ -9,6 +9,8 @@ Aprire `project.godot` dalla radice della repository con Godot 4.7.2 e premere *
 La build browser viene esportata con il preset `Web` nella cartella `godot-web/` ed è pubblicata da GitHub Pages insieme al repository.
 
 La prova `preview=3d` è un diorama cel-shaded della Cascata di Lavvu con ambiente, acqua, vento e personaggio articolato in tempo reale.
+
+Lo styleframe artistico vincolante del primo POI è `assets/concepts/poi-t1-01-lavvu-diorama-styleframe-v1.png`: conserva la composizione del fondale raster approvato e la traduce in un diorama 3D lappone ad alta qualità.
 
 ## Vertical slice attuale
 
