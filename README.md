@@ -4,7 +4,7 @@ Gioco di ruolo a scelte sul trekking a lunga distanza. La nuova linea di svilupp
 
 ## Godot 2D
 
-Aprire `project.godot` dalla radice della repository. La vertical slice `0.3.2` comprende schermata iniziale, preparazione, salvataggio nativo e la prima tappa con sei POI animati. I dettagli sono in `godot/README.md`.
+Aprire `project.godot` dalla radice della repository. La vertical slice `0.3.3` comprende schermata iniziale, preparazione, salvataggio nativo e la prima tappa con sei POI animati. I dettagli sono in `godot/README.md`.
 
 ## Avvio locale
 
@@ -32,7 +32,7 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versioni
 
-Godot `0.3.2`.
+Godot `0.3.3`.
 
 Prototipo `0.1.28` (web legacy).
 
