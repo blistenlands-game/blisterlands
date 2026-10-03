@@ -106,7 +106,7 @@ func show_intro() -> void:
 	name_edit.add_theme_font_size_override("font_size", 20)
 	name_edit.add_theme_stylebox_override("normal", panel_style(PAPER_LIGHT, INK, 5))
 	column.add_child(name_edit)
-	var start := button("Prepara lo zaino  →", true)
+	var start := button("Prepara lo zaino", true)
 	start.pressed.connect(_start_pressed)
 	column.add_child(start)
 
@@ -139,7 +139,7 @@ func show_pack() -> void:
 	add_toggle(fields, "Guscio", "shell")
 	add_toggle(fields, "Guanti neri", "gloves")
 	add_toggle(fields, "Bastoncini", "poles")
-	var start := button("Parti per la tappa 1  →", true)
+	var start := button("Parti per la tappa 1", true)
 	start.pressed.connect(func(): GameState.reset_trek(); show_trail())
 	column.add_child(start)
 	var back := button("← Torna alla scelta del personaggio")
@@ -171,7 +171,7 @@ func show_trail() -> void:
 	var title_box := VBoxContainer.new()
 	title_box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	title_box.add_child(heading("Tappa 1", 34))
-	title_box.add_child(label("Lavvuby → Rifugio Vuolle · 14 km", 15, SOFT))
+	title_box.add_child(label("Lavvuby verso Rifugio Vuolle · 14 km", 15, SOFT))
 	title_row.add_child(title_box)
 	var pack := button("Zaino")
 	pack.custom_minimum_size = Vector2(82,45)
@@ -198,7 +198,7 @@ func show_trail() -> void:
 	column.add_child(heading(GameState.POI_NAMES[GameState.poi], 29))
 	column.add_child(label(ambient_description(GameState.poi), 17, SOFT))
 	column.add_child(label("POI  " + progress_dots(), 17, RUST))
-	walk_button = button("Cammina  →", true)
+	walk_button = button("Cammina", true)
 	walk_button.pressed.connect(_walk)
 	column.add_child(walk_button)
 	column.add_child(label("Animazione completa con bastoncini" if GameState.gear.poles else "Animazione completa senza bastoncini", 14, SOFT))
@@ -232,4 +232,3 @@ func _walk() -> void:
 	GameState.morale = mini(100, GameState.morale + 2)
 	GameState.save_game()
 	show_trail()
-

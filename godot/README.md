@@ -6,6 +6,8 @@ Nuova linea del prototipo, versione `0.2.0`, sviluppata con Godot 4.7.2 e GDScri
 
 Aprire `project.godot` dalla radice della repository con Godot 4.7.2 e premere **F6/F5**.
 
+La build browser viene esportata con il preset `Web` nella cartella `godot-web/` ed è pubblicata da GitHub Pages insieme al repository.
+
 ## Vertical slice attuale
 
 - scelta fra i quattro protagonisti e nome libero;
@@ -17,4 +19,3 @@ Aprire `project.godot` dalla radice della repository con Godot 4.7.2 e premere *
 - animazioni complete alternative con e senza bastoncini, senza sovrapposizione di accessori.
 
 Le altre modifiche estetiche dell'equipaggiamento verranno realizzate solo a partire da personaggi completi disegnati sul medesimo rig e approvati prima dell'integrazione.
-
