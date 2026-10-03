@@ -14,11 +14,23 @@ const SPRITE_GROUPS={
 };
 const SPRITES=Object.entries(SPRITE_GROUPS).flatMap(([folder,names])=>names.map(name=>`./assets/sprites/${folder}/${name}.png`));
 for(const person of SPRITE_GROUPS.portrait)for(const pose of ['walk','stand','sit','victory'])SPRITES.push(`./assets/sprites/pose/${person}-${pose}.png`);
+const BACKGROUNDS=[
+ 'poi-t1-06-vuolle-overlook','poi-t3-05-mist-cairns','poi-t3-06-biegga-three-roofs',
+ 'poi-t4-04-raven-teeth','poi-t4-05-green-valley','poi-t4-06-sallo-from-above',
+ 'poi-t5-01-silent-meadow','poi-t5-03-cranes-boardwalk','poi-t5-05-icy-pool','poi-t5-06-guovda-smoke',
+ 'poi-t6-01-gaisi-birches','poi-t6-03-torrent-ledge','poi-t6-04-station-hill','poi-t6-05-gaisi-wall','poi-t6-06-last-switchback',
+ 'poi-t7-01-summit-marker','poi-t7-02-stone-slabs','poi-t7-03-snow-tongue','poi-t7-04-gaisi-shoulder','poi-t7-05-false-cairn',
+ 'poi-t8-01-first-road','poi-t8-02-return-forest','poi-t8-03-njalla-lake','poi-t8-04-boat-fork','poi-t8-05-reed-boardwalk','poi-t8-06-njalla-roofs',
+ 'final-njalla-bench','evening-vuolle','evening-gaskas','evening-biegga','evening-sallo','evening-guovda','evening-gaisi-station','evening-gaisi-return',
+ 'morning-vuolle-refuge','morning-vuolle-tent','morning-gaskas-refuge','morning-gaskas-tent','morning-biegga-refuge','morning-biegga-tent',
+ 'morning-sallo-refuge','morning-sallo-tent','morning-guovda-refuge','morning-guovda-tent','morning-gaisi-summit-refuge','morning-gaisi-summit-tent',
+ 'morning-gaisi-njalla-refuge','morning-gaisi-njalla-tent'
+].map(name=>`./assets/backgrounds/${name}.jpg`);
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js',
  './src/visuals.js','./src/home.js','./src/bootstrap.js',
- './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,
+ './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,...BACKGROUNDS,
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];

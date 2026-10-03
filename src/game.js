@@ -125,6 +125,7 @@ function forecastWho(morning){if(devOn('faro'))return morning?'Il faro satellita
 function sauna(){if(S.didSauna)return;S.didSauna=true;fx({m:12,e:6,rm:['freddo','bagnati','scottato']});if(TAPPE[S.tappa].n===5){fx({timbro:'Sauna e torrente',m:S.mem.has('tuffo')?6:0})}S.log.unshift('Sauna e tuffo nel torrente gelato.');render()}
 function buy(k,p){if(S.soldi>=p){S.soldi-=p;S.inv[k]=inv(k)+1;render()}}
 function sleep(where){const t=TAPPE[S.tappa],m=[];
+ S.lastSleep=where;
  if(where==='letto'){fx({s:-hutPrice(t),e:40,m:10,rm:['bagnati','freddo']});S.inv.batteria=100;S.bat.orologio=100;S.bat.faro=100;m.push('Letto vero, stufa accesa, scarpe asciutte al mattino.')}
  else if(where==='pavimento'){fx({s:-floorPrice(t),e:14+4*att('comfort'),m:att('comfort')>=3?3:-1,rm:['freddo']});S.inv.batteria=Math.min(100,inv('batteria')+40);S.bat.orologio=Math.min(100,S.bat.orologio+40);S.bat.faro=Math.min(100,S.bat.faro+40);m.push('Materassino sul pavimento del locale comune. Qualcuno russa.')}
  else{const bad=S.wx==='pioggia'||S.wx==='vento';const cold=(S.mese==='settembre'?3:S.mese==='giugno'?2:1)+(bad?1:0);
@@ -185,9 +186,9 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
     return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${esc(lab(op.l))}<span class="meta">${r&&ok?`<span class="risk ${r[1]}">${r[0]}</span>`:''}<span>${ok?(meta||'nessun costo immediato'):'Non hai quello che serve'}</span></span></button>`}).join('')}</div>`}
   else{if(S.outcome)body+=`<div class="out ${S.outcome.bad?'bad':''}">${esc(tx(S.outcome.txt))}</div>`;
    body+=`<button class="btn primary" onclick="step()">${S.seg>=t.terr.length?'Arrivi al rifugio':'Cammini'}</button>`}
-  a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`}
+  a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${poiName(S.tappa,S.seg)} · ${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
-  a.innerHTML=`${hdr(hutScene(t),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
+  a.innerHTML=`${hdr(hutScene(t,saunaOk&&!S.closed),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
   ${S.arrMsg.map(m=>`<div class="out">${esc(m)}</div>`).join('')}
   ${!S.closed&&S.tappa===0?`<p class="note">Il custode apre il registro: «Nome?». Scrive ${esc(pgName())} con una bella grafia.</p>`:!S.closed&&S.tappa>0&&(S.tappa*37)%10<4?`<p class="note">«Ah, ${esc(pgName())}! Ho saputo che arrivavi.» Le voci corrono tra i rifugi.</p>`:''}<p class="sub">${forecastWho()} domani ${WX[S.forecast.shown].toLowerCase()}.</p>
   ${t.sauna&&!S.closed?`<div class="card"><h3>Sauna</h3>${saunaOk?`<button class="btn" ${S.didSauna?'disabled':''} onclick="sauna()">Sauna e tuffo nel torrente<span class="meta">${S.didSauna?'Fatto':'Morale, energia, asciughi tutto'}</span></button>`:'<p class="sub">Chiusa alle 17. Arriva prima la prossima volta.</p>'}</div>`:''}

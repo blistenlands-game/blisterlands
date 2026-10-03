@@ -2,6 +2,7 @@
 const VERSION=GAME_CONFIG.version;
 const ART_ROOT='assets/art/';
 const SPRITE_ROOT='assets/sprites/';
+const BACKGROUND_ROOT='assets/backgrounds/';
 function updatePaperWear(){
  const atHome=typeof H!=='undefined'&&H&&H.screen;
  const walked=!atHome&&typeof S!=='undefined'&&S?Math.max(0,S.gseg||0):0;
@@ -99,6 +100,43 @@ for(const [scene,ids] of Object.entries({
  'trail-station':['treno','bilancia','stazioneArrivo','vettaRitorno','colazioneStazione','genteDelGiorno','escursionistiGiornalieri']
 }))for(const id of ids)EVENT_SCENE[id]=scene;
 function eventLandscape(ev){return ev&&EVENT_SCENE[ev.id]}
+const POI=[
+ [
+  ['La Cascata di Lavvu','scene/waterfall.png'],['La Sorgente Fredda','scene/spring.png'],['Le Betulle dell’Alce','scene/moose-birches.png'],
+  ['La Costa dei Mirtilli','scene/blueberry-slope.png'],['La Baia del Pescatore','scene/fisherman-lake.png'],['Il Belvedere di Vuolle','backgrounds/poi-t1-06-vuolle-overlook.jpg']
+ ],
+ [
+  ['Il Ponte di Vuolle','scene/suspension-bridge.png'],['La Torbiera delle Assi','scene/bog-boardwalk.png'],['Il Recinto delle Renne','scene/reindeer-corral.png'],
+  ['Il Sieidi delle Corna','scene/sacred-boulder.png'],['La Piana degli Eriofori','scene/flower-meadow.png'],['Il Campo dei Massi','scene/boulder-field.png']
+ ],
+ [
+  ['Il Nevaio di Gaskas','scene/snowfield.png'],['La Frana dei Tre Picchi','scene/landslide.png'],['Il Lago del Vento','scene/lake-boat.png'],
+  ['Il Pantano Nero','scene/deep-mud.png'],['Gli Ometti della Nebbia','backgrounds/poi-t3-05-mist-cairns.jpg'],['I Tre Tetti di Biegga','backgrounds/poi-t3-06-biegga-three-roofs.jpg']
+ ],
+ [
+  ['La Cresta del Corvo','scene/ridge-routes.png'],['Il Riparo del Passo','scene/turf-hut.png'],['Il Ponte Spazzato','scene/broken-bridge.png'],
+  ['I Denti del Corvo','backgrounds/poi-t4-04-raven-teeth.jpg'],['La Valle Verde','backgrounds/poi-t4-05-green-valley.jpg'],['Sállo dall’Alto','backgrounds/poi-t4-06-sallo-from-above.jpg']
+ ],
+ [
+  ['Il Prato del Silenzio','backgrounds/poi-t5-01-silent-meadow.jpg'],['Il Campo del Ruscello','scene/stream-camp.png'],['La Passerella delle Gru','backgrounds/poi-t5-03-cranes-boardwalk.jpg'],
+  ['Il Guado di Guovda','scene/ford.png'],['La Pozza Gelida','backgrounds/poi-t5-05-icy-pool.jpg'],['Il Fumo di Guovda','backgrounds/poi-t5-06-guovda-smoke.jpg']
+ ],
+ [
+  ['Le Betulle del Gáisi','backgrounds/poi-t6-01-gaisi-birches.jpg'],['La Gola del Gáisi','scene/narrow-canyon.png'],['La Cengia del Torrente','backgrounds/poi-t6-03-torrent-ledge.jpg'],
+  ['Il Colle della Stazione','backgrounds/poi-t6-04-station-hill.jpg'],['La Parete del Gáisi','backgrounds/poi-t6-05-gaisi-wall.jpg'],['L’Ultimo Tornante','backgrounds/poi-t6-06-last-switchback.jpg']
+ ],
+ [
+  ['Il Cartello della Vetta','backgrounds/poi-t7-01-summit-marker.jpg'],['Il Pendio delle Lastre','backgrounds/poi-t7-02-stone-slabs.jpg'],['La Lingua di Neve','backgrounds/poi-t7-03-snow-tongue.jpg'],
+  ['La Spalla del Gáisi','backgrounds/poi-t7-04-gaisi-shoulder.jpg'],['L’Ometto Falso','backgrounds/poi-t7-05-false-cairn.jpg'],['La Cima del Gáisi','scene/summit-panorama.png']
+ ],
+ [
+  ['La Prima Strada','backgrounds/poi-t8-01-first-road.jpg'],['Il Bosco del Ritorno','backgrounds/poi-t8-02-return-forest.jpg'],['Il Lago di Njalla','backgrounds/poi-t8-03-njalla-lake.jpg'],
+  ['Il Bivio della Barca','backgrounds/poi-t8-04-boat-fork.jpg'],['La Passerella delle Canne','backgrounds/poi-t8-05-reed-boardwalk.jpg'],['I Tetti di Njalla','backgrounds/poi-t8-06-njalla-roofs.jpg']
+ ]
+];
+function poiIndex(stage,seg){const row=POI[stage]||POI[0];return Math.max(0,Math.min((seg||1)-1,row.length-1))}
+function poiName(stage,seg){const row=POI[stage]||POI[0];return row[poiIndex(stage,seg)][0]}
+function assetImage(asset){const root=asset.startsWith('scene/')?SPRITE_ROOT:asset.startsWith('backgrounds/')?'assets/':'';return `<img class="scene-bg" src="${root+asset}" alt="">`}
 const ROUTE_SHAPES=[
  [[.08,.68],[.20,.57],[.17,.46],[.38,.40],[.45,.28],[.67,.25],[.76,.13],[.93,.06]],
  [[.08,.68],[.28,.61],[.18,.50],[.43,.45],[.34,.33],[.61,.28],[.75,.18],[.93,.06]],
@@ -117,11 +155,13 @@ function routeOverlay(stage,total,done){const c=document.createElement('canvas')
 function trekScene(background,label,weather){const t=TAPPE[S.tappa],route=routeOverlay(S.tappa,t.terr.length,Math.min(S.seg,t.terr.length));return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${background}${route}${poseSprite('walk',label)}${weatherLayer(weather)}</div>`}
 function sceneMode(){const ev=S.current;if(!ev)return null;if(ev.id==='traversataLago')return 'lago';const k=eventCard(ev);return k==='i_acqua'&&/guado|torrent|ruscell|fium|corrente/i.test((ev.title||'')+' '+(typeof ev.text==='string'?ev.text:''))?'guado':null}
 const TERR_SCENE={valle:0,betulle:1,torbiera:2,lago:3,altopiano:4,passo:5,gola:6};
-function scene(t){const special=eventLandscape(S.current);if(special)return trekScene(`<img class="scene-bg" src="${SPRITE_ROOT}scene/${special}.png" alt="">`,S.current.title,S.wx);const i=Math.max(0,Math.min(S.seg-1,t.terr.length-1)),mode=sceneMode(),terrain=mode==='guado'?'guado':mode==='lago'?'lago':t.terr[i],index=terrain==='guado'?7:(TERR_SCENE[terrain]??0);return trekScene(sprite('trail-scenes.png',4,3,index,'scene-bg','',null,null),`Sentiero: ${TERR[terrain]||terrain}`,S.wx)}
-function hutScene(t){return atlasScene('trail-scenes.png',4,3,8,`${t.to}, la sera`,'stand',S.wx)}
-function morningScene(){return atlasScene('trail-scenes.png',4,3,9,'Il mattino dopo','stand',S.forecast.shown)}
+function scene(t){const start=S.tappa===0&&S.seg<=1&&S.current&&['treno','bilancia','stazioneArrivo'].includes(S.current.id);const row=POI[S.tappa]||POI[0],entry=start?['Lavvuby — Il primo segnavia','scene/trail-station.png']:row[poiIndex(S.tappa,S.seg)];return trekScene(assetImage(entry[1]),entry[0],S.wx)}
+const EVENING=['evening-vuolle','evening-gaskas','evening-biegga','evening-sallo','evening-guovda','evening-gaisi-station','evening-gaisi-return'];
+function hutScene(t,saunaOn){const file=EVENING[S.tappa]||EVENING[0];return `<div class="scene raster-scene evening-scene ${saunaOn?'sauna-on':''}" role="img" aria-label="${esc(t.to+', la sera')}"><img class="scene-bg" src="${BACKGROUND_ROOT+file}.jpg" alt="">${saunaOn?'<span class="sauna-glow"></span><span class="sauna-smoke s1"></span><span class="sauna-smoke s2"></span>':''}${weatherLayer(S.wx)}</div>`}
+const MORNING=['vuolle','gaskas','biegga','sallo','guovda'];
+function morningScene(){let place;if(S.tappa<=4)place=MORNING[S.tappa];else place=S.tappa===5?'gaisi-summit':'gaisi-njalla';const kind=S.lastSleep==='tenda'?'tent':'refuge';return `<div class="scene raster-scene morning-scene" role="img" aria-label="Il mattino dopo"><img class="scene-bg" src="${BACKGROUND_ROOT}morning-${place}-${kind}.jpg" alt="">${weatherLayer(S.forecast.shown)}</div>`}
 function endKind(){if(S.endKind)return S.endKind;if(S.timbri.includes('Via delle Renne completata'))return 'completo';return 'altro'}
-function endScene(){const k=endKind(),win=k==='completo';return atlasScene('trail-scenes.png',4,3,win?10:11,win?'Cammino completato':'Fine del cammino',win?'victory':k==='energia'||k==='morale'?'sit':'stand',S.wx)}
+function endScene(){const k=endKind(),win=k==='completo';if(win)return `<div class="scene raster-scene" role="img" aria-label="Cammino completato"><img class="scene-bg" src="${BACKGROUND_ROOT}final-njalla-bench.jpg" alt="">${weatherLayer(S.wx)}</div>`;return atlasScene('trail-scenes.png',4,3,11,'Fine del cammino',k==='energia'||k==='morale'?'sit':'stand',S.wx)}
 function figure(){return `<div class="pack-figure">${poseSprite('stand','Escursionista con lo zaino')}<span>${packKg().toFixed(1).replace('.',',')} kg</span></div>`}
 function calendar(){return atlasScene('home-scenes.png',4,2,0,MONTHS[H.mese-1],null,'sereno')}
 function trekKm(){let km=0;for(let i=0;i<S.tappa;i++){if(TAPPE[i].extra&&!S.timbri.includes('La vetta del Gáisi'))continue;km+=TAPPE[i].km}const t=TAPPE[S.tappa];if(t)km+=endKind()==='completo'?t.km:Math.round(t.km*Math.min(S.seg,t.terr.length)/t.terr.length);return km}

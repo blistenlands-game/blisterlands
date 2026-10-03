@@ -1,7 +1,15 @@
 const http = require('node:http');
 const fs = require('node:fs');
 const path = require('node:path');
-const { chromium } = require('playwright');
+let chromium;
+try {
+  ({ chromium } = require('playwright'));
+} catch {
+  ({ chromium } = require(path.join(
+    process.env.USERPROFILE,
+    '.cache/codex-runtimes/codex-primary-runtime/dependencies/node/node_modules/playwright',
+  )));
+}
 
 const root = path.resolve(__dirname, '..');
 const mime = {
@@ -10,6 +18,7 @@ const mime = {
   '.js': 'text/javascript; charset=utf-8',
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
+  '.jpg': 'image/jpeg',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
@@ -58,9 +67,11 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.21').waitFor();
+  await page.getByText('Prototipo · versione 0.1.22').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
+  const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
+  if (poiCoverage.stages !== 8 || poiCoverage.counts.some((count) => count !== 6) || poiCoverage.names !== 48 || poiCoverage.assets !== 48) throw new Error(`Copertura POI non valida: ${JSON.stringify(poiCoverage)}`);
   if (await page.getByText('Marco', { exact: true }).count()) throw new Error('Il nome non deve comparire sotto il personaggio');
 
   await page.evaluate(() => {
@@ -138,6 +149,18 @@ const server = http.createServer((request, response) => {
   if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
   if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.wear !== 'worn') throw new Error(`Il taccuino non si sporca con il cammino: ${JSON.stringify(trekLayout)}`);
+  const lodgingScenes = await page.evaluate(() => {
+    S.tappa = 5; S.lastSleep = 'letto'; S.forecast = { shown: 'sole' };
+    const refuge = morningScene();
+    S.lastSleep = 'tenda'; const tent = morningScene();
+    S.tappa = 5; const evening = hutScene(TAPPE[5], true);
+    S.tappa = 6; const returnEvening = hutScene(TAPPE[6], false);
+    S.endKind = 'completo'; const ending = endScene();
+    return { refuge, tent, evening, returnEvening, ending };
+  });
+  if (!lodgingScenes.refuge.includes('morning-gaisi-summit-refuge.jpg') || !lodgingScenes.tent.includes('morning-gaisi-summit-tent.jpg')) throw new Error('Varianti del mattino non coerenti con il pernottamento');
+  if (!lodgingScenes.evening.includes('evening-gaisi-station.jpg') || !lodgingScenes.evening.includes('sauna-on') || !lodgingScenes.returnEvening.includes('evening-gaisi-return.jpg')) throw new Error('Arrivi alla Stazione del Gáisi non distinti');
+  if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return document.body.dataset.paperWear; });
   if (cleanAtHome !== 'clean') throw new Error(`Il taccuino a casa non e pulito: ${cleanAtHome}`);
   await page.reload({ waitUntil: 'networkidle' });
@@ -150,7 +173,7 @@ const server = http.createServer((request, response) => {
   await context.setOffline(false);
 
   if (errors.length) throw new Error(errors.join('\n'));
-  console.log(`Smoke test: migrazione salvataggio, UI iniziale, ${sceneCoverage.scenes} paesaggi per ${sceneCoverage.events} eventi e avvio offline OK`);
+  console.log(`Smoke test: migrazione, UI, 48 POI, arrivi/mattine/finale, ${sceneCoverage.scenes} paesaggi evento e avvio offline OK`);
 
   await browser.close();
   server.close();
