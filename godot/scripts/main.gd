@@ -13,6 +13,9 @@ var trail: TrailView
 var walk_button: Button
 
 func _ready() -> void:
+	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search")).contains("preview=3d"):
+		get_tree().change_scene_to_file.call_deferred("res://godot/scenes/diorama_3d.tscn")
+		return
 	var background := Control.new()
 	background.set_script(load("res://godot/scripts/notebook_background.gd"))
 	background.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)

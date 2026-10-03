@@ -87,6 +87,13 @@ const server = http.createServer((request, response) => {
   await page.mouse.click(216, 713);
   await page.waitForTimeout(1100);
   await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-walking.png') });
+  await page.goto(`http://127.0.0.1:${port}/godot-web/?preview=3d`, { waitUntil: 'domcontentloaded', timeout: 30000 });
+  await page.waitForFunction(() => !document.getElementById('status'), null, { timeout: 120000 });
+  await page.waitForTimeout(1800);
+  await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-3d.png') });
+  await page.mouse.click(216, 870);
+  await page.waitForTimeout(1400);
+  await page.screenshot({ path: path.join(process.env.TEMP || root, 'blisterborn-godot-3d-walking.png') });
   console.log(`Godot Web smoke test OK: ${canvas.width}x${canvas.height}, nessun errore browser`);
   await browser.close();
   server.close();
