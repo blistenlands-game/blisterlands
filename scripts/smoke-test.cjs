@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.23').waitFor();
+  await page.getByText('Prototipo · versione 0.1.24').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -117,7 +117,7 @@ const server = http.createServer((request, response) => {
     const routes = TAPPE.map((stage, index) => {
       S.tappa = index; S.seg = 2;
       const routeHost = document.createElement('div'); routeHost.innerHTML = scene(stage);
-      const route = routeHost.querySelector('.route-overlay');
+      const route = routeHost.querySelector('.route-progress');
       return { src: route?.getAttribute('src'), stage: route?.dataset.stage, events: route?.dataset.events, done: route?.dataset.done };
     });
     S.tappa = 0; S.seg = 0;
@@ -136,15 +136,17 @@ const server = http.createServer((request, response) => {
     S.seg = 3;
     S.gseg = Math.ceil(TAPPE.reduce((sum, t) => sum + t.terr.length, 0) * .75);
     render();
-    const pose = document.querySelector('.trek-scene .pose-sprite').getBoundingClientRect();
+    const pose = document.querySelector('.map-hiker').getBoundingClientRect();
+    const mapBox = document.querySelector('.stage-map').getBoundingClientRect();
     const sceneBox = document.querySelector('.trek-scene').getBoundingClientRect();
     const stats = document.querySelector('.ov-bot').getBoundingClientRect();
-    const route = document.querySelector('.route-overlay');
+    const route = document.querySelector('.route-progress');
     const title = getComputedStyle(document.querySelector('.ov-top'));
     const weather = getComputedStyle(document.querySelector('.weather-layer'));
-    return { poseBottom: pose.bottom, statsTop: stats.top, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, routeDone: route?.dataset.done, map: document.querySelector('.stage-map-bg')?.getAttribute('src'), walking: document.querySelector('.map-hiker')?.className, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, paperStage: document.body.dataset.paperStage, paperLevel: document.body.dataset.paperLevel, paperImage: getComputedStyle(document.documentElement).getPropertyValue('--paper-image'), titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
+    return { poseBottom: pose.bottom, poseRight: pose.right, mapBottom: mapBox.bottom, mapRight: mapBox.right, sceneRight: sceneBox.right, statsTop: stats.top, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, routeDone: route?.dataset.done, map: document.querySelector('.stage-map-bg')?.getAttribute('src'), walking: document.querySelector('.map-hiker')?.className, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, paperStage: document.body.dataset.paperStage, paperLevel: document.body.dataset.paperLevel, paperImage: getComputedStyle(document.documentElement).getPropertyValue('--paper-image'), titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
   });
-  if (trekLayout.poseBottom > trekLayout.statsTop - 2) throw new Error(`Il personaggio invade la barra dei valori: ${JSON.stringify(trekLayout)}`);
+  if (Math.abs(trekLayout.poseBottom - trekLayout.mapBottom) > 1 || Math.abs(trekLayout.poseRight - trekLayout.mapRight) > 1) throw new Error(`Il personaggio non è allineato alla cartina: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.statsTop - trekLayout.mapBottom < 2 || trekLayout.statsTop - trekLayout.mapBottom > 6 || trekLayout.sceneRight - trekLayout.mapRight < 2 || trekLayout.sceneRight - trekLayout.mapRight > 6) throw new Error(`La cartina non è accostata ai bordi richiesti: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.poseLeft < .75 || trekLayout.routeDone !== '3' || !trekLayout.map?.includes('stage-map-1.png') || !trekLayout.walking?.includes('is-still')) throw new Error(`Mappa, personaggio o avanzamento fuori posizione: ${JSON.stringify(trekLayout)}`);
   if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
   if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);

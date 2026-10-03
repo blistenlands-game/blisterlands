@@ -141,24 +141,12 @@ const POI=[
 function poiIndex(stage,seg){const row=POI[stage]||POI[0];return Math.max(0,Math.min((seg||1)-1,row.length-1))}
 function poiName(stage,seg){const row=POI[stage]||POI[0];return row[poiIndex(stage,seg)][0]}
 function assetImage(asset){const root=asset.startsWith('scene/')?SPRITE_ROOT:asset.startsWith('backgrounds/')?'assets/':'';return `<img class="scene-bg" src="${root+asset}" alt="">`}
-const ROUTE_SHAPES=[
- [[.08,.68],[.20,.57],[.17,.46],[.38,.40],[.45,.28],[.67,.25],[.76,.13],[.93,.06]],
- [[.08,.68],[.28,.61],[.18,.50],[.43,.45],[.34,.33],[.61,.28],[.75,.18],[.93,.06]],
- [[.08,.68],[.17,.53],[.36,.58],[.48,.43],[.43,.29],[.68,.31],[.82,.18],[.93,.06]],
- [[.08,.68],[.25,.62],[.35,.48],[.27,.36],[.53,.39],[.66,.25],[.82,.22],[.93,.06]],
- [[.08,.68],[.23,.55],[.41,.57],[.36,.43],[.58,.35],[.55,.23],[.77,.16],[.93,.06]],
- [[.08,.68],[.14,.49],[.33,.44],[.47,.52],[.59,.34],[.73,.30],[.79,.14],[.93,.06]],
- [[.08,.68],[.27,.65],[.23,.49],[.45,.52],[.57,.38],[.52,.24],[.77,.25],[.93,.06]],
- [[.08,.68],[.19,.60],[.36,.63],[.47,.45],[.63,.48],[.70,.29],[.86,.20],[.93,.06]]
-];
-function routePoint(points,t){const seg=[];let total=0;for(let i=1;i<points.length;i++){const a=points[i-1],b=points[i],len=Math.hypot(b[0]-a[0],b[1]-a[1]);seg.push(len);total+=len}let left=t*total;for(let i=0;i<seg.length;i++){if(left<=seg[i]){const q=seg[i]?left/seg[i]:0,a=points[i],b=points[i+1];return[a[0]+(b[0]-a[0])*q,a[1]+(b[1]-a[1])*q]}left-=seg[i]}return points[points.length-1]}
-function routeOverlay(stage,total,done){const c=document.createElement('canvas');c.width=780;c.height=520;const g=c.getContext('2d'),pts=ROUTE_SHAPES[stage%ROUTE_SHAPES.length];
- const xy=p=>[p[0]*c.width,p[1]*c.height],draw=(progress)=>{const p0=xy(pts[0]);g.beginPath();g.moveTo(...p0);if(progress>=1){for(let i=1;i<pts.length;i++)g.lineTo(...xy(pts[i]));return}const stops=120;for(let i=1;i<=stops;i++){const q=i/stops;if(q>progress)break;g.lineTo(...xy(routePoint(pts,q)))}};
- g.lineCap='round';g.lineJoin='round';draw(1);g.strokeStyle='rgba(250,244,224,.96)';g.lineWidth=18;g.stroke();g.setLineDash([18,12]);draw(1);g.strokeStyle='#3F382F';g.lineWidth=7;g.stroke();g.setLineDash([]);
- if(done>0){draw(Math.min(1,done/total));g.strokeStyle='#A33E22';g.lineWidth=9;g.stroke()}
- for(let i=0;i<total;i++){const p=routePoint(pts,(i+1)/(total+1)),[x,y]=xy(p),passed=i<done,current=i===done;g.beginPath();g.arc(x,y,current?14:passed?12:10,0,Math.PI*2);g.fillStyle=passed?'#A33E22':current?'#E8B44F':'#F8F0DD';g.fill();g.strokeStyle='#302720';g.lineWidth=5;g.stroke()}
- return `<img class="route-overlay" src="${c.toDataURL('image/png')}" alt="" data-stage="${stage+1}" data-events="${total}" data-done="${done}">`}
-function trekScene(background,label,weather){const t=TAPPE[S.tappa],route=routeOverlay(S.tappa,t.terr.length,Math.min(S.seg,t.terr.length)),moving=!!S.walking;return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${background}<span class="stage-map"><img class="stage-map-bg" src="assets/maps/stage-map-${S.tappa+1}.png" alt="Mappa illustrata della tappa">${route}</span><span class="map-hiker ${moving?'is-walking':'is-still'}">${poseSprite(moving?'walk':'stand',moving?'Escursionista in cammino':'Escursionista al punto di interesse')}</span>${weatherLayer(weather)}</div>`}
+function routeOverlay(stage,total,done){const c=document.createElement('canvas');c.width=780;c.height=520;const g=c.getContext('2d'),samples=sampleMapRoute(stage,40),points=MAP_ROUTE_POINTS[stage%MAP_ROUTE_POINTS.length];
+ const completed=Math.max(0,Math.min(total,done)),progress=total>1?Math.max(0,(completed-1)/(total-1)):0,last=Math.round(progress*(samples.length-1));
+ if(completed>1){g.beginPath();for(let i=0;i<=last;i++){const p=samples[i],x=p[0]*c.width,y=p[1]*c.height;i?g.lineTo(x,y):g.moveTo(x,y)}g.lineCap='round';g.lineJoin='round';g.strokeStyle='#A33E22';g.lineWidth=10;g.stroke()}
+ if(completed>0){const p=points[Math.min(completed-1,points.length-1)],x=p[0]*c.width,y=p[1]*c.height;g.beginPath();g.arc(x,y,15,0,Math.PI*2);g.fillStyle='#E1A640';g.fill();g.strokeStyle='#49382D';g.lineWidth=5;g.stroke()}
+ return `<img class="route-progress" src="${c.toDataURL('image/png')}" alt="" data-stage="${stage+1}" data-events="${total}" data-done="${done}">`}
+function trekScene(background,label,weather){const t=TAPPE[S.tappa],route=routeOverlay(S.tappa,t.terr.length,Math.min(S.seg,t.terr.length)),moving=!!S.walking;return `<div class="scene raster-scene trek-scene wx-${weather||'sole'}" role="img" aria-label="${esc(label||'')}">${background}<span class="stage-map"><img class="stage-map-bg" src="assets/maps/stage-map-${S.tappa+1}.png" alt="Mappa illustrata della tappa">${route}<span class="map-hiker ${moving?'is-walking':'is-still'}">${poseSprite(moving?'walk':'stand',moving?'Escursionista in cammino':'Escursionista al punto di interesse')}</span></span>${weatherLayer(weather)}</div>`}
 function sceneMode(){const ev=S.current;if(!ev)return null;if(ev.id==='traversataLago')return 'lago';const k=eventCard(ev);return k==='i_acqua'&&/guado|torrent|ruscell|fium|corrente/i.test((ev.title||'')+' '+(typeof ev.text==='string'?ev.text:''))?'guado':null}
 const TERR_SCENE={valle:0,betulle:1,torbiera:2,lago:3,altopiano:4,passo:5,gola:6};
 function scene(t){const start=S.tappa===0&&S.seg<=1&&S.current&&['treno','bilancia','stazioneArrivo'].includes(S.current.id);const row=POI[S.tappa]||POI[0],entry=start?['Lavvuby — Il primo segnavia','scene/trail-station.png']:row[poiIndex(S.tappa,S.seg)];return trekScene(assetImage(entry[1]),entry[0],S.wx)}
