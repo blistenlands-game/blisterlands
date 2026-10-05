@@ -5,7 +5,7 @@ func _init() -> void:
 
 func run() -> void:
 	var state = root.get_node("GameState")
-	assert(state.VERSION == "0.4.1")
+	assert(state.VERSION == "0.4.2")
 	assert(state.POI_NAMES.size() == 6)
 	state.person = "sara"
 	state.gear.poles = true
@@ -27,11 +27,15 @@ func run() -> void:
 	assert(main.trail.stats_bar != null)
 	assert(main.trail.POI[0].card.contains("assets/sprites/event"))
 	assert(main.trail.POI[0].choices[0].has("detail"))
+	assert(main.trail.POI[0].choices[0].has("outcome"))
 	assert(main.trail.POI[5].has("walking_body"))
 	assert(main.trail.get_node_or_null("CharacterPreview") == null)
 	for poi in range(6):
 		main.trail.configure(poi, poi % 2 == 0)
 		assert(main.trail.background != null)
+	main.trail.configure(2, false)
+	main.trail.show_choice_outcome(main.trail.POI[2].choices[0])
+	assert(main.trail.showing_outcome)
 	main.trail.show_finish()
 	assert(main.trail.finished)
 	assert(main.trail.background.resource_path.contains("poi-t1-vuolle-refuge-isometric-v1.png"))

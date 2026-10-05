@@ -2,6 +2,7 @@ class_name TrailView
 extends Control
 
 signal choice_selected(choice: Dictionary)
+signal outcome_acknowledged
 signal pack_requested
 signal restart_requested
 
@@ -16,9 +17,9 @@ const POI := [
 		"walking_body": "Il fragore della cascata si attenua. Il sentiero risale il torrente fra rocce umide e ginepri bassi.",
 		"walking_note": "Il rumore dell’acqua resta alla tua destra.",
 		"choices": [
-			{"title":"Riempi la borraccia", "energy":1, "morale":1, "minutes":10, "tag":"ACQUA", "detail":"Energia +1 · Morale +1 · 10 min"},
-			{"title":"Fermati ad ascoltare", "energy":-1, "morale":3, "minutes":15, "tag":"CALMA", "detail":"Energia −1 · Morale +3 · 15 min"},
-			{"title":"Continua sul sentiero", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato"},
+			{"title":"Riempi la borraccia", "energy":1, "morale":1, "minutes":10, "tag":"ACQUA", "detail":"Energia +1 · Morale +1 · 10 min", "outcome":"Ti inginocchi fra gli spruzzi. L’acqua è gelida, pulita e cancella per un momento la fatica dalle mani."},
+			{"title":"Fermati ad ascoltare", "energy":-1, "morale":3, "minutes":15, "tag":"CALMA", "detail":"Energia −1 · Morale +3 · 15 min", "outcome":"Resti immobile accanto alla cascata. Quando riparti, il fragore non è più rumore: è il ritmo del cammino."},
+			{"title":"Continua sul sentiero", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato", "outcome":"Lasci la cascata alle spalle senza fermarti. Il sentiero continua a risalire il torrente."},
 		],
 	},
 	{
@@ -31,9 +32,9 @@ const POI := [
 		"walking_body": "La valle si stringe e il terreno diventa scuro. Le prime betulle nane compaiono oltre il dosso.",
 		"walking_note": "Il vento porta odore di terra bagnata.",
 		"choices": [
-			{"title":"Bevi alla sorgente", "energy":4, "morale":1, "minutes":5, "tag":"BEVI", "detail":"Energia +4 · Morale +1 · 5 min"},
-			{"title":"Bagna il viso", "energy":1, "morale":2, "minutes":10, "tag":"SOSTA", "detail":"Energia +1 · Morale +2 · 10 min"},
-			{"title":"Passa oltre", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato"},
+			{"title":"Bevi alla sorgente", "energy":4, "morale":1, "minutes":5, "tag":"BEVI", "detail":"Energia +4 · Morale +1 · 5 min", "outcome":"L’acqua sa di pietra e neve. La bevi lentamente e senti il freddo scendere fino allo stomaco."},
+			{"title":"Bagna il viso", "energy":1, "morale":2, "minutes":10, "tag":"SOSTA", "detail":"Energia +1 · Morale +2 · 10 min", "outcome":"Il gelo ti mozza il respiro, poi ti rimette completamente sveglio. Riparti con il viso ancora bagnato."},
+			{"title":"Passa oltre", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato", "outcome":"Non tocchi l’acqua immobile. Segui il rivolo finché scompare sotto le pietre."},
 		],
 	},
 	{
@@ -46,9 +47,9 @@ const POI := [
 		"walking_body": "Le betulle si diradano. Il sentiero sale su un pendio aperto, macchiato di blu e rosso.",
 		"walking_note": "Dietro di te un ramo si spezza, poi torna il silenzio.",
 		"choices": [
-			{"title":"Segui le orme", "energy":-3, "morale":4, "minutes":20, "tag":"RISCHIO", "detail":"Rischio medio · Energia −3 · Morale +4 · 20 min"},
-			{"title":"Fai silenzio e aspetta", "energy":-1, "morale":2, "minutes":15, "tag":"ATTENDI", "detail":"Energia −1 · Morale +2 · 15 min"},
-			{"title":"Resta sul sentiero", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Scelta prudente · nessun costo"},
+			{"title":"Segui le orme", "energy":-3, "morale":4, "minutes":20, "tag":"RISCHIO", "detail":"Rischio medio · Energia −3 · Morale +4 · 20 min", "outcome":"Le orme portano fra le betulle. Per un istante intravedi il dorso scuro di un alce, poi il bosco lo richiude."},
+			{"title":"Fai silenzio e aspetta", "energy":-1, "morale":2, "minutes":15, "tag":"ATTENDI", "detail":"Energia −1 · Morale +2 · 15 min", "outcome":"Aspetti senza muoverti. Un ramo si piega, qualcosa respira oltre le foglie, ma non si mostra."},
+			{"title":"Resta sul sentiero", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Scelta prudente · nessun costo", "outcome":"Non lasci la traccia battuta. Le impronte ti accompagnano per qualche metro e poi spariscono nel fango."},
 		],
 	},
 	{
@@ -61,9 +62,9 @@ const POI := [
 		"walking_body": "Superato il crinale, il lago appare fra i massi. Una traccia chiara scende verso un piccolo pontile.",
 		"walking_note": "L’acqua è immobile; qualcosa urta piano contro il legno.",
 		"choices": [
-			{"title":"Raccogli una manciata", "energy":2, "morale":3, "minutes":15, "tag":"RACCOGLI", "detail":"Energia +2 · Morale +3 · 15 min"},
-			{"title":"Fermati per una foto", "energy":-1, "morale":2, "minutes":10, "tag":"RICORDO", "detail":"Energia −1 · Morale +2 · 10 min"},
-			{"title":"Continua a salire", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato"},
+			{"title":"Raccogli una manciata", "energy":2, "morale":3, "minutes":15, "tag":"RACCOGLI", "detail":"Energia +2 · Morale +3 · 15 min", "outcome":"Le bacche sono piccole, aspre e dolcissime. Le dita restano blu mentre il vento scuote gli arbusti."},
+			{"title":"Fermati per una foto", "energy":-1, "morale":2, "minutes":10, "tag":"RICORDO", "detail":"Energia −1 · Morale +2 · 10 min", "outcome":"Aspetti che una raffica passi e scatti. Nella foto il pendio sembra immobile; tu ricordi quanto si muoveva."},
+			{"title":"Continua a salire", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato", "outcome":"Lasci i mirtilli agli uccelli e continui verso il crinale, con il lago che compare poco a poco."},
 		],
 	},
 	{
@@ -76,9 +77,9 @@ const POI := [
 		"walking_body": "La baia rimane sotto di te. Il sentiero taglia il fianco della montagna verso la luce della sera.",
 		"walking_note": "Sul lago compare il riflesso delle prime finestre accese.",
 		"choices": [
-			{"title":"Controlla il capanno", "energy":-2, "morale":3, "minutes":15, "tag":"CERCA", "detail":"Rischio medio · Energia −2 · Morale +3 · 15 min"},
-			{"title":"Riposa sul pontile", "energy":3, "morale":2, "minutes":20, "tag":"RIPOSA", "detail":"Energia +3 · Morale +2 · 20 min"},
-			{"title":"Prosegui verso Vuolle", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato"},
+			{"title":"Controlla il capanno", "energy":-2, "morale":3, "minutes":15, "tag":"CERCA", "detail":"Rischio medio · Energia −2 · Morale +3 · 15 min", "outcome":"La porta è socchiusa. Dentro trovi reti asciutte, una tazza capovolta e nessuno: il pescatore è già sul lago."},
+			{"title":"Riposa sul pontile", "energy":3, "morale":2, "minutes":20, "tag":"RIPOSA", "detail":"Energia +3 · Morale +2 · 20 min", "outcome":"Il pontile cede appena sotto il tuo peso. La barca dondola e per venti minuti non serve andare da nessuna parte."},
+			{"title":"Prosegui verso Vuolle", "energy":0, "morale":0, "minutes":0, "tag":"PASSA", "detail":"Nessun costo immediato", "outcome":"Superi il capanno senza fermarti. Dietro di te la barca continua a battere piano contro il legno."},
 		],
 	},
 	{
@@ -91,7 +92,7 @@ const POI := [
 		"walking_body": "L’ultimo tratto scende verso il lago. Il cartello di Vuolle emerge fra i cespugli e il fumo della sauna sale diritto.",
 		"walking_note": "Mancano pochi minuti: al rifugio c’è ancora luce.",
 		"choices": [
-			{"title":"Raggiungi Rifugio Vuolle", "energy":-2, "morale":5, "minutes":10, "tag":"ARRIVA", "detail":"Energia −2 · Morale +5 · 10 min"},
+			{"title":"Raggiungi Rifugio Vuolle", "energy":-2, "morale":5, "minutes":10, "tag":"ARRIVA", "detail":"Energia −2 · Morale +5 · 10 min", "outcome":"Scendi gli ultimi tornanti. Le finestre accese si avvicinano e dal camino della sauna arriva odore di legna."},
 		],
 	},
 ]
@@ -109,9 +110,11 @@ const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
 const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
 const StatIconControl := preload("res://godot/scripts/stat_icon.gd")
 const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
+const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
 
 var poi := 0
 var walking := false
+var showing_outcome := false
 var finished := false
 var time := 0.0
 var background: Texture2D
@@ -143,6 +146,7 @@ func _ready() -> void:
 func configure(next_poi: int, is_walking: bool) -> void:
 	poi = clampi(next_poi, 0, POI.size() - 1)
 	walking = is_walking
+	showing_outcome = false
 	finished = false
 	finish_resolved = false
 	background = load(str(POI[poi].background))
@@ -156,8 +160,34 @@ func configure(next_poi: int, is_walking: bool) -> void:
 
 func set_walking(value: bool) -> void:
 	walking = value
+	showing_outcome = false
 	if walking: _build_walking_drawer()
 	else: _build_event_drawer()
+	_move_interface()
+	queue_redraw()
+
+func show_choice_outcome(choice: Dictionary) -> void:
+	walking = false
+	showing_outcome = true
+	clear_children(drawer_content)
+	drawer_content.add_child(_small_label("ESITO · %s" % str(choice.get("tag", "SCELTA")), 10, RUST))
+	drawer_content.add_child(_title_label(str(choice.get("title", "Scelta")), 28))
+	var outcome := _body_label(str(choice.get("outcome", "La scelta cambia il passo con cui riprendi il cammino.")))
+	outcome.max_lines_visible = 4
+	outcome.add_theme_font_size_override("font_size", 14)
+	drawer_content.add_child(outcome)
+	var rule := HSeparator.new()
+	rule.modulate = Color(RUST, .35)
+	drawer_content.add_child(rule)
+	drawer_content.add_child(_small_label(str(choice.get("detail", "")), 12, MOSS))
+	var continue_choice := {"title":"Riprendi il cammino", "tag":"CONTINUA", "detail":"Prosegui verso il prossimo punto di interesse"}
+	var continue_button := _choice_button(continue_choice, false)
+	continue_button.pressed.connect(func(): outcome_acknowledged.emit())
+	drawer_content.add_child(continue_button)
+	var footer_clearance := Control.new()
+	footer_clearance.custom_minimum_size.y = 40
+	drawer_content.add_child(footer_clearance)
+	_refresh_stats()
 	_move_interface()
 	queue_redraw()
 
@@ -196,8 +226,8 @@ func _build_finish_drawer() -> void:
 	drawer_content.add_child(sleep_label)
 	for option in [
 		{"title":"Letto nel rifugio", "energy":35, "morale":5, "money":-30, "tag":"30 €", "detail":"Recupero pieno · scarpe asciutte · batteria carica", "icon":"res://assets/sprites/gear/quiltPiuma.png"},
-		{"title":"Pavimento del locale comune", "energy":20, "morale":2, "money":-15, "tag":"15 €", "detail":"Recupero ridotto · al caldo", "icon":"res://assets/sprites/gear/matSchiuma.png"},
-		{"title":"Tenda vicino al lago", "energy":10, "morale":0, "money":0, "tag":"GRATIS", "detail":"Recupero minimo · notte all’aperto", "icon":"res://assets/sprites/gear/tenda.png"},
+		{"title":"Pavimento", "energy":20, "morale":2, "money":-15, "tag":"15 €", "detail":"Recupero ridotto · al caldo", "icon":"res://assets/sprites/gear/matSchiuma.png"},
+		{"title":"Tenda", "energy":10, "morale":0, "money":0, "tag":"GRATIS", "detail":"Recupero minimo · notte all’aperto", "icon":"res://assets/sprites/gear/tenda.png"},
 	]:
 		var sleep_button := _choice_button(option, false)
 		sleep_button.pressed.connect(_resolve_finish.bind(option))
@@ -243,32 +273,35 @@ func _create_header() -> void:
 	header = PanelContainer.new()
 	header.add_theme_stylebox_override("panel", _ornament_style(HEADER_FRAME, 0, 0))
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 21)
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 9)
 	margin.add_theme_constant_override("margin_bottom", 8)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 10)
-	var stage := _small_label("TAPPA 1", 11, OCHRE)
-	stage.custom_minimum_size.x = 54
+	row.add_theme_constant_override("separation", 12)
+	var stage := _small_label("TAPPA 1", 13, OCHRE)
+	stage.custom_minimum_size = Vector2(67, 38)
+	stage.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	stage.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	row.add_child(stage)
 	var divider := VSeparator.new()
-	divider.custom_minimum_size.x = 1
+	divider.custom_minimum_size = Vector2(1, 38)
+	divider.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(divider)
-	header_title = _small_label("", 18, Color("#fff6e5"))
+	header_title = _small_label("", 17, Color("#fff6e5"))
 	header_title.add_theme_font_override("font", SERIF_SEMIBOLD)
 	header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_title.size_flags_vertical = Control.SIZE_EXPAND_FILL
+	header_title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	header_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(header_title)
-	var progress_box := VBoxContainer.new()
-	progress_box.add_theme_constant_override("separation", -3)
-	header_progress = _small_label("", 12, Color("#eee3cd"))
+	header_progress = _small_label("", 13, Color("#eee3cd"))
+	header_progress.custom_minimum_size = Vector2(70, 38)
 	header_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	header_progress.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	header_progress.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	header_dots = _small_label("", 1, Color.TRANSPARENT)
-	header_dots.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
-	progress_box.add_child(header_progress)
-	progress_box.add_child(header_dots)
-	row.add_child(progress_box)
+	row.add_child(header_progress)
 	margin.add_child(row)
 	header.add_child(margin)
 	add_child(header)
@@ -373,21 +406,25 @@ func _build_event_drawer() -> void:
 	rule.modulate = Color(RUST, .45)
 	drawer_content.add_child(rule)
 	var card_row := HBoxContainer.new()
+	card_row.custom_minimum_size.y = 122
 	card_row.add_theme_constant_override("separation", 8)
 	card_row.clip_contents = true
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.size_flags_stretch_ratio = 1.0
 	copy.add_theme_constant_override("separation", 2)
-	copy.add_child(_small_label(str(POI[poi].kicker), 10, RUST))
-	copy.add_child(_title_label(str(POI[poi].event_title), 24))
-	copy.add_child(_body_label(str(POI[poi].body)))
+	copy.add_child(_small_label("—  %s" % str(POI[poi].kicker), 10, RUST))
+	copy.add_child(_title_label(str(POI[poi].event_title), 23))
+	var body := _body_label(str(POI[poi].body))
+	body.max_lines_visible = 4
+	body.add_theme_font_size_override("font_size", 14)
+	copy.add_child(body)
 	card_row.add_child(copy)
 	var illustration := TextureRect.new()
 	illustration.texture = load(str(POI[poi].card))
 	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	illustration.custom_minimum_size = Vector2(66, 76)
+	illustration.custom_minimum_size = Vector2(104, 112)
 	illustration.size_flags_horizontal = Control.SIZE_SHRINK_END
 	card_row.add_child(illustration)
 	drawer_content.add_child(card_row)
@@ -417,26 +454,33 @@ func _build_walking_drawer() -> void:
 
 func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	var result := Button.new()
-	result.custom_minimum_size.y = 72
+	result.custom_minimum_size.y = 64
 	var featured := str(choice.get("tag", "")) == "SAUNA"
-	result.add_theme_stylebox_override("normal", _choice_style(Color("#fff0cf") if featured else Color("#f3e7cd"), OCHRE if featured else Color("#c8b690"), 2 if featured else 1))
-	result.add_theme_stylebox_override("hover", _choice_style(Color("#fff4da"), OCHRE, 2))
-	result.add_theme_stylebox_override("pressed", _choice_style(Color("#e7d7b8"), RUST, 2))
+	var parchment := _ornament_style(CHOICE_FRAME, 0, 0, 15, 9)
+	result.add_theme_stylebox_override("normal", parchment)
+	result.add_theme_stylebox_override("hover", _ornament_style(CHOICE_FRAME, 0, 0, 15, 9))
+	result.add_theme_stylebox_override("pressed", _ornament_style(CHOICE_FRAME, 0, 0, 15, 9))
+	result.modulate = Color("#fff4d4") if featured else Color.WHITE
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 11
-	row.offset_right = -11
-	row.offset_top = 5
-	row.offset_bottom = -5
+	row.offset_left = 12
+	row.offset_right = -12
+	row.offset_top = 4
+	row.offset_bottom = -4
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 9)
+	row.add_theme_constant_override("separation", 7)
+	if str(choice.get("icon", "")).is_empty():
+		var marker := _small_label("•", 18, RUST)
+		marker.custom_minimum_size.x = 9
+		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+		row.add_child(marker)
 	var icon_path := str(choice.get("icon", ""))
 	if not icon_path.is_empty():
 		var icon := TextureRect.new()
 		icon.texture = load(icon_path)
 		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(54, 54)
+		icon.custom_minimum_size = Vector2(42, 46)
 		row.add_child(icon)
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
@@ -447,10 +491,15 @@ func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	copy.add_child(title)
 	var detail := _small_label(str(choice.get("detail", "")), 11, SOFT)
-	detail.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	detail.max_lines_visible = 2
+	detail.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	detail.max_lines_visible = 1
 	copy.add_child(detail)
 	row.add_child(copy)
+	var action := _small_label(str(choice.get("tag", "")), 10, RUST)
+	action.custom_minimum_size.x = 42
+	action.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(action)
 	var arrow := _small_label("›", 29, RUST)
 	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(arrow)
@@ -514,7 +563,7 @@ func _shortcut_content(title: String, icon_path: String) -> HBoxContainer:
 func _layout_interface() -> void:
 	if size.x <= 0 or not header: return
 	header.position = Vector2.ZERO
-	header.size = Vector2(size.x, 82)
+	header.size = Vector2(size.x, 64)
 	drawer.size.x = size.x - 20
 	drawer.position.x = 10
 	stats_bar.size.x = size.x - 24
@@ -526,8 +575,9 @@ func _layout_interface() -> void:
 
 func _move_interface(immediate := false) -> void:
 	if not drawer or size.y <= 0: return
-	var drawer_height := 450.0
+	var drawer_height := 475.0
 	if walking: drawer_height = 280.0
+	if showing_outcome: drawer_height = 360.0
 	if finished: drawer_height = 515.0 if not finish_resolved else 310.0
 	var height_limit := size.y * (.64 if finished and not finish_resolved else .56)
 	drawer_height = minf(drawer_height, height_limit)
@@ -553,41 +603,115 @@ func _draw() -> void:
 		var scene_bottom := maxf(220.0, stats_bar.position.y + 12.0)
 		var scene_rect := Rect2(Vector2(0, 64), Vector2(size.x, scene_bottom - 64.0))
 		_draw_texture_cover(background, scene_rect)
-	_draw_atmosphere()
+		_draw_scene_animation(scene_rect)
 
 func _draw_texture_cover(texture: Texture2D, target: Rect2) -> void:
 	var texture_size := texture.get_size()
 	if texture_size.x <= 0 or texture_size.y <= 0: return
 	var factor := maxf(target.size.x / texture_size.x, target.size.y / texture_size.y)
 	var source_size := target.size / factor
-	var breathing := 1.0 - (sin(time * .22) + 1.0) * .0025
+	var breathing := 1.0 - (sin(time * .42) + 1.0) * .010
 	source_size *= breathing
 	var source_position := (texture_size - source_size) * .5
-	# Un movimento lentissimo da camera rende vivo il quadro senza deformarlo.
+	# Il quadro respira con un movimento di camera percepibile ma senza deformazioni.
 	var drift_room := maxf(0.0, (texture_size.x - source_size.x) * .45)
-	source_position.x += sin(time * .16) * minf(drift_room, texture_size.x * .008)
-	source_position.y += cos(time * .13) * minf(maxf(0.0, (texture_size.y - source_size.y) * .35), texture_size.y * .004)
+	source_position.x += sin(time * .24) * minf(drift_room, texture_size.x * .018)
+	source_position.y += cos(time * .19) * minf(maxf(0.0, (texture_size.y - source_size.y) * .35), texture_size.y * .010)
 	draw_texture_rect_region(texture, target, Rect2(source_position, source_size))
 
-func _draw_atmosphere() -> void:
-	# Niente particelle generiche sopra i quadri: il movimento di camera è sufficiente.
-	# A Vuolle resta soltanto il fumo, ancorato al vero camino della sauna.
-	if not stats_bar or not finished: return
-	var top := 64.0
-	var bottom := stats_bar.position.y
-	var scene_height := maxf(120.0, bottom - top)
-	var chimney := Vector2(size.x * .855, top + scene_height * .185)
-	for strand in range(2):
-		var smoke_line := PackedVector2Array()
-		for step in range(9):
-			var sway := sin(time * 1.05 + step * .58 + strand * 1.8) * (1.5 + step * .55)
-			smoke_line.append(chimney + Vector2(strand * 3.5 + sway, -step * 6.0))
-		draw_polyline(smoke_line, Color(.95,.95,.89,.34), 2.2, true)
+func _draw_scene_animation(scene: Rect2) -> void:
+	if finished:
+		_draw_finish_animation(scene)
+		return
+	match poi:
+		0: _draw_waterfall_animation(scene)
+		1: _draw_spring_animation(scene)
+		2: _draw_birch_animation(scene)
+		3: _draw_berry_animation(scene)
+		4: _draw_bay_animation(scene)
+		5: _draw_belvedere_animation(scene)
+
+func _scene_point(scene: Rect2, x: float, y: float) -> Vector2:
+	return scene.position + Vector2(scene.size.x * x, scene.size.y * y)
+
+func _draw_waterfall_animation(scene: Rect2) -> void:
+	# Fili d'acqua rapidi e schiuma pulsante seguono i tre salti della cascata.
+	for index in range(11):
+		var phase := fmod(time * 115.0 + index * 29.0, scene.size.y * .43)
+		var start := _scene_point(scene, .39 + index * .012, .10) + Vector2(sin(time * 2.2 + index) * 2.5, phase)
+		var length := 15.0 + float(index % 4) * 5.0
+		draw_line(start, start + Vector2(4.0, length), Color(.78,.95,1.0,.60), 2.0, true)
+	for index in range(9):
+		var foam := _scene_point(scene, .48 + sin(index * 2.1) * .13, .55 + cos(index * 1.7) * .035)
+		var pulse := 1.3 + (sin(time * 3.0 + index) + 1.0) * .9
+		draw_circle(foam, pulse, Color(.92,.98,1.0,.42))
+
+func _draw_spring_animation(scene: Rect2) -> void:
+	var center := _scene_point(scene, .53, .52)
+	for index in range(4):
+		var radius := fmod(time * 24.0 + index * 18.0, 72.0)
+		var alpha := .52 * (1.0 - radius / 72.0)
+		draw_arc(center, radius, 0.0, TAU, 48, Color(.76,.94,1.0,alpha), 2.0, true)
+	for index in range(5):
+		var glint := _scene_point(scene, .38 + index * .08, .47 + sin(time * 1.7 + index) * .025)
+		draw_line(glint - Vector2(5,0), glint + Vector2(5,0), Color(1,1,.88,.48), 1.6, true)
+
+func _draw_birch_animation(scene: Rect2) -> void:
+	for index in range(15):
+		var travel := fmod(time * (34.0 + index % 3 * 7.0) + index * 41.0, scene.size.x + 80.0)
+		var leaf := Vector2(scene.end.x + 30.0 - travel, scene.position.y + 35.0 + fmod(index * 37.0, scene.size.y * .72))
+		leaf.y += sin(time * 3.0 + index) * 11.0
+		var color := Color("#d4a936") if index % 3 else Color("#8c993f")
+		color.a = .72
+		draw_colored_polygon(PackedVector2Array([leaf + Vector2(-4,0), leaf + Vector2(0,-2), leaf + Vector2(5,1), leaf + Vector2(0,3)]), color)
+
+func _draw_berry_animation(scene: Rect2) -> void:
+	for index in range(18):
+		var position := _scene_point(scene, .12 + fmod(index * .173, .78), .45 + fmod(index * .117, .36))
+		var pulse := (sin(time * 2.4 + index * 1.8) + 1.0) * .5
+		draw_circle(position, 1.4 + pulse * 2.1, Color(.45,.60,1.0,.28 + pulse * .42))
+	for index in range(4):
+		var grass := _scene_point(scene, .25 + index * .17, .63)
+		draw_line(grass, grass + Vector2(sin(time * 2.0 + index) * 5.0, -18.0), Color(.84,.72,.31,.50), 1.4, true)
+
+func _draw_bay_animation(scene: Rect2) -> void:
+	for index in range(9):
+		var y := scene.position.y + scene.size.y * (.47 + index * .045)
+		var offset := fmod(time * (18.0 + index), 46.0)
+		for segment in range(5):
+			var x := scene.position.x + scene.size.x * .43 + segment * 54.0 + offset
+			draw_line(Vector2(x,y), Vector2(x + 25.0,y + sin(time * 2.0 + segment) * 1.8), Color(.80,.95,1.0,.38), 1.5, true)
+	# Due uccelli attraversano lentamente il cielo del lago.
+	for bird in range(2):
+		var bx := scene.position.x + fmod(time * 29.0 + bird * 170.0, scene.size.x + 50.0) - 25.0
+		var by := scene.position.y + 48.0 + bird * 24.0
+		draw_arc(Vector2(bx - 5,by), 6, PI * 1.05, PI * 1.85, 8, Color(.10,.13,.13,.65), 1.5, true)
+		draw_arc(Vector2(bx + 5,by), 6, PI * 1.15, PI * 1.95, 8, Color(.10,.13,.13,.65), 1.5, true)
+
+func _draw_belvedere_animation(scene: Rect2) -> void:
+	for index in range(5):
+		var x := scene.position.x + fmod(time * (12.0 + index) + index * 91.0, scene.size.x + 120.0) - 60.0
+		var y := scene.position.y + 28.0 + index * 14.0
+		draw_circle(Vector2(x,y), 16.0 + index * 2.0, Color(.92,.94,.91,.12))
+	_draw_smoke(_scene_point(scene, .73, .39), scene.size.y * .28)
+
+func _draw_finish_animation(scene: Rect2) -> void:
+	# Luce calda pulsante nelle finestre della sauna e fumo dal suo camino.
+	var glow_strength := .12 + (sin(time * 2.1) + 1.0) * .055
+	draw_circle(_scene_point(scene, .815, .43), 18.0, Color(1.0,.59,.16,glow_strength))
+	draw_circle(_scene_point(scene, .825, .43), 8.0, Color(1.0,.80,.34,glow_strength + .10))
+	_draw_smoke(_scene_point(scene, .855, .27), scene.size.y * .34)
 	for index in range(7):
-		var rise := fmod(time * 11.0 + index * 9.0, scene_height * .24)
-		var progress := rise / (scene_height * .24)
-		var smoke_center := chimney + Vector2(sin(time * .65 + index * 1.4) * (2.0 + progress * 7.0) + rise * .06, -rise)
-		draw_circle(smoke_center, 3.5 + progress * 7.5, Color(.94,.94,.88,.27 * (1.0 - progress)))
+		var y := scene.position.y + scene.size.y * (.55 + index * .045)
+		var x := scene.position.x + scene.size.x * .55 + fmod(time * 16.0 + index * 31.0, scene.size.x * .42)
+		draw_line(Vector2(x,y), Vector2(x + 19.0,y), Color(1.0,.78,.39,.22), 1.5, true)
+
+func _draw_smoke(chimney: Vector2, max_rise: float) -> void:
+	for index in range(9):
+		var rise := fmod(time * 18.0 + index * 12.0, max_rise)
+		var progress := rise / max_rise
+		var smoke_center := chimney + Vector2(sin(time * .85 + index * 1.3) * (3.0 + progress * 10.0), -rise)
+		draw_circle(smoke_center, 4.0 + progress * 9.0, Color(.95,.94,.87,.40 * (1.0 - progress)))
 
 func _panel_style(fill: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

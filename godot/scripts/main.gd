@@ -33,6 +33,14 @@ func _ready() -> void:
 		GameState.money = 640
 		show_trail()
 		trail.show_finish()
+	elif web_query.contains("preview=outcome"):
+		GameState.player_name = "Nico"
+		GameState.person = "marco"
+		GameState.reset_trek()
+		GameState.poi = 2
+		show_trail()
+		trail.configure(2, false)
+		trail.show_choice_outcome(trail.POI[2].choices[0])
 	elif web_query.contains("preview=trail"):
 		GameState.player_name = "Nico"
 		GameState.person = "marco"
@@ -224,6 +232,9 @@ func _trail_choice(choice: Dictionary) -> void:
 	GameState.morale = clampi(GameState.morale + int(choice.get("morale", 0)), 0, 100)
 	GameState.money = maxi(0, GameState.money + int(choice.get("money", 0)))
 	GameState.hour_minutes += int(choice.get("minutes", 0))
+	GameState.save_game()
+	trail.show_choice_outcome(choice)
+	await trail.outcome_acknowledged
 	trail.set_walking(true)
 	await get_tree().create_timer(6.4).timeout
 	GameState.walking = false
