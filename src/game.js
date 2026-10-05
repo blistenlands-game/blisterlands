@@ -182,12 +182,18 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
   <h3>Scorte</h3>${CONSUM.map(c=>`<div class="qrow"><span>${esc(c.name)}<small>${esc(c.note)} · ${c.kg} kg</small></span><span class="qty"><button aria-label="Meno ${esc(c.name)}" onclick="qty('${c.id}',-1)">−</button><b>${inv(c.id)}</b><button aria-label="Più ${esc(c.name)}" onclick="qty('${c.id}',1)">+</button></span></div>`).join('')}
   <button class="btn primary" onclick="depart()">Parti da Lavvuby</button>`}
  else if(S.screen==='tappa'){const t=TAPPE[S.tappa];let body=S.notes.map(n=>`<p class="note">${esc(n)}</p>`).join('');
-  if(S.current){const ev=S.current;
-   body+=`<div class="card">${tapedCard(eventCard(ev),104,116,'ritratto')}<h2>${esc(ev.title)}</h2><p>${esc(tx(ev.text))}</p>${opts(ev).map((op,i)=>{const ok=!op.req||op.req();const r=riskOf(op);const meta=optMeta(op);
-    return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${esc(lab(op.l))}<span class="meta">${r&&ok?`<span class="risk ${r[1]}">${r[0]}</span>`:''}<span>${ok?(meta||'nessun costo immediato'):'Non hai quello che serve'}</span></span></button>`}).join('')}</div>`}
-  else{if(S.outcome)body+=`<div class="out ${S.outcome.bad?'bad':''}">${esc(tx(S.outcome.txt))}</div>`;
-   body+=`<button class="btn primary" onclick="step()">${S.seg>=t.terr.length?'Arrivi al rifugio':'Cammini'}</button>`}
-  a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${poiName(S.tappa,S.seg)} · ${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`}
+  if(S.tappa===0){
+   body=S.current?stageOneEventPanel(S.current):stageOneTravelPanel(t);
+   a.innerHTML=`<div class="stage-one-ui ${S.current?'has-event':''}">${stageOneHero(t)}${body}</div>`
+  }
+  else{
+   if(S.current){const ev=S.current;
+    body+=`<div class="card">${tapedCard(eventCard(ev),104,116,'ritratto')}<h2>${esc(ev.title)}</h2><p>${esc(tx(ev.text))}</p>${opts(ev).map((op,i)=>{const ok=!op.req||op.req();const r=riskOf(op);const meta=optMeta(op);
+     return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${esc(lab(op.l))}<span class="meta">${r&&ok?`<span class="risk ${r[1]}">${r[0]}</span>`:''}<span>${ok?(meta||'nessun costo immediato'):'Non hai quello che serve'}</span></span></button>`}).join('')}</div>`}
+   else{if(S.outcome)body+=`<div class="out ${S.outcome.bad?'bad':''}">${esc(tx(S.outcome.txt))}</div>`;
+    body+=`<button class="btn primary" onclick="step()">${S.seg>=t.terr.length?'Arrivi al rifugio':'Cammini'}</button>`}
+   a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${poiName(S.tappa,S.seg)} · ${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`
+  }}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
   a.innerHTML=`${hdr(hutScene(t,saunaOk&&!S.closed),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
   ${S.arrMsg.map(m=>`<div class="out">${esc(m)}</div>`).join('')}

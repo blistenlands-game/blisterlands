@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.1.27').waitFor();
+  await page.getByText('Prototipo · versione 0.2.0').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -133,38 +133,38 @@ const server = http.createServer((request, response) => {
     H.screen = null;
     S = newState();
     S.screen = 'tappa';
+    S.tappa = 0;
     S.seg = 3;
+    S.current = null;
     S.gseg = Math.ceil(TAPPE.reduce((sum, t) => sum + t.terr.length, 0) * .75);
     render();
-    const pose = document.querySelector('.map-hiker').getBoundingClientRect();
-    const mapBox = document.querySelector('.stage-map').getBoundingClientRect();
-    const sceneBox = document.querySelector('.trek-scene').getBoundingClientRect();
-    const stats = document.querySelector('.ov-bot').getBoundingClientRect();
-    const route = document.querySelector('.route-progress');
-    const title = getComputedStyle(document.querySelector('.ov-top'));
-    const weather = getComputedStyle(document.querySelector('.weather-layer'));
-    const alphaGap = Number.parseFloat(getComputedStyle(document.querySelector('.stage-map')).getPropertyValue('--map-alpha-gap')) || 0;
-    return { poseBottom: pose.bottom, poseRight: pose.right, mapBottom: mapBox.bottom, visibleMapBottom: mapBox.bottom-alphaGap, mapRight: mapBox.right, sceneRight: sceneBox.right, statsTop: stats.top, mapWidthRatio: mapBox.width/sceneBox.width, poseWidthRatio: pose.width/sceneBox.width, poseLeft: (pose.left-sceneBox.left)/sceneBox.width, poseRatio: pose.width/pose.height, routeDone: route?.dataset.done, map: document.querySelector('.stage-map-bg')?.getAttribute('src'), walking: document.querySelector('.map-hiker')?.className, subtitle: document.querySelector('.ov-top span')?.textContent, wear: document.body.dataset.paperWear, paperStage: document.body.dataset.paperStage, paperLevel: document.body.dataset.paperLevel, paperImage: getComputedStyle(document.documentElement).getPropertyValue('--paper-image'), titleZ: Number(title.zIndex), weatherZ: Number(weather.zIndex), titleBg: title.backgroundColor };
+    const route = document.querySelector('.stage-one-map .route-progress');
+    return {
+      stage: !!document.querySelector('.stage-one-ui'),
+      panorama: document.querySelector('.stage-one-diorama>.scene-bg')?.getAttribute('src'),
+      walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
+      stats: document.querySelectorAll('.stage-one-stats>div').length,
+      tools: [...document.querySelectorAll('.stage-one-tools summary span')].map((node) => node.textContent),
+      map: document.querySelector('.stage-one-map-sheet>img')?.getAttribute('src'),
+      routeDone: route?.dataset.done,
+      continueButton: document.querySelector('.stage-continue')?.textContent,
+      paperStage: document.body.dataset.paperStage,
+      paperLevel: document.body.dataset.paperLevel,
+    };
   });
-  if (Math.abs(trekLayout.poseBottom - trekLayout.visibleMapBottom) > 1 || Math.abs(trekLayout.poseRatio - 1) > .02) throw new Error(`Il personaggio non è allineato o mantiene proporzioni errate: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.statsTop - trekLayout.visibleMapBottom < 2 || trekLayout.statsTop - trekLayout.visibleMapBottom > 5 || trekLayout.sceneRight - trekLayout.mapRight < 2 || trekLayout.sceneRight - trekLayout.mapRight > 6) throw new Error(`La cartina non è accostata ai bordi richiesti: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.mapWidthRatio < .39 || trekLayout.mapWidthRatio > .41 || trekLayout.poseWidthRatio < .16 || trekLayout.poseWidthRatio > .17) throw new Error(`Dimensioni di cartina o personaggio errate: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.poseLeft < .75 || trekLayout.routeDone !== '3' || !trekLayout.map?.includes('stage-map-1.png') || !trekLayout.walking?.includes('is-still')) throw new Error(`Mappa, personaggio o avanzamento fuori posizione: ${JSON.stringify(trekLayout)}`);
-  if (/[●○]/.test(trekLayout.subtitle || '')) throw new Error('I pallini non devono essere duplicati nel sottotitolo');
-  if (trekLayout.titleZ <= trekLayout.weatherZ || trekLayout.titleBg !== 'rgb(243, 234, 214)') throw new Error(`Il meteo attraversa il titolo: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.wear !== 'light' || trekLayout.paperStage !== '1' || trekLayout.paperLevel !== '3' || !trekLayout.paperImage.includes('paper-stage-1-3.jpg')) throw new Error(`Il taccuino non segue tappa e avanzamento: ${JSON.stringify(trekLayout)}`);
-  await page.locator('.trek-scene .diorama-canvas canvas').waitFor();
-  await page.waitForFunction(() => document.querySelector('.trek-scene')?.classList.contains('diorama-ready'));
-  const diorama = await page.evaluate(() => {
-    const first = document.querySelector('.diorama-canvas');
-    S.tappa = 1;
-    const secondStage = scene(TAPPE[1]);
-    S.tappa = 0;
-    return { ready: document.querySelector('.trek-scene')?.classList.contains('diorama-ready'), poi: first?.dataset.poi, src: first?.dataset.src, secondStageHasDiorama: secondStage.includes('diorama-canvas') };
-  });
-  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('moose-birches.png') || diorama.secondStageHasDiorama) throw new Error(`Diorama della prima tappa errato: ${JSON.stringify(diorama)}`);
-  const walkingPose = await page.evaluate(() => { S.walking = true; render(); return document.querySelector('.map-hiker')?.className; });
-  if (!walkingPose?.includes('is-walking')) throw new Error(`L'omino non cammina durante l'avanzamento: ${walkingPose}`);
+  if (!trekLayout.stage || !trekLayout.panorama?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Panorama isometrico della prima tappa errato: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.walker !== 0) throw new Error(`L'omino non deve comparire nella schermata di tappa: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.stats !== 4 || !trekLayout.tools.includes('TACCUINO') || !trekLayout.tools.includes('ZAINO')) throw new Error(`Comandi o statistiche mancanti: ${JSON.stringify(trekLayout)}`);
+  if (!trekLayout.map?.includes('stage-map-1.png') || trekLayout.routeDone !== '3') throw new Error(`Mappa della tappa non disponibile: ${JSON.stringify(trekLayout)}`);
+  if (!trekLayout.continueButton?.includes('CONTINUA') || trekLayout.paperStage !== '1' || trekLayout.paperLevel !== '3') throw new Error(`Pannello di avanzamento errato: ${JSON.stringify(trekLayout)}`);
+  await page.locator('.stage-one-diorama .diorama-canvas canvas').waitFor();
+  await page.waitForFunction(() => document.querySelector('.stage-one-diorama')?.classList.contains('diorama-ready'));
+  const diorama = await page.evaluate(() => ({
+    ready: document.querySelector('.stage-one-diorama')?.classList.contains('diorama-ready'),
+    poi: document.querySelector('.diorama-canvas')?.dataset.poi,
+    src: document.querySelector('.diorama-canvas')?.dataset.src,
+  }));
+  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
   const lodgingScenes = await page.evaluate(() => {
     S.tappa = 5; S.lastSleep = 'letto'; S.forecast = { shown: 'sole' };
     const refuge = morningScene();
@@ -181,11 +181,11 @@ const server = http.createServer((request, response) => {
     const host = document.createElement('div');
     host.innerHTML = hutScene(TAPPE[0], true);
     document.body.append(host);
-    const result = { sun: getComputedStyle(host.querySelector('.weather-sun')).display, stage: host.querySelector('.evening-scene')?.className, glow: !!host.querySelector('.sauna-glow'), smoke: host.querySelectorAll('.sauna-smoke').length };
+    const result = { sun: getComputedStyle(host.querySelector('.weather-sun')).display, stage: host.querySelector('.evening-scene')?.className, image: host.querySelector('.scene-bg')?.getAttribute('src'), glow: !!host.querySelector('.sauna-glow'), smoke: host.querySelectorAll('.sauna-smoke').length };
     host.remove();
     return result;
   });
-  if (eveningEffects.sun !== 'none' || !eveningEffects.stage?.includes('stage-1') || !eveningEffects.glow || eveningEffects.smoke !== 2) throw new Error(`Effetti serali o sauna errati: ${JSON.stringify(eveningEffects)}`);
+  if (eveningEffects.sun !== 'none' || !eveningEffects.stage?.includes('stage-1') || !eveningEffects.stage?.includes('isometric-refuge') || !eveningEffects.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || !eveningEffects.glow || eveningEffects.smoke !== 2) throw new Error(`Effetti serali o sauna errati: ${JSON.stringify(eveningEffects)}`);
   if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });
   if (cleanAtHome.wear !== 'clean' || cleanAtHome.stage !== '1' || cleanAtHome.level !== '1') throw new Error(`Il taccuino a casa non e pulito: ${JSON.stringify(cleanAtHome)}`);

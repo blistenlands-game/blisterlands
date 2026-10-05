@@ -11,7 +11,7 @@ function coverDioramaSprite(sprite,w,h,overscan=1.055){
 function dioramaDot(color,alpha,radius){const g=new PIXI.Graphics();g.circle(0,0,radius).fill({color,alpha});return g}
 async function mountStageDiorama(){
  stopStageDiorama();
- const host=document.querySelector('.trek-scene .diorama-canvas');
+ const host=document.querySelector('.stage-one-diorama .diorama-canvas,.trek-scene .diorama-canvas');
  if(!host||!window.PIXI||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const token=++dioramaToken,src=host.dataset.src,poi=Number(host.dataset.poi)||0;
  try{
@@ -56,6 +56,6 @@ async function mountStageDiorama(){
     else if(n._kind==='cloud'){n.x+=dt*n._speed;if(n.x>w+90)n.x=-90}
    }
   });
-  host.closest('.trek-scene')?.classList.add('diorama-ready');
+  host.closest('.stage-one-diorama,.trek-scene')?.classList.add('diorama-ready');
  }catch(error){console.warn('Diorama non disponibile, uso il fondale statico.',error);stopStageDiorama()}
 }
