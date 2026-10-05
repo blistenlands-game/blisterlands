@@ -5,7 +5,7 @@ func _init() -> void:
 
 func run() -> void:
 	var state = root.get_node("GameState")
-	assert(state.VERSION == "0.4.2")
+	assert(state.VERSION == "0.4.3")
 	assert(state.POI_NAMES.size() == 6)
 	state.person = "sara"
 	state.gear.poles = true

@@ -109,8 +109,12 @@ const SERIF := preload("res://assets/fonts/Spectral-Regular.ttf")
 const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
 const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
 const StatIconControl := preload("res://godot/scripts/stat_icon.gd")
+const ChoiceIconControl := preload("res://godot/scripts/choice_icon.gd")
+const FooterOrnamentControl := preload("res://godot/scripts/footer_ornament.gd")
 const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
 const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
+const MOCKUP_CHOICE_FRAME := "res://assets/ui/choice-card-mockup-v1.png"
+const MOCKUP_PANEL_FRAME := "res://assets/ui/event-panel-mockup-v1.png"
 
 var poi := 0
 var walking := false
@@ -128,7 +132,10 @@ var stat_bars: Array[ProgressBar] = []
 var stat_icons: Array[Control] = []
 var drawer: PanelContainer
 var drawer_content: VBoxContainer
-var footer_bar: HBoxContainer
+var footer_bar: Control
+var footer_note: Label
+var footer_sprig: Control
+var footer_mountains: Control
 var interface_tween: Tween
 var sauna_used := false
 var finish_resolved := false
@@ -308,36 +315,42 @@ func _create_header() -> void:
 
 func _create_stats() -> void:
 	stats_bar = PanelContainer.new()
-	stats_bar.custom_minimum_size.y = 58
-	stats_bar.add_theme_stylebox_override("panel", _panel_style(Color("#0d3035f5"), Color("#60777a"), 10, 1))
+	stats_bar.custom_minimum_size.y = 42
+	stats_bar.add_theme_stylebox_override("panel", _panel_style(Color("#102e33f2"), Color("#53686a"), 5, 1))
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 7)
-	margin.add_theme_constant_override("margin_right", 7)
-	margin.add_theme_constant_override("margin_top", 6)
-	margin.add_theme_constant_override("margin_bottom", 6)
+	margin.add_theme_constant_override("margin_left", 9)
+	margin.add_theme_constant_override("margin_right", 9)
+	margin.add_theme_constant_override("margin_top", 3)
+	margin.add_theme_constant_override("margin_bottom", 3)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
-	var icon_kinds := ["sun", "bolt", "heart", "coins"]
-	var icon_colors := [OCHRE, OCHRE, Color("#e76f51"), OCHRE]
+	var icon_kinds := ["sun", "bolt", "heart", "boot"]
+	var icon_colors := [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
 	for index in range(4):
+		if index > 0:
+			var separator := VSeparator.new()
+			separator.custom_minimum_size = Vector2(1, 26)
+			separator.modulate = Color("#8b99917a")
+			row.add_child(separator)
 		var cell := HBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.alignment = BoxContainer.ALIGNMENT_CENTER
-		cell.add_theme_constant_override("separation", 5)
+		cell.add_theme_constant_override("separation", 3)
 		var icon: Control = StatIconControl.new().setup(icon_kinds[index], icon_colors[index])
+		icon.custom_minimum_size = Vector2(18, 18)
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		cell.add_child(icon)
 		var text_stack := VBoxContainer.new()
 		text_stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER
-		text_stack.add_theme_constant_override("separation", 3)
-		var value := _small_label("", 11, Color("#f3ead8"))
+		var value := _small_label("", 10, Color("#f3ead8"))
 		value.add_theme_font_override("font", SERIF_SEMIBOLD)
 		value.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 		text_stack.add_child(value)
 		var bar := ProgressBar.new()
 		bar.show_percentage = false
 		bar.max_value = 100
-		bar.custom_minimum_size = Vector2(46, 5)
+		bar.custom_minimum_size = Vector2(0, 0)
+		bar.visible = false
 		bar.add_theme_stylebox_override("background", _bar_style(Color("#263f42")))
 		bar.add_theme_stylebox_override("fill", _bar_style(MOSS if index == 1 else Color("#e76f51")))
 		text_stack.add_child(bar)
@@ -359,10 +372,10 @@ func _create_drawer() -> void:
 	drawer = PanelContainer.new()
 	drawer.add_theme_stylebox_override("panel", _paper_style())
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 19)
-	margin.add_theme_constant_override("margin_right", 19)
-	margin.add_theme_constant_override("margin_top", 12)
-	margin.add_theme_constant_override("margin_bottom", 9)
+	margin.add_theme_constant_override("margin_left", 30)
+	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_top", 20)
+	margin.add_theme_constant_override("margin_bottom", 18)
 	drawer_content = VBoxContainer.new()
 	drawer_content.add_theme_constant_override("separation", 4)
 	margin.add_child(drawer_content)
@@ -370,6 +383,17 @@ func _create_drawer() -> void:
 	add_child(drawer)
 	footer_bar = _shortcut_row()
 	add_child(footer_bar)
+	footer_sprig = FooterOrnamentControl.new().setup("sprig")
+	footer_sprig.custom_minimum_size = Vector2(52, 56)
+	add_child(footer_sprig)
+	footer_mountains = FooterOrnamentControl.new().setup("mountains")
+	footer_mountains.custom_minimum_size = Vector2(56, 34)
+	add_child(footer_mountains)
+	footer_note = _small_label("Più lontano.\nPiù tuo.", 12, Color("#8f4b35"))
+	footer_note.add_theme_font_override("font", HAND)
+	footer_note.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	footer_note.rotation = -.08
+	add_child(footer_note)
 
 func _refresh_header() -> void:
 	header_title.text = str(POI[poi].title)
@@ -377,15 +401,15 @@ func _refresh_header() -> void:
 	header_dots.text = ""
 
 func _refresh_stats() -> void:
-	var values := [GameState.clock_text(), "Energia %d" % GameState.energy, "Morale %d" % GameState.morale, "%d €" % GameState.money]
-	var kinds := ["sun", "bolt", "heart", "coins"]
-	var colors := [OCHRE, OCHRE, Color("#e76f51"), OCHRE]
-	var bar_values := [-1, GameState.energy, GameState.morale, -1]
+	var remaining_km := maxi(0, 14 - poi * 2)
+	var values := [GameState.clock_text(), "Energia  %d" % GameState.energy, "Morale  %d" % GameState.morale, "%d km" % remaining_km]
+	var kinds := ["sun", "bolt", "heart", "boot"]
+	var colors := [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
+	var bar_values := [-1, -1, -1, -1]
 	if finished:
-		values = ["Energia %d" % GameState.energy, "Morale %d" % GameState.morale, "%d €" % GameState.money, "Sauna fatta" if sauna_used else "Sauna aperta"]
-		kinds = ["bolt", "heart", "coins", "steam"]
-		colors = [OCHRE, Color("#e76f51"), OCHRE, Color("#a6c65a")]
-		bar_values = [GameState.energy, GameState.morale, -1, -1]
+		values = [GameState.clock_text(), "Energia  %d" % GameState.energy, "Morale  %d" % GameState.morale, "14 km"]
+		kinds = ["sun", "bolt", "heart", "boot"]
+		colors = [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
 	for index in range(4):
 		stat_values[index].text = values[index]
 		stat_icons[index].set("kind", kinds[index])
@@ -396,17 +420,8 @@ func _refresh_stats() -> void:
 
 func _build_event_drawer() -> void:
 	clear_children(drawer_content)
-	var top := HBoxContainer.new()
-	var weather := _small_label(str(POI[poi].weather), 11, MOSS)
-	weather.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	top.add_child(weather)
-	top.add_child(_small_label("POI %d DI 6" % (poi + 1), 10, SOFT))
-	drawer_content.add_child(top)
-	var rule := HSeparator.new()
-	rule.modulate = Color(RUST, .45)
-	drawer_content.add_child(rule)
 	var card_row := HBoxContainer.new()
-	card_row.custom_minimum_size.y = 122
+	card_row.custom_minimum_size.y = 166
 	card_row.add_theme_constant_override("separation", 8)
 	card_row.clip_contents = true
 	var copy := VBoxContainer.new()
@@ -414,22 +429,26 @@ func _build_event_drawer() -> void:
 	copy.size_flags_stretch_ratio = 1.0
 	copy.add_theme_constant_override("separation", 2)
 	copy.add_child(_small_label("—  %s" % str(POI[poi].kicker), 10, RUST))
-	copy.add_child(_title_label(str(POI[poi].event_title), 23))
+	copy.add_child(_title_label(str(POI[poi].event_title), 28))
+	var title_rule := HSeparator.new()
+	title_rule.custom_minimum_size.x = 28
+	title_rule.modulate = Color(RUST, .55)
+	copy.add_child(title_rule)
 	var body := _body_label(str(POI[poi].body))
-	body.max_lines_visible = 4
-	body.add_theme_font_size_override("font_size", 14)
+	body.max_lines_visible = 5
+	body.add_theme_font_size_override("font_size", 15)
 	copy.add_child(body)
 	card_row.add_child(copy)
 	var illustration := TextureRect.new()
 	illustration.texture = load(str(POI[poi].card))
 	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	illustration.custom_minimum_size = Vector2(104, 112)
+	illustration.custom_minimum_size = Vector2(112, 150)
 	illustration.size_flags_horizontal = Control.SIZE_SHRINK_END
 	card_row.add_child(illustration)
 	drawer_content.add_child(card_row)
-	for choice in POI[poi].choices:
-		drawer_content.add_child(_choice_button(choice))
+	for index in range(POI[poi].choices.size()):
+		drawer_content.add_child(_event_choice_button(POI[poi].choices[index], index))
 	var spacer := Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	drawer_content.add_child(spacer)
@@ -452,15 +471,51 @@ func _build_walking_drawer() -> void:
 	footer_clearance.custom_minimum_size.y = 42
 	drawer_content.add_child(footer_clearance)
 
+func _event_choice_button(choice: Dictionary, index: int) -> Button:
+	var result := Button.new()
+	result.custom_minimum_size.y = 58
+	for state in ["normal", "hover", "pressed"]:
+		result.add_theme_stylebox_override(state, _ornament_style(MOCKUP_CHOICE_FRAME, 96, 72, 11, 7))
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 11
+	row.offset_right = -11
+	row.offset_top = 5
+	row.offset_bottom = -5
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 8)
+	var kinds := ["speak", "scatter", "avoid"]
+	var icon_color := MOSS if index == 2 else RUST
+	var choice_icon: Control = ChoiceIconControl.new().setup(kinds[min(index, 2)], icon_color)
+	choice_icon.custom_minimum_size = Vector2(34, 34)
+	choice_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+	row.add_child(choice_icon)
+	var title := _small_label(str(choice.get("title", "Scelta")), 14, INK)
+	title.add_theme_font_override("font", SERIF_SEMIBOLD)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(title)
+	var risk_count := maxi(1, 3 - index)
+	var risk := _small_label("●".repeat(risk_count), 13, MOSS if risk_count == 1 else RUST)
+	risk.custom_minimum_size.x = 48
+	risk.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	risk.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(risk)
+	var arrow := _small_label("→", 23, INK)
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(arrow)
+	result.add_child(row)
+	result.pressed.connect(func(): choice_selected.emit(choice))
+	return result
+
 func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	var result := Button.new()
-	result.custom_minimum_size.y = 64
+	result.custom_minimum_size.y = 68
 	var featured := str(choice.get("tag", "")) == "SAUNA"
-	var parchment := _ornament_style(CHOICE_FRAME, 0, 0, 15, 9)
-	result.add_theme_stylebox_override("normal", parchment)
-	result.add_theme_stylebox_override("hover", _ornament_style(CHOICE_FRAME, 0, 0, 15, 9))
-	result.add_theme_stylebox_override("pressed", _ornament_style(CHOICE_FRAME, 0, 0, 15, 9))
-	result.modulate = Color("#fff4d4") if featured else Color.WHITE
+	result.add_theme_stylebox_override("normal", _choice_style(Color("#fff1d5") if featured else Color("#f5ead3"), OCHRE if featured else Color("#d3c5a8"), 2 if featured else 1))
+	result.add_theme_stylebox_override("hover", _choice_style(Color("#fff5df"), OCHRE, 2))
+	result.add_theme_stylebox_override("pressed", _choice_style(Color("#eadcbe"), RUST, 2))
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.offset_left = 12
@@ -469,11 +524,6 @@ func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	row.offset_bottom = -4
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 7)
-	if str(choice.get("icon", "")).is_empty():
-		var marker := _small_label("•", 18, RUST)
-		marker.custom_minimum_size.x = 9
-		marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-		row.add_child(marker)
 	var icon_path := str(choice.get("icon", ""))
 	if not icon_path.is_empty():
 		var icon := TextureRect.new()
@@ -525,37 +575,38 @@ func _choice_style(fill: Color, border: Color, width: int) -> StyleBoxFlat:
 func _shortcut_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
-	row.add_theme_constant_override("separation", 34)
+	row.add_theme_constant_override("separation", 28)
 	var notebook := Button.new()
-	notebook.custom_minimum_size = Vector2(88, 42)
+	notebook.custom_minimum_size = Vector2(78, 64)
 	notebook.flat = true
-	notebook.add_child(_shortcut_content("TACCUINO", "res://assets/sprites/event/taccuino.png"))
+	notebook.add_child(_shortcut_content("Taccuino", "res://assets/sprites/event/taccuino.png"))
 	row.add_child(notebook)
 	var divider := VSeparator.new()
-	divider.custom_minimum_size.y = 28
+	divider.custom_minimum_size.y = 50
 	row.add_child(divider)
 	var pack := Button.new()
-	pack.custom_minimum_size = Vector2(88, 42)
+	pack.custom_minimum_size = Vector2(78, 64)
 	pack.flat = true
-	pack.add_child(_shortcut_content("ZAINO", "res://assets/sprites/event/zaino.png"))
+	pack.add_child(_shortcut_content("Zaino", "res://assets/sprites/event/zaino.png"))
 	pack.pressed.connect(func(): pack_requested.emit())
 	row.add_child(pack)
 	return row
 
-func _shortcut_content(title: String, icon_path: String) -> HBoxContainer:
-	var content := HBoxContainer.new()
+func _shortcut_content(title: String, icon_path: String) -> VBoxContainer:
+	var content := VBoxContainer.new()
 	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	content.alignment = BoxContainer.ALIGNMENT_CENTER
-	content.add_theme_constant_override("separation", 4)
+	content.add_theme_constant_override("separation", 0)
 	var icon := TextureRect.new()
 	icon.texture = load(icon_path)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(24, 28)
+	icon.custom_minimum_size = Vector2(28, 34)
+	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	content.add_child(icon)
 	var caption := _small_label(title, 11, INK)
-	caption.add_theme_font_override("font", SERIF_SEMIBOLD)
+	caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	content.add_child(caption)
 	return content
@@ -564,13 +615,19 @@ func _layout_interface() -> void:
 	if size.x <= 0 or not header: return
 	header.position = Vector2.ZERO
 	header.size = Vector2(size.x, 64)
-	drawer.size.x = size.x - 20
-	drawer.position.x = 10
-	stats_bar.size.x = size.x - 24
-	stats_bar.size.y = 58
-	stats_bar.position.x = 12
-	footer_bar.size = Vector2(220, 42)
-	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 45)
+	drawer.size.x = size.x - 2
+	drawer.position.x = 1
+	stats_bar.size.x = size.x - 18
+	stats_bar.size.y = 42
+	stats_bar.position.x = 9
+	footer_bar.size = Vector2(230, 70)
+	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 75)
+	footer_sprig.position = Vector2(16, size.y - 70)
+	footer_sprig.size = Vector2(48, 55)
+	footer_mountains.position = Vector2(size.x - 72, size.y - 72)
+	footer_mountains.size = Vector2(54, 32)
+	footer_note.position = Vector2(size.x - 88, size.y - 43)
+	footer_note.size = Vector2(76, 35)
 	_move_interface(true)
 
 func _move_interface(immediate := false) -> void:
@@ -583,7 +640,7 @@ func _move_interface(immediate := false) -> void:
 	drawer_height = minf(drawer_height, height_limit)
 	drawer.size.y = drawer_height
 	var drawer_y := size.y - drawer_height
-	var stats_y := drawer_y - 64.0
+	var stats_y := drawer_y - 46.0
 	if interface_tween and interface_tween.is_valid(): interface_tween.kill()
 	if immediate:
 		drawer.position.y = drawer_y
@@ -745,13 +802,12 @@ func _ornament_style(path: String, horizontal_margin: float, vertical_margin: fl
 	return style
 
 func _paper_style() -> StyleBoxTexture:
-	var wear := clampi(1 + poi * 4 / 6, 1, 4)
 	var style := StyleBoxTexture.new()
-	style.texture = load("res://assets/paper/paper-stage-1-%d.jpg" % wear)
-	style.set_texture_margin(SIDE_LEFT, 42)
-	style.set_texture_margin(SIDE_TOP, 42)
-	style.set_texture_margin(SIDE_RIGHT, 42)
-	style.set_texture_margin(SIDE_BOTTOM, 42)
+	style.texture = load(MOCKUP_PANEL_FRAME)
+	style.set_texture_margin(SIDE_LEFT, 72)
+	style.set_texture_margin(SIDE_TOP, 86)
+	style.set_texture_margin(SIDE_RIGHT, 72)
+	style.set_texture_margin(SIDE_BOTTOM, 86)
 	style.set_content_margin(SIDE_LEFT, 8)
 	style.set_content_margin(SIDE_TOP, 8)
 	style.set_content_margin(SIDE_RIGHT, 8)

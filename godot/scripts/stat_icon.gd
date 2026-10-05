@@ -21,6 +21,7 @@ func _draw() -> void:
 		"heart": _heart()
 		"coins": _coins()
 		"steam": _steam()
+		"boot": _boot()
 
 func _sun() -> void:
 	var center := Vector2(9, 9)
@@ -55,3 +56,10 @@ func _steam() -> void:
 			Vector2(x, 16), Vector2(x - 1, 12), Vector2(x + 1, 9),
 			Vector2(x, 5), Vector2(x + 1, 2)
 		]), accent, 1.8, true)
+
+func _boot() -> void:
+	draw_colored_polygon(PackedVector2Array([
+		Vector2(5,2), Vector2(12,2), Vector2(12,10), Vector2(16,12),
+		Vector2(16,16), Vector2(3,16), Vector2(3,12), Vector2(7,10)
+	]), accent)
+	for y in [5.0, 8.0, 11.0]: draw_line(Vector2(6,y), Vector2(11,y), Color("#704d25"), .8, true)
