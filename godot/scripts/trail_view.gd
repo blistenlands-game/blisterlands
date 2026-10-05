@@ -6,12 +6,12 @@ signal pack_requested
 signal restart_requested
 
 const BACKGROUNDS := [
-	"res://assets/godot/poi-t1-01-cascata-isometric.png",
-	"res://assets/godot/poi-t1-02-sorgente-isometric.png",
-	"res://assets/godot/poi-t1-03-betulle-isometric.png",
-	"res://assets/godot/poi-t1-04-mirtilli-isometric.png",
-	"res://assets/godot/poi-t1-05-baia-isometric.png",
-	"res://assets/godot/poi-t1-06-belvedere-isometric.png",
+	"res://assets/godot/poi-t1-01-cascata-cutout.png",
+	"res://assets/godot/poi-t1-02-sorgente-cutout.png",
+	"res://assets/godot/poi-t1-03-betulle-cutout.png",
+	"res://assets/godot/poi-t1-04-mirtilli-cutout.png",
+	"res://assets/godot/poi-t1-05-baia-cutout.png",
+	"res://assets/godot/poi-t1-06-belvedere-cutout.png",
 ]
 
 const POI := [
@@ -65,6 +65,9 @@ const RUST := Color("#963d1d")
 const OCHRE := Color("#e1ab43")
 const MOSS := Color("#6f7d42")
 const SOFT := Color("#665b50")
+const SERIF := preload("res://assets/fonts/Spectral-Regular.ttf")
+const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
+const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
 
 var poi := 0
 var walking := false
@@ -151,6 +154,7 @@ func _create_header() -> void:
 	divider.custom_minimum_size.x = 1
 	row.add_child(divider)
 	header_title = _small_label("", 17, Color("#fff6e5"))
+	header_title.add_theme_font_override("font", SERIF_SEMIBOLD)
 	header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	row.add_child(header_title)
@@ -181,7 +185,8 @@ func _create_stats() -> void:
 		var cell := VBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.add_theme_constant_override("separation", -3)
-		var value := _small_label("", 20, OCHRE)
+		var value := _small_label("", 21, OCHRE)
+		value.add_theme_font_override("font", HAND)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var caption := _small_label("", 10, Color("#ddd4c5"))
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
@@ -198,10 +203,10 @@ func _create_drawer() -> void:
 	drawer = PanelContainer.new()
 	drawer.add_theme_stylebox_override("panel", _paper_style())
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 18)
-	margin.add_theme_constant_override("margin_right", 18)
-	margin.add_theme_constant_override("margin_top", 11)
-	margin.add_theme_constant_override("margin_bottom", 8)
+	margin.add_theme_constant_override("margin_left", 19)
+	margin.add_theme_constant_override("margin_right", 19)
+	margin.add_theme_constant_override("margin_top", 12)
+	margin.add_theme_constant_override("margin_bottom", 9)
 	drawer_content = VBoxContainer.new()
 	drawer_content.add_theme_constant_override("separation", 4)
 	margin.add_child(drawer_content)
@@ -234,9 +239,11 @@ func _build_event_drawer() -> void:
 	rule.modulate = Color(RUST, .45)
 	drawer_content.add_child(rule)
 	var card_row := HBoxContainer.new()
-	card_row.add_theme_constant_override("separation", 12)
+	card_row.add_theme_constant_override("separation", 8)
+	card_row.clip_contents = true
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	copy.size_flags_stretch_ratio = 1.0
 	copy.add_theme_constant_override("separation", 2)
 	copy.add_child(_small_label(str(POI[poi].kicker), 10, RUST))
 	copy.add_child(_title_label(str(POI[poi].event_title), 24))
@@ -246,7 +253,8 @@ func _build_event_drawer() -> void:
 	illustration.texture = load(str(POI[poi].card))
 	illustration.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	illustration.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	illustration.custom_minimum_size = Vector2(78, 82)
+	illustration.custom_minimum_size = Vector2(66, 76)
+	illustration.size_flags_horizontal = Control.SIZE_SHRINK_END
 	card_row.add_child(illustration)
 	drawer_content.add_child(card_row)
 	for choice in POI[poi].choices:
@@ -273,10 +281,11 @@ func _build_walking_drawer() -> void:
 
 func _choice_button(text_value: String, energy_delta: int, morale_delta: int, tag: String, emits_choice := true) -> Button:
 	var result := Button.new()
-	result.text = "%s  ·  %s                                      >" % [text_value, tag]
+	result.text = "%s  ·  %s  >" % [text_value, tag]
 	result.alignment = HORIZONTAL_ALIGNMENT_LEFT
 	result.custom_minimum_size.y = 42
 	result.add_theme_font_size_override("font_size", 14)
+	result.add_theme_font_override("font", SERIF_SEMIBOLD)
 	result.add_theme_color_override("font_color", INK)
 	result.add_theme_color_override("font_hover_color", RUST)
 	result.add_theme_stylebox_override("normal", _panel_style(Color("#f8ecd3d9"), Color("#c5b69a"), 7, 1))
@@ -293,6 +302,7 @@ func _shortcut_row() -> HBoxContainer:
 	notebook.text = "TACCUINO"
 	notebook.flat = true
 	notebook.add_theme_font_size_override("font_size", 12)
+	notebook.add_theme_font_override("font", SERIF_SEMIBOLD)
 	notebook.add_theme_color_override("font_color", INK)
 	row.add_child(notebook)
 	var divider := VSeparator.new()
@@ -302,6 +312,7 @@ func _shortcut_row() -> HBoxContainer:
 	pack.text = "ZAINO"
 	pack.flat = true
 	pack.add_theme_font_size_override("font_size", 12)
+	pack.add_theme_font_override("font", SERIF_SEMIBOLD)
 	pack.add_theme_color_override("font_color", INK)
 	pack.pressed.connect(func(): pack_requested.emit())
 	row.add_child(pack)
@@ -311,10 +322,10 @@ func _layout_interface() -> void:
 	if size.x <= 0 or not header: return
 	header.position = Vector2.ZERO
 	header.size = Vector2(size.x, 72)
-	drawer.size.x = size.x - 12
-	drawer.position.x = 6
-	stats_bar.size.x = size.x - 18
-	stats_bar.position.x = 9
+	drawer.size.x = size.x - 20
+	drawer.position.x = 10
+	stats_bar.size.x = size.x - 24
+	stats_bar.position.x = 12
 	footer_bar.size = Vector2(170, 34)
 	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 39)
 	_move_interface(true)
@@ -327,7 +338,7 @@ func _move_interface(immediate := false) -> void:
 	drawer_height = minf(drawer_height, size.y * .56)
 	drawer.size.y = drawer_height
 	var drawer_y := size.y - drawer_height
-	var stats_y := drawer_y - 67.0
+	var stats_y := drawer_y - 63.0
 	if interface_tween and interface_tween.is_valid(): interface_tween.kill()
 	if immediate:
 		drawer.position.y = drawer_y
@@ -353,7 +364,7 @@ func _draw() -> void:
 func _draw_progress_dots() -> void:
 	var start_x := size.x - 65.0
 	for index in range(6):
-		var fill := OCHRE if index <= poi else Color("#789094")
+		var fill := OCHRE if index <= poi else Color("#a3b1b0")
 		draw_circle(Vector2(start_x + index * 9.0, 51.0), 2.5, fill)
 
 func _draw_texture_cover(texture: Texture2D, target: Rect2) -> void:
@@ -412,19 +423,17 @@ func _small_label(text_value: String, size_px: int, color: Color) -> Label:
 	result.text = text_value
 	result.add_theme_font_size_override("font_size", size_px)
 	result.add_theme_color_override("font_color", color)
+	result.add_theme_font_override("font", SERIF)
 	return result
 
 func _title_label(text_value: String, size_px: int) -> Label:
 	var result := _small_label(text_value, size_px, INK)
-	var serif := SystemFont.new()
-	serif.font_names = PackedStringArray(["Georgia", "Palatino Linotype", "Times New Roman"])
-	serif.font_weight = 600
-	result.add_theme_font_override("font", serif)
+	result.add_theme_font_override("font", SERIF_SEMIBOLD)
 	result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	return result
 
 func _body_label(text_value: String) -> Label:
-	var result := _small_label(text_value, 14, SOFT)
+	var result := _small_label(text_value, 13, SOFT)
 	result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
 	result.max_lines_visible = 2
 	return result

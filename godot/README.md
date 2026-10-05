@@ -1,6 +1,6 @@
 # Blisterborn — Godot 2D
 
-Nuova linea del prototipo, versione `0.3.6`, sviluppata con Godot 4.7.2 e GDScript.
+Nuova linea del prototipo, versione `0.3.7`, sviluppata con Godot 4.7.2 e GDScript.
 
 ## Apertura
 
@@ -12,6 +12,7 @@ Il pacchetto web usa un nome versionato (`game-<versione>.pck`) per impedire a b
 La prima tappa adotta sei quadri isometrici coordinati. L'interfaccia non scorre: il paesaggio arriva sempre alla barra statistiche e il taccuino illustrato occupa lo spazio restante. Durante il cammino il foglio diventa più compatto, mostrando realmente più paesaggio, e torna completo all'arrivo al POI successivo.
 
 Le carte evento includono nuovamente un'illustrazione raster e il fondo del taccuino usa le quattro varianti di carta progressivamente più consumata previste per la tappa.
+I sei diorami della tappa usano ritagli PNG trasparenti, così l'animazione ambientale non rivela più il bordo rettangolare dello sfondo originale.
 
 Lo styleframe artistico vincolante del primo POI è `assets/concepts/poi-t1-01-lavvu-diorama-styleframe-v1.png`. La scena Blender e il GLB conservano la sua composizione e aggiungono movimento senza degradarne il disegno.
 

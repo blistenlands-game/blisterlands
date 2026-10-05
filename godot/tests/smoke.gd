@@ -5,7 +5,7 @@ func _init() -> void:
 
 func run() -> void:
 	var state = root.get_node("GameState")
-	assert(state.VERSION == "0.3.6")
+	assert(state.VERSION == "0.3.7")
 	assert(state.POI_NAMES.size() == 6)
 	state.person = "sara"
 	state.gear.poles = true
@@ -18,7 +18,7 @@ func run() -> void:
 	await process_frame
 	assert(main.trail != null)
 	assert(main.trail.background != null)
-	assert(main.trail.BACKGROUNDS[0].contains("poi-t1-01-cascata-isometric.png"))
+	assert(main.trail.BACKGROUNDS[0].contains("poi-t1-01-cascata-cutout.png"))
 	assert(main.trail.drawer != null)
 	assert(main.trail.stats_bar != null)
 	assert(main.trail.POI[0].card.contains("assets/sprites/event"))
