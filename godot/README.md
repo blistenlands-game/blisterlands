@@ -7,6 +7,7 @@ Nuova linea del prototipo, versione `0.3.5`, sviluppata con Godot 4.7.2 e GDScri
 Aprire `project.godot` dalla radice della repository con Godot 4.7.2 e premere **F6/F5**.
 
 La build browser viene esportata con il preset `Web` nella cartella `godot-web/` ed è pubblicata da GitHub Pages insieme al repository.
+Il pacchetto web usa un nome versionato (`game-<versione>.pck`) per impedire a browser e CDN di riaprire una build precedente dalla cache.
 
 La prima tappa adotta sei quadri isometrici coordinati. L'interfaccia non scorre: barra statistiche e taccuino formano un pannello mobile che si abbassa durante il cammino e risale automaticamente a ogni POI.
 
