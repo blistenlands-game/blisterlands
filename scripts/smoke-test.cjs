@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.2.0').waitFor();
+  await page.getByText('Prototipo · versione 0.2.1').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -186,6 +186,15 @@ const server = http.createServer((request, response) => {
     return result;
   });
   if (eveningEffects.sun !== 'none' || !eveningEffects.stage?.includes('stage-1') || !eveningEffects.stage?.includes('isometric-refuge') || !eveningEffects.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || !eveningEffects.glow || eveningEffects.smoke !== 2) throw new Error(`Effetti serali o sauna errati: ${JSON.stringify(eveningEffects)}`);
+  const stageOneArrival = await page.evaluate(() => {
+    H.screen = null; S = newState(); S.screen = 'sera'; S.tappa = 0; S.arrive = 990; S.full = false; S.closed = false; S.arrMsg = []; S.forecast = { real: 'sole', shown: 'sole' }; render();
+    const open = { image: document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), smoke: document.querySelectorAll('.arrival-smoke').length, choices: document.querySelectorAll('.arrival-choice').length, bottom: document.querySelector('.stage-one-arrival-paper')?.getBoundingClientRect().bottom, uiBottom: document.querySelector('.stage-one-ui')?.getBoundingClientRect().bottom };
+    S.arrive = 1050; S.full = true; render();
+    const closed = { image: document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), smoke: document.querySelectorAll('.arrival-smoke').length, label: document.querySelector('.arrival-closed')?.textContent };
+    return { open, closed };
+  });
+  if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || Math.abs(stageOneArrival.open.bottom-stageOneArrival.open.uiBottom) > 1) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
+  if (!stageOneArrival.closed.image?.includes('poi-t1-vuolle-refuge-isometric-closed-v1.png') || stageOneArrival.closed.smoke !== 0 || !stageOneArrival.closed.label?.includes('SAUNA CHIUSA')) throw new Error(`Arrivo Vuolle chiuso errato: ${JSON.stringify(stageOneArrival)}`);
   if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });
   if (cleanAtHome.wear !== 'clean' || cleanAtHome.stage !== '1' || cleanAtHome.level !== '1') throw new Error(`Il taccuino a casa non e pulito: ${JSON.stringify(cleanAtHome)}`);

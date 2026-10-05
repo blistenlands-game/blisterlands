@@ -32,7 +32,7 @@ const MAPS=Array.from({length:8},(_,i)=>`./assets/maps/stage-map-${i+1}.png`);
 const ISOMETRIC_STAGE_ONE=[
  'poi-t1-01-cascata-isometric','poi-t1-02-sorgente-isometric','poi-t1-03-betulle-isometric',
  'poi-t1-04-mirtilli-isometric','poi-t1-05-baia-isometric','poi-t1-06-belvedere-isometric',
- 'poi-t1-vuolle-refuge-isometric-v1'
+ 'poi-t1-vuolle-refuge-isometric-v1','poi-t1-vuolle-refuge-isometric-closed-v1'
 ].map(name=>`./assets/godot/${name}.png`);
 const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`./assets/paper/paper-stage-${stage+1}-${wear+1}.jpg`)).flat();
 const CORE=[

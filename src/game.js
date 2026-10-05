@@ -195,7 +195,8 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
    a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${poiName(S.tappa,S.seg)} · ${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`
   }}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
-  a.innerHTML=`${hdr(hutScene(t,saunaOk&&!S.closed),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
+  if(S.tappa===0)a.innerHTML=stageOneArrivalScreen(t,saunaOk&&!S.closed,late);
+  else a.innerHTML=`${hdr(hutScene(t,saunaOk&&!S.closed),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
   ${S.arrMsg.map(m=>`<div class="out">${esc(m)}</div>`).join('')}
   ${!S.closed&&S.tappa===0?`<p class="note">Il custode apre il registro: «Nome?». Scrive ${esc(pgName())} con una bella grafia.</p>`:!S.closed&&S.tappa>0&&(S.tappa*37)%10<4?`<p class="note">«Ah, ${esc(pgName())}! Ho saputo che arrivavi.» Le voci corrono tra i rifugi.</p>`:''}<p class="sub">${forecastWho()} domani ${WX[S.forecast.shown].toLowerCase()}.</p>
   ${t.sauna&&!S.closed?`<div class="card"><h3>Sauna</h3>${saunaOk?`<button class="btn" ${S.didSauna?'disabled':''} onclick="sauna()">Sauna e tuffo nel torrente<span class="meta">${S.didSauna?'Fatto':'Morale, energia, asciughi tutto'}</span></button>`:'<p class="sub">Chiusa alle 17. Arriva prima la prossima volta.</p>'}</div>`:''}
