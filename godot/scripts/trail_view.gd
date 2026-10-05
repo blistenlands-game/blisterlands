@@ -65,8 +65,8 @@ const SOFT := Color("#665b50")
 const SERIF := preload("res://assets/fonts/Spectral-Regular.ttf")
 const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
 const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
+const StatIconControl := preload("res://godot/scripts/stat_icon.gd")
 const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
-const STATS_FRAME := "res://assets/ui/stats-frame-v2.png"
 const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
 
 var poi := 0
@@ -79,7 +79,9 @@ var header_title: Label
 var header_progress: Label
 var header_dots: Label
 var stats_bar: PanelContainer
-var stat_labels: Array[Label] = []
+var stat_values: Array[Label] = []
+var stat_bars: Array[ProgressBar] = []
+var stat_icons: Array[Control] = []
 var drawer: PanelContainer
 var drawer_content: VBoxContainer
 var footer_bar: HBoxContainer
@@ -171,40 +173,48 @@ func _create_header() -> void:
 
 func _create_stats() -> void:
 	stats_bar = PanelContainer.new()
-	stats_bar.custom_minimum_size.y = 58
-	stats_bar.add_theme_stylebox_override("panel", _ornament_style(STATS_FRAME, 0, 0))
+	stats_bar.custom_minimum_size.y = 50
+	stats_bar.add_theme_stylebox_override("panel", _panel_style(Color("#0d3035f5"), Color("#60777a"), 10, 1))
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 8)
-	margin.add_theme_constant_override("margin_right", 8)
-	margin.add_theme_constant_override("margin_top", 8)
+	margin.add_theme_constant_override("margin_left", 10)
+	margin.add_theme_constant_override("margin_right", 10)
+	margin.add_theme_constant_override("margin_top", 7)
 	margin.add_theme_constant_override("margin_bottom", 7)
 	var row := HBoxContainer.new()
-	row.add_theme_constant_override("separation", 2)
-	var stat_icons := ["sole.png", "cibo.png", "meraviglia.png", "soldi.png"]
+	row.add_theme_constant_override("separation", 0)
+	var icon_kinds := ["sun", "bolt", "heart", "coins"]
+	var icon_colors := [OCHRE, OCHRE, Color("#e76f51"), OCHRE]
 	for index in range(4):
 		var cell := HBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.alignment = BoxContainer.ALIGNMENT_CENTER
-		cell.add_theme_constant_override("separation", 2)
-		var icon := TextureRect.new()
-		icon.texture = load("res://assets/sprites/event/%s" % stat_icons[index])
-		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
-		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-		icon.custom_minimum_size = Vector2(19, 19)
+		cell.add_theme_constant_override("separation", 4)
+		var icon: Control = StatIconControl.new().setup(icon_kinds[index], icon_colors[index])
+		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		cell.add_child(icon)
 		var text_stack := VBoxContainer.new()
-		text_stack.add_theme_constant_override("separation", -4)
-		var value := _small_label("", 21, OCHRE)
-		value.add_theme_font_override("font", HAND)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var caption := _small_label("", 10, Color("#ddd4c5"))
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		text_stack.size_flags_vertical = Control.SIZE_SHRINK_CENTER
+		text_stack.add_theme_constant_override("separation", 2)
+		var value := _small_label("", 12, Color("#f3ead8"))
+		value.add_theme_font_override("font", SERIF_SEMIBOLD)
 		text_stack.add_child(value)
-		text_stack.add_child(caption)
+		var bar := ProgressBar.new()
+		bar.show_percentage = false
+		bar.max_value = 100
+		bar.custom_minimum_size = Vector2(48, 4)
+		bar.add_theme_stylebox_override("background", _bar_style(Color("#263f42")))
+		bar.add_theme_stylebox_override("fill", _bar_style(MOSS if index == 1 else Color("#e76f51")))
+		text_stack.add_child(bar)
 		cell.add_child(text_stack)
 		row.add_child(cell)
-		stat_labels.append(value)
-		stat_labels.append(caption)
+		stat_values.append(value)
+		stat_bars.append(bar)
+		stat_icons.append(icon)
+		if index < 3:
+			var divider := VSeparator.new()
+			divider.modulate = Color(1, 1, 1, .25)
+			divider.custom_minimum_size.x = 1
+			row.add_child(divider)
 	margin.add_child(row)
 	stats_bar.add_child(margin)
 	add_child(stats_bar)
@@ -231,11 +241,19 @@ func _refresh_header() -> void:
 	header_dots.text = ""
 
 func _refresh_stats() -> void:
-	var values := [GameState.clock_text(), str(GameState.energy), str(GameState.morale), "%d €" % GameState.money]
-	var captions := ["ORA", "ENERGIA", "MORALE", "SOLDI"]
+	var values := [GameState.clock_text(), "Energia %d" % GameState.energy, "Morale %d" % GameState.morale, "%d €" % GameState.money]
+	var kinds := ["sun", "bolt", "heart", "coins"]
+	var bar_values := [-1, GameState.energy, GameState.morale, -1]
+	if finished:
+		values = ["Energia %d" % GameState.energy, "Morale %d" % GameState.morale, "%d €" % GameState.money, "Sauna aperta"]
+		kinds = ["bolt", "heart", "coins", "steam"]
+		bar_values = [GameState.energy, GameState.morale, -1, -1]
 	for index in range(4):
-		stat_labels[index * 2].text = values[index]
-		stat_labels[index * 2 + 1].text = captions[index]
+		stat_values[index].text = values[index]
+		stat_icons[index].set("kind", kinds[index])
+		stat_icons[index].queue_redraw()
+		stat_bars[index].visible = bar_values[index] >= 0
+		if bar_values[index] >= 0: stat_bars[index].value = bar_values[index]
 
 func _build_event_drawer() -> void:
 	clear_children(drawer_content)
@@ -365,7 +383,7 @@ func _layout_interface() -> void:
 	drawer.size.x = size.x - 20
 	drawer.position.x = 10
 	stats_bar.size.x = size.x - 24
-	stats_bar.size.y = 58
+	stats_bar.size.y = 50
 	stats_bar.position.x = 12
 	footer_bar.size = Vector2(220, 42)
 	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 45)
@@ -379,7 +397,7 @@ func _move_interface(immediate := false) -> void:
 	drawer_height = minf(drawer_height, size.y * .56)
 	drawer.size.y = drawer_height
 	var drawer_y := size.y - drawer_height
-	var stats_y := drawer_y - 66.0
+	var stats_y := drawer_y - 56.0
 	if interface_tween and interface_tween.is_valid(): interface_tween.kill()
 	if immediate:
 		drawer.position.y = drawer_y
@@ -443,6 +461,12 @@ func _panel_style(fill: Color, border: Color, radius: int, width: int) -> StyleB
 	style.content_margin_right = 10
 	style.content_margin_top = 6
 	style.content_margin_bottom = 6
+	return style
+
+func _bar_style(fill: Color) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.set_corner_radius_all(2)
 	return style
 
 func _ornament_style(path: String, horizontal_margin: float, vertical_margin: float, content_horizontal := 8.0, content_vertical := 6.0) -> StyleBoxTexture:
