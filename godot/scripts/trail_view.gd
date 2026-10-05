@@ -113,8 +113,19 @@ const ChoiceIconControl := preload("res://godot/scripts/choice_icon.gd")
 const FooterOrnamentControl := preload("res://godot/scripts/footer_ornament.gd")
 const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
 const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
-const MOCKUP_CHOICE_FRAME := "res://assets/ui/choice-card-mockup-v1.png"
-const MOCKUP_PANEL_FRAME := "res://assets/ui/event-panel-mockup-v1.png"
+const MOCKUP_CHOICE_FRAME := "res://assets/ui/corvo/choice-card.png"
+const MOCKUP_PANEL_FRAME := "res://assets/ui/corvo/event-panel.png"
+const STAT_ICON_PATHS := [
+	"res://assets/ui/corvo/stat-sun.png",
+	"res://assets/ui/corvo/stat-bolt.png",
+	"res://assets/ui/corvo/stat-heart.png",
+	"res://assets/ui/corvo/stat-boot.png",
+]
+const CHOICE_ICON_PATHS := [
+	"res://assets/ui/corvo/choice-speak.png",
+	"res://assets/ui/corvo/choice-scatter.png",
+	"res://assets/ui/corvo/choice-avoid.png",
+]
 
 var poi := 0
 var walking := false
@@ -324,8 +335,6 @@ func _create_stats() -> void:
 	margin.add_theme_constant_override("margin_bottom", 3)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 0)
-	var icon_kinds := ["sun", "bolt", "heart", "boot"]
-	var icon_colors := [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
 	for index in range(4):
 		if index > 0:
 			var separator := VSeparator.new()
@@ -336,8 +345,11 @@ func _create_stats() -> void:
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 		cell.alignment = BoxContainer.ALIGNMENT_CENTER
 		cell.add_theme_constant_override("separation", 3)
-		var icon: Control = StatIconControl.new().setup(icon_kinds[index], icon_colors[index])
-		icon.custom_minimum_size = Vector2(18, 18)
+		var icon := TextureRect.new()
+		icon.texture = load(STAT_ICON_PATHS[index])
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(21, 21)
 		icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 		cell.add_child(icon)
 		var text_stack := VBoxContainer.new()
@@ -372,8 +384,8 @@ func _create_drawer() -> void:
 	drawer = PanelContainer.new()
 	drawer.add_theme_stylebox_override("panel", _paper_style())
 	var margin := MarginContainer.new()
-	margin.add_theme_constant_override("margin_left", 30)
-	margin.add_theme_constant_override("margin_right", 18)
+	margin.add_theme_constant_override("margin_left", 16)
+	margin.add_theme_constant_override("margin_right", 16)
 	margin.add_theme_constant_override("margin_top", 20)
 	margin.add_theme_constant_override("margin_bottom", 18)
 	drawer_content = VBoxContainer.new()
@@ -403,18 +415,12 @@ func _refresh_header() -> void:
 func _refresh_stats() -> void:
 	var remaining_km := maxi(0, 14 - poi * 2)
 	var values := [GameState.clock_text(), "Energia  %d" % GameState.energy, "Morale  %d" % GameState.morale, "%d km" % remaining_km]
-	var kinds := ["sun", "bolt", "heart", "boot"]
-	var colors := [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
 	var bar_values := [-1, -1, -1, -1]
 	if finished:
 		values = [GameState.clock_text(), "Energia  %d" % GameState.energy, "Morale  %d" % GameState.morale, "14 km"]
-		kinds = ["sun", "bolt", "heart", "boot"]
-		colors = [OCHRE, OCHRE, Color("#bd684f"), OCHRE]
 	for index in range(4):
 		stat_values[index].text = values[index]
-		stat_icons[index].set("kind", kinds[index])
-		stat_icons[index].set("accent", colors[index])
-		stat_icons[index].queue_redraw()
+		stat_icons[index].set("texture", load(STAT_ICON_PATHS[index]))
 		stat_bars[index].visible = bar_values[index] >= 0
 		if bar_values[index] >= 0: stat_bars[index].value = bar_values[index]
 
@@ -475,7 +481,7 @@ func _event_choice_button(choice: Dictionary, index: int) -> Button:
 	var result := Button.new()
 	result.custom_minimum_size.y = 58
 	for state in ["normal", "hover", "pressed"]:
-		result.add_theme_stylebox_override(state, _ornament_style(MOCKUP_CHOICE_FRAME, 96, 72, 11, 7))
+		result.add_theme_stylebox_override(state, _ornament_style(MOCKUP_CHOICE_FRAME, 62, 25, 11, 7))
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
 	row.offset_left = 11
@@ -484,10 +490,11 @@ func _event_choice_button(choice: Dictionary, index: int) -> Button:
 	row.offset_bottom = -5
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
 	row.add_theme_constant_override("separation", 8)
-	var kinds := ["speak", "scatter", "avoid"]
-	var icon_color := MOSS if index == 2 else RUST
-	var choice_icon: Control = ChoiceIconControl.new().setup(kinds[min(index, 2)], icon_color)
-	choice_icon.custom_minimum_size = Vector2(34, 34)
+	var choice_icon := TextureRect.new()
+	choice_icon.texture = load(CHOICE_ICON_PATHS[min(index, 2)])
+	choice_icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	choice_icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	choice_icon.custom_minimum_size = Vector2(32, 32)
 	choice_icon.size_flags_vertical = Control.SIZE_SHRINK_CENTER
 	row.add_child(choice_icon)
 	var title := _small_label(str(choice.get("title", "Scelta")), 14, INK)
@@ -579,7 +586,7 @@ func _shortcut_row() -> HBoxContainer:
 	var notebook := Button.new()
 	notebook.custom_minimum_size = Vector2(78, 64)
 	notebook.flat = true
-	notebook.add_child(_shortcut_content("Taccuino", "res://assets/sprites/event/taccuino.png"))
+	notebook.add_child(_shortcut_content("Taccuino", "res://assets/ui/corvo/footer-notebook.png"))
 	row.add_child(notebook)
 	var divider := VSeparator.new()
 	divider.custom_minimum_size.y = 50
@@ -587,7 +594,7 @@ func _shortcut_row() -> HBoxContainer:
 	var pack := Button.new()
 	pack.custom_minimum_size = Vector2(78, 64)
 	pack.flat = true
-	pack.add_child(_shortcut_content("Zaino", "res://assets/sprites/event/zaino.png"))
+	pack.add_child(_shortcut_content("Zaino", "res://assets/ui/corvo/footer-backpack.png"))
 	pack.pressed.connect(func(): pack_requested.emit())
 	row.add_child(pack)
 	return row
@@ -602,7 +609,7 @@ func _shortcut_content(title: String, icon_path: String) -> VBoxContainer:
 	icon.texture = load(icon_path)
 	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
 	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
-	icon.custom_minimum_size = Vector2(28, 34)
+	icon.custom_minimum_size = Vector2(34, 42)
 	icon.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	content.add_child(icon)
 	var caption := _small_label(title, 11, INK)
@@ -615,8 +622,8 @@ func _layout_interface() -> void:
 	if size.x <= 0 or not header: return
 	header.position = Vector2.ZERO
 	header.size = Vector2(size.x, 64)
-	drawer.size.x = size.x - 2
-	drawer.position.x = 1
+	drawer.size.x = size.x - 16
+	drawer.position.x = 8
 	stats_bar.size.x = size.x - 18
 	stats_bar.size.y = 42
 	stats_bar.position.x = 9
@@ -804,10 +811,10 @@ func _ornament_style(path: String, horizontal_margin: float, vertical_margin: fl
 func _paper_style() -> StyleBoxTexture:
 	var style := StyleBoxTexture.new()
 	style.texture = load(MOCKUP_PANEL_FRAME)
-	style.set_texture_margin(SIDE_LEFT, 72)
-	style.set_texture_margin(SIDE_TOP, 86)
-	style.set_texture_margin(SIDE_RIGHT, 72)
-	style.set_texture_margin(SIDE_BOTTOM, 86)
+	style.set_texture_margin(SIDE_LEFT, 48)
+	style.set_texture_margin(SIDE_TOP, 38)
+	style.set_texture_margin(SIDE_RIGHT, 48)
+	style.set_texture_margin(SIDE_BOTTOM, 38)
 	style.set_content_margin(SIDE_LEFT, 8)
 	style.set_content_margin(SIDE_TOP, 8)
 	style.set_content_margin(SIDE_RIGHT, 8)
