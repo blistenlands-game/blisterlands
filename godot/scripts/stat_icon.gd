@@ -7,12 +7,14 @@ var accent := Color("#e5ae3e")
 func setup(next_kind: String, next_color: Color) -> StatIcon:
 	kind = next_kind
 	accent = next_color
-	custom_minimum_size = Vector2(18, 18)
+	custom_minimum_size = Vector2(26, 26)
 	mouse_filter = Control.MOUSE_FILTER_IGNORE
 	queue_redraw()
 	return self
 
 func _draw() -> void:
+	var icon_scale := minf(size.x, size.y) / 18.0
+	draw_set_transform((size - Vector2(18, 18) * icon_scale) * .5, 0.0, Vector2.ONE * icon_scale)
 	match kind:
 		"sun": _sun()
 		"bolt": _bolt()

@@ -12,7 +12,8 @@ var name_edit: LineEdit
 var trail: TrailView
 
 func _ready() -> void:
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search")).contains("preview=3d"):
+	var web_query := str(JavaScriptBridge.eval("window.location.search")) if OS.has_feature("web") else ""
+	if web_query.contains("preview=3d"):
 		get_tree().change_scene_to_file.call_deferred("res://godot/scenes/diorama_3d.tscn")
 		return
 	var background := Control.new()
@@ -21,7 +22,18 @@ func _ready() -> void:
 	add_child(background)
 	GameState.load_game()
 	selected_person = GameState.person
-	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search")).contains("preview=trail"):
+	if web_query.contains("preview=finish"):
+		GameState.player_name = "Nico"
+		GameState.person = "marco"
+		GameState.reset_trek()
+		GameState.poi = 5
+		GameState.hour_minutes = 988
+		GameState.energy = 58
+		GameState.morale = 45
+		GameState.money = 640
+		show_trail()
+		trail.show_finish()
+	elif web_query.contains("preview=trail"):
 		GameState.player_name = "Nico"
 		GameState.person = "marco"
 		GameState.gear.poles = true
@@ -205,13 +217,15 @@ func ambient_description(index: int) -> String:
 		"Le nuvole scorrono sopra il belvedere di Vuolle.",
 	][index]
 
-func _trail_choice(energy_delta: int, morale_delta: int) -> void:
+func _trail_choice(choice: Dictionary) -> void:
 	if GameState.walking: return
 	GameState.walking = true
-	GameState.energy = clampi(GameState.energy + energy_delta, 0, 100)
-	GameState.morale = clampi(GameState.morale + morale_delta, 0, 100)
+	GameState.energy = clampi(GameState.energy + int(choice.get("energy", 0)), 0, 100)
+	GameState.morale = clampi(GameState.morale + int(choice.get("morale", 0)), 0, 100)
+	GameState.money = maxi(0, GameState.money + int(choice.get("money", 0)))
+	GameState.hour_minutes += int(choice.get("minutes", 0))
 	trail.set_walking(true)
-	await get_tree().create_timer(4.8).timeout
+	await get_tree().create_timer(6.4).timeout
 	GameState.walking = false
 	GameState.hour_minutes += 45
 	GameState.energy = maxi(0, GameState.energy - 7)

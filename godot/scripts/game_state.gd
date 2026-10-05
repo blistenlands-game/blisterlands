@@ -1,6 +1,6 @@
 extends Node
 
-const VERSION := "0.3.9"
+const VERSION := "0.4.0"
 const SAVE_PATH := "user://blisterborn-godot.json"
 const PEOPLE := ["marco", "davide", "sara", "elena"]
 const POI_NAMES := [
