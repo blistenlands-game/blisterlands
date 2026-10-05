@@ -28,10 +28,20 @@ function sprite(file,cols,rows,index,cls,label,w,h){
  const col=index%cols,row=Math.floor(index/cols),x=cols===1?0:col*100/(cols-1),y=rows===1?0:row*100/(rows-1);
  return `<span class="sprite ${cls||''}" role="img" aria-label="${esc(label||'')}" style="width:${w||'100%'};height:${h||'100%'};background-image:url('${ART_ROOT+file}');background-size:${cols*100}% ${rows*100}%;background-position:${x}% ${y}%"></span>`
 }
-function poseSprite(pose,label){const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco',withPoles=pose==='walk'&&typeof S!=='undefined'&&S&&S.kit&&has('bastoncini');
- const heldPoles=pose==='stand'&&typeof S!=='undefined'&&S&&S.kit&&has('bastoncini');
- const base=pose==='walk'?`<span class="pose-art walk-art" data-poles="${withPoles?'yes':'no'}" style="background-image:url('${SPRITE_ROOT}${withPoles?'walk-poles':'walk'}/${who}.png')"></span>`:`<img class="pose-art" data-poles="${heldPoles?'yes':'no'}" src="${SPRITE_ROOT}${heldPoles?'pose-poles/'+who+'.png':'pose/'+who+'-'+pose+'.png'}" alt="">`;
- return `<span class="pose-sprite pose-figure pose-${pose}" role="img" aria-label="${esc(label||'')}">${base}</span>`}
+function equippedItem(base){if(typeof S==='undefined'||!S||!S.kit)return null;for(const id of S.kit){const it=typeof ITEM_BY!=='undefined'&&ITEM_BY[id];if(id===base||(it&&it.base===base))return it||{id,base:id}}return null}
+function gearColor(item,fallback){return item&&item.brand&&BRANDS[item.brand]?BRANDS[item.brand].color:fallback}
+function rigLayer(file,layer,tint){const url=`${SPRITE_ROOT}rig/${file}.png`,style=`background-image:url('${url}')${tint?`;--rig-tint:${tint};--rig-mask:url('${url}')`:''}`;return `<span class="rig-strip rig-${layer}${tint?' is-tinted':''}" style="${style}"></span>`}
+function rigSprite(pose,label){const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco',pack=equippedItem('zainoUL')||equippedItem('zainoClassico'),shoe=equippedItem('trail')||equippedItem('basse')||equippedItem('scarponi'),shell=equippedItem('guscio'),wool=equippedItem('cappelloLana'),sun=equippedItem('cappello'),net=equippedItem('rete'),gloves=equippedItem('guanti'),poles=equippedItem('bastoncini');
+ const packType=pack&&((pack.base||pack.id)==='zainoUL')?'ul':'classic',shoeBase=shoe&&(shoe.base||shoe.id),shoeType=shoeBase==='scarponi'?'boot':shoeBase==='basse'?'low':'trail',hat=wool?'wool':sun?'sun':'none';
+ const layers=[rigLayer(`base/${who}`,'base'),rigLayer(`gear/shoe-${shoeType}`,'shoes',gearColor(shoe,'#70523d'))];
+ if(shell)layers.push(rigLayer('gear/shell','shell',gearColor(shell,'#667352')));
+ if(gloves)layers.push(rigLayer('gear/gloves','gloves'));
+ if(!net&&hat!=='none')layers.push(rigLayer(`gear/hat-${hat}`,'hat'));
+ if(net)layers.push(rigLayer('gear/net','net'));
+ if(pack)layers.push(rigLayer(`gear/pack-${packType}`,'pack',gearColor(pack,'#7b4b36')));
+ if(poles)layers.push(rigLayer('gear/poles','poles'));
+ return `<span class="pose-sprite pose-figure pose-${pose} rig-character" role="img" aria-label="${esc(label||'')}" data-pack="${packType}" data-pack-brand="${pack&&pack.brand||'base'}" data-shoes="${shoeType}" data-shoe-brand="${shoe&&shoe.brand||'base'}" data-hat="${hat}" data-net="${net?'yes':'no'}" data-shell="${shell?'yes':'no'}" data-gloves="${gloves?'yes':'no'}" data-poles="${poles?'yes':'no'}">${layers.join('')}</span>`}
+function poseSprite(pose,label){if(pose==='walk'||pose==='stand')return rigSprite(pose,label);const who=(typeof H!=='undefined'&&H&&PG[H.pg])?H.pg:'marco';return `<span class="pose-sprite pose-figure pose-${pose}" role="img" aria-label="${esc(label||'')}"><img class="pose-art" src="${SPRITE_ROOT}pose/${who}-${pose}.png" alt=""></span>`}
 
 const PORTRAIT={
  pg_marco:{name:'Aspetto 1',sheet:'protagonists.png',cols:2,rows:2,index:0},
