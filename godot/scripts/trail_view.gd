@@ -96,7 +96,7 @@ const POI := [
 	},
 ]
 
-const FINISH_BACKGROUND := "res://assets/backgrounds/evening-vuolle.jpg"
+const FINISH_BACKGROUND := "res://assets/godot/poi-t1-vuolle-refuge-isometric-v1.png"
 
 const TEAL := Color("#0b2d32")
 const INK := Color("#29251f")
@@ -109,7 +109,6 @@ const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
 const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
 const StatIconControl := preload("res://godot/scripts/stat_icon.gd")
 const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
-const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
 
 var poi := 0
 var walking := false
@@ -187,7 +186,7 @@ func _build_finish_drawer() -> void:
 	drawer_content.add_child(_title_label("Dove dormi?", 30))
 	drawer_content.add_child(_body_label("A Vuolle c’è ancora un letto libero. La sauna sul lago è accesa e il custode sta chiudendo il registro."))
 	if not sauna_used:
-		var sauna := {"title":"Sauna e tuffo nel torrente", "energy":12, "morale":15, "money":0, "tag":"SAUNA", "detail":"Energia +12 · Morale +15 · asciughi tutto"}
+		var sauna := {"title":"Sauna e tuffo nel torrente", "energy":12, "morale":15, "money":0, "tag":"SAUNA", "detail":"Energia +12 · Morale +15 · asciughi tutto", "icon":"res://assets/sprites/event/rifugio.png"}
 		var sauna_button := _choice_button(sauna, false)
 		sauna_button.pressed.connect(_use_sauna)
 		drawer_content.add_child(sauna_button)
@@ -196,9 +195,9 @@ func _build_finish_drawer() -> void:
 	var sleep_label := _small_label("PER LA NOTTE", 10, RUST)
 	drawer_content.add_child(sleep_label)
 	for option in [
-		{"title":"Letto nel rifugio", "energy":35, "morale":5, "money":-30, "tag":"30 €", "detail":"Recupero pieno · scarpe asciutte · batteria carica"},
-		{"title":"Pavimento del locale comune", "energy":20, "morale":2, "money":-15, "tag":"15 €", "detail":"Recupero ridotto · al caldo"},
-		{"title":"Tenda vicino al lago", "energy":10, "morale":0, "money":0, "tag":"GRATIS", "detail":"Recupero minimo · notte all’aperto"},
+		{"title":"Letto nel rifugio", "energy":35, "morale":5, "money":-30, "tag":"30 €", "detail":"Recupero pieno · scarpe asciutte · batteria carica", "icon":"res://assets/sprites/gear/quiltPiuma.png"},
+		{"title":"Pavimento del locale comune", "energy":20, "morale":2, "money":-15, "tag":"15 €", "detail":"Recupero ridotto · al caldo", "icon":"res://assets/sprites/gear/matSchiuma.png"},
+		{"title":"Tenda vicino al lago", "energy":10, "morale":0, "money":0, "tag":"GRATIS", "detail":"Recupero minimo · notte all’aperto", "icon":"res://assets/sprites/gear/tenda.png"},
 	]:
 		var sleep_button := _choice_button(option, false)
 		sleep_button.pressed.connect(_resolve_finish.bind(option))
@@ -418,24 +417,32 @@ func _build_walking_drawer() -> void:
 
 func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	var result := Button.new()
-	result.custom_minimum_size.y = 68
-	result.add_theme_stylebox_override("normal", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
-	result.add_theme_stylebox_override("hover", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
-	result.add_theme_stylebox_override("pressed", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
+	result.custom_minimum_size.y = 72
+	var featured := str(choice.get("tag", "")) == "SAUNA"
+	result.add_theme_stylebox_override("normal", _choice_style(Color("#fff0cf") if featured else Color("#f3e7cd"), OCHRE if featured else Color("#c8b690"), 2 if featured else 1))
+	result.add_theme_stylebox_override("hover", _choice_style(Color("#fff4da"), OCHRE, 2))
+	result.add_theme_stylebox_override("pressed", _choice_style(Color("#e7d7b8"), RUST, 2))
 	var row := HBoxContainer.new()
 	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
-	row.offset_left = 13
-	row.offset_right = -13
+	row.offset_left = 11
+	row.offset_right = -11
+	row.offset_top = 5
+	row.offset_bottom = -5
 	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
-	row.add_theme_constant_override("separation", 7)
-	var marker := _small_label("•", 19, RUST)
-	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(marker)
+	row.add_theme_constant_override("separation", 9)
+	var icon_path := str(choice.get("icon", ""))
+	if not icon_path.is_empty():
+		var icon := TextureRect.new()
+		icon.texture = load(icon_path)
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(54, 54)
+		row.add_child(icon)
 	var copy := VBoxContainer.new()
 	copy.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	copy.alignment = BoxContainer.ALIGNMENT_CENTER
 	copy.add_theme_constant_override("separation", 0)
-	var title := _small_label(str(choice.get("title", "Scelta")), 14, INK)
+	var title := _small_label(str(choice.get("title", "Scelta")), 15, INK)
 	title.add_theme_font_override("font", SERIF_SEMIBOLD)
 	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
 	copy.add_child(title)
@@ -444,15 +451,27 @@ func _choice_button(choice: Dictionary, emits_choice := true) -> Button:
 	detail.max_lines_visible = 2
 	copy.add_child(detail)
 	row.add_child(copy)
-	var action := _small_label(str(choice.get("tag", "")), 9, RUST)
-	action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
-	row.add_child(action)
-	var arrow := _small_label("›", 25, RUST)
+	var arrow := _small_label("›", 29, RUST)
 	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
 	row.add_child(arrow)
 	result.add_child(row)
 	if emits_choice: result.pressed.connect(func(): choice_selected.emit(choice))
 	return result
+
+func _choice_style(fill: Color, border: Color, width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(width)
+	style.set_corner_radius_all(7)
+	style.shadow_color = Color(0.20, .14, .08, .13)
+	style.shadow_size = 3
+	style.shadow_offset = Vector2(0, 2)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
 
 func _shortcut_row() -> HBoxContainer:
 	var row := HBoxContainer.new()
@@ -535,83 +554,40 @@ func _draw() -> void:
 		var scene_rect := Rect2(Vector2(0, 64), Vector2(size.x, scene_bottom - 64.0))
 		_draw_texture_cover(background, scene_rect)
 	_draw_atmosphere()
-	_draw_progress_dots()
-
-func _draw_progress_dots() -> void:
-	var start_x := size.x - 68.0
-	for index in range(6):
-		var fill := OCHRE if index <= poi else Color("#a3b1b0")
-		draw_circle(Vector2(start_x + index * 9.0, 60.0), 2.5, fill)
 
 func _draw_texture_cover(texture: Texture2D, target: Rect2) -> void:
 	var texture_size := texture.get_size()
 	if texture_size.x <= 0 or texture_size.y <= 0: return
 	var factor := maxf(target.size.x / texture_size.x, target.size.y / texture_size.y)
 	var source_size := target.size / factor
+	var breathing := 1.0 - (sin(time * .22) + 1.0) * .0025
+	source_size *= breathing
 	var source_position := (texture_size - source_size) * .5
 	# Un movimento lentissimo da camera rende vivo il quadro senza deformarlo.
 	var drift_room := maxf(0.0, (texture_size.x - source_size.x) * .45)
 	source_position.x += sin(time * .16) * minf(drift_room, texture_size.x * .008)
+	source_position.y += cos(time * .13) * minf(maxf(0.0, (texture_size.y - source_size.y) * .35), texture_size.y * .004)
 	draw_texture_rect_region(texture, target, Rect2(source_position, source_size))
 
 func _draw_atmosphere() -> void:
-	if not stats_bar: return
+	# Niente particelle generiche sopra i quadri: il movimento di camera è sufficiente.
+	# A Vuolle resta soltanto il fumo, ancorato al vero camino della sauna.
+	if not stats_bar or not finished: return
 	var top := 64.0
 	var bottom := stats_bar.position.y
 	var scene_height := maxf(120.0, bottom - top)
-	if finished:
-		# Increspature orizzontali, luce pulsante alle finestre e fumo dalla sauna.
-		for index in range(6):
-			var wave_y := top + scene_height * (.61 + index * .052)
-			var wave_x := size.x * .20 + sin(time * .9 + index) * 13.0 + index * 11.0
-			draw_line(Vector2(wave_x, wave_y), Vector2(wave_x + 38.0 + index * 5.0, wave_y), Color(1,.87,.58,.18), 1.25, true)
-		var glow := .16 + (sin(time * 2.2) + 1.0) * .055
-		draw_circle(Vector2(size.x * .64, top + scene_height * .39), 18.0, Color(1,.55,.18,glow))
-		for index in range(5):
-			var smoke_phase := fmod(time * 12.0 + index * 16.0, scene_height * .28)
-			var smoke_center := Vector2(size.x * .84 + sin(time * .7 + index) * 6.0, top + scene_height * .38 - smoke_phase)
-			draw_circle(smoke_center, 6.0 + index * 1.7, Color(.91,.91,.84,.15))
-		return
-	match poi:
-		0:
-			# Spruzzi e velo d’acqua sulla cascata.
-			for index in range(8):
-				var fall_x := size.x * (.35 + index * .018)
-				var fall_y := top + scene_height * .20 + fmod(time * (38.0 + index * 2.0) + index * 23.0, scene_height * .36)
-				draw_line(Vector2(fall_x, fall_y), Vector2(fall_x - 3.0, fall_y + 19.0), Color(.84,.96,1,.38), 1.6, true)
-			for index in range(4):
-				var mist_x := size.x * .39 + sin(time * .55 + index) * (24.0 + index * 7.0)
-				draw_circle(Vector2(mist_x, top + scene_height * .60), 13.0 + index * 5.0, Color(.88,.96,1,.09))
-		1:
-			# Cerchi concentrici nella sorgente.
-			for index in range(4):
-				var ripple := fmod(time * 18.0 + index * 18.0, 72.0)
-				draw_arc(Vector2(size.x * .51, top + scene_height * .57), ripple, 0, TAU, 48, Color(.82,.95,1,.28 * (1.0 - ripple / 72.0)), 1.4, true)
-		2, 3:
-			# Foglie portate dal vento: grandi abbastanza da essere leggibili sul telefono.
-			for index in range(11):
-				var leaf_x := fmod(time * (24.0 + index % 3) + index * 43.0, size.x + 36.0) - 18.0
-				var leaf_y := top + 28.0 + fmod(index * 37.0 + sin(time + index) * 15.0, scene_height - 48.0)
-				var leaf_color := Color("#d8a13b") if poi == 2 else Color("#8e552a")
-				leaf_color.a = .62
-				draw_colored_polygon(PackedVector2Array([Vector2(leaf_x-3,leaf_y),Vector2(leaf_x+4,leaf_y-2),Vector2(leaf_x+2,leaf_y+3)]), leaf_color)
-		4:
-			# Increspature della baia e due uccelli in lontananza.
-			for index in range(7):
-				var water_y := top + scene_height * (.47 + index * .07)
-				var water_x := size.x * .54 + sin(time * .8 + index) * 22.0
-				draw_line(Vector2(water_x, water_y), Vector2(water_x + 35.0 + index * 3.0, water_y), Color(.83,.95,1,.24), 1.3, true)
-			for index in range(2):
-				var bird_x := fmod(time * 11.0 + index * 170.0, size.x + 50.0) - 25.0
-				var bird_y := top + 45.0 + index * 24.0
-				draw_polyline(PackedVector2Array([Vector2(bird_x-7,bird_y+2),Vector2(bird_x,bird_y-2),Vector2(bird_x+7,bird_y+2)]), Color(.08,.13,.14,.48), 1.7, true)
-		5:
-			# Luce della sera sul lago e foschia che scorre verso Vuolle.
-			var sun_pulse := .10 + (sin(time * 1.4) + 1.0) * .045
-			draw_circle(Vector2(size.x * .80, top + scene_height * .22), 31.0, Color(1,.61,.18,sun_pulse))
-			for index in range(5):
-				var fog_x := fmod(time * (9.0 + index) + index * 101.0, size.x + 150.0) - 75.0
-				draw_circle(Vector2(fog_x, top + scene_height * (.42 + index * .055)), 34.0 + index * 7.0, Color(.92,.94,.88,.08))
+	var chimney := Vector2(size.x * .855, top + scene_height * .185)
+	for strand in range(2):
+		var smoke_line := PackedVector2Array()
+		for step in range(9):
+			var sway := sin(time * 1.05 + step * .58 + strand * 1.8) * (1.5 + step * .55)
+			smoke_line.append(chimney + Vector2(strand * 3.5 + sway, -step * 6.0))
+		draw_polyline(smoke_line, Color(.95,.95,.89,.34), 2.2, true)
+	for index in range(7):
+		var rise := fmod(time * 11.0 + index * 9.0, scene_height * .24)
+		var progress := rise / (scene_height * .24)
+		var smoke_center := chimney + Vector2(sin(time * .65 + index * 1.4) * (2.0 + progress * 7.0) + rise * .06, -rise)
+		draw_circle(smoke_center, 3.5 + progress * 7.5, Color(.94,.94,.88,.27 * (1.0 - progress)))
 
 func _panel_style(fill: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
 	var style := StyleBoxFlat.new()

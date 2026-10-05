@@ -5,7 +5,7 @@ func _init() -> void:
 
 func run() -> void:
 	var state = root.get_node("GameState")
-	assert(state.VERSION == "0.4.0")
+	assert(state.VERSION == "0.4.1")
 	assert(state.POI_NAMES.size() == 6)
 	state.person = "sara"
 	state.gear.poles = true
@@ -34,6 +34,6 @@ func run() -> void:
 		assert(main.trail.background != null)
 	main.trail.show_finish()
 	assert(main.trail.finished)
-	assert(main.trail.background.resource_path.contains("evening-vuolle.jpg"))
+	assert(main.trail.background.resource_path.contains("poi-t1-vuolle-refuge-isometric-v1.png"))
 	print("Godot smoke test: 6 POI, carte illustrate e interfaccia senza vuoti OK")
 	quit()
