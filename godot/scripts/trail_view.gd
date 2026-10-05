@@ -5,17 +5,9 @@ signal choice_selected(energy_delta: int, morale_delta: int)
 signal pack_requested
 signal restart_requested
 
-const BACKGROUNDS := [
-	"res://assets/godot/poi-t1-01-cascata-cutout.png",
-	"res://assets/godot/poi-t1-02-sorgente-cutout.png",
-	"res://assets/godot/poi-t1-03-betulle-cutout.png",
-	"res://assets/godot/poi-t1-04-mirtilli-cutout.png",
-	"res://assets/godot/poi-t1-05-baia-cutout.png",
-	"res://assets/godot/poi-t1-06-belvedere-cutout.png",
-]
-
 const POI := [
 	{
+		"background": "res://assets/godot/poi-t1-01-cascata-cutout.png",
 		"weather": "SERENO · 8°", "kicker": "SOSTA",
 		"title": "La Cascata di Lavvu", "event_title": "La borraccia vuota",
 		"body": "L’acqua copre ogni rumore. Il sentiero prosegue accanto alla cascata.",
@@ -23,6 +15,7 @@ const POI := [
 		"choices": [["Riempi la borraccia", 1, 1, "ACQUA"], ["Fermati ad ascoltare", -1, 3, "CALMA"], ["Continua sul sentiero", 0, 0, "PASSA"]],
 	},
 	{
+		"background": "res://assets/godot/poi-t1-02-sorgente-cutout-v2.png",
 		"weather": "VENTO LEGGERO · 7°", "kicker": "SCOPERTA",
 		"title": "La Sorgente Fredda", "event_title": "Acqua tra le rocce",
 		"body": "La sorgente è così limpida che sembra immobile. L’aria sa di pietra bagnata.",
@@ -30,6 +23,7 @@ const POI := [
 		"choices": [["Bevi alla sorgente", 4, 1, "BEVI"], ["Bagna il viso", 1, 2, "SOSTA"], ["Passa oltre", 0, 0, "PASSA"]],
 	},
 	{
+		"background": "res://assets/godot/poi-t1-03-betulle-cutout.png",
 		"weather": "NUVOLOSO · 7°", "kicker": "TRACCIA",
 		"title": "Le Betulle dell’Alce", "event_title": "Orme nel fango",
 		"body": "Orme fresche attraversano il sentiero e scompaiono fra le betulle basse.",
@@ -37,6 +31,7 @@ const POI := [
 		"choices": [["Segui le orme", -3, 4, "RISCHIO"], ["Fai silenzio e aspetta", -1, 2, "ATTENDI"], ["Resta sul sentiero", 0, 0, "PASSA"]],
 	},
 	{
+		"background": "res://assets/godot/poi-t1-04-mirtilli-cutout.png",
 		"weather": "SOLE E RAFFICHE · 9°", "kicker": "RACCOLTA",
 		"title": "La Costa dei Mirtilli", "event_title": "Una macchia blu",
 		"body": "Il pendio è pieno di bacche. Il vento piega gli arbusti tutti insieme.",
@@ -44,6 +39,7 @@ const POI := [
 		"choices": [["Raccogli una manciata", 2, 3, "RACCOGLI"], ["Fermati per una foto", -1, 2, "RICORDO"], ["Continua a salire", 0, 0, "PASSA"]],
 	},
 	{
+		"background": "res://assets/godot/poi-t1-05-baia-cutout.png",
 		"weather": "CALMA · 9°", "kicker": "INCONTRO",
 		"title": "La Baia del Pescatore", "event_title": "La barca vuota",
 		"body": "Una barca dondola accanto al pontile. Dal piccolo capanno non arriva rumore.",
@@ -51,6 +47,7 @@ const POI := [
 		"choices": [["Controlla il capanno", -2, 3, "CERCA"], ["Riposa sul pontile", 3, 2, "RIPOSA"], ["Prosegui verso Vuolle", 0, 0, "PASSA"]],
 	},
 	{
+		"background": "res://assets/godot/poi-t1-06-belvedere-cutout.png",
 		"weather": "LUCE DELLA SERA · 6°", "kicker": "ULTIMO SGUARDO",
 		"title": "Il Belvedere di Vuolle", "event_title": "Finestre accese",
 		"body": "Oltre il lago si accendono le finestre. Dietro il rifugio sale il fumo della sauna.",
@@ -68,6 +65,9 @@ const SOFT := Color("#665b50")
 const SERIF := preload("res://assets/fonts/Spectral-Regular.ttf")
 const SERIF_SEMIBOLD := preload("res://assets/fonts/Spectral-SemiBold.ttf")
 const HAND := preload("res://assets/fonts/Caveat-Variable.ttf")
+const HEADER_FRAME := "res://assets/ui/header-frame-v2.png"
+const STATS_FRAME := "res://assets/ui/stats-frame-v2.png"
+const CHOICE_FRAME := "res://assets/ui/choice-paper-v2.png"
 
 var poi := 0
 var walking := false
@@ -96,10 +96,10 @@ func _ready() -> void:
 	call_deferred("_layout_interface")
 
 func configure(next_poi: int, is_walking: bool) -> void:
-	poi = clampi(next_poi, 0, BACKGROUNDS.size() - 1)
+	poi = clampi(next_poi, 0, POI.size() - 1)
 	walking = is_walking
 	finished = false
-	background = load(BACKGROUNDS[poi])
+	background = load(str(POI[poi].background))
 	drawer.add_theme_stylebox_override("panel", _paper_style())
 	_refresh_header()
 	_refresh_stats()
@@ -137,13 +137,11 @@ func show_finish() -> void:
 
 func _create_header() -> void:
 	header = PanelContainer.new()
-	var style := _panel_style(Color(TEAL, .94), Color(1,1,1,.12), 0, 0)
-	style.border_width_bottom = 1
-	header.add_theme_stylebox_override("panel", style)
+	header.add_theme_stylebox_override("panel", _ornament_style(HEADER_FRAME, 0, 0))
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 18)
 	margin.add_theme_constant_override("margin_right", 16)
-	margin.add_theme_constant_override("margin_top", 10)
+	margin.add_theme_constant_override("margin_top", 21)
 	margin.add_theme_constant_override("margin_bottom", 8)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 10)
@@ -153,7 +151,7 @@ func _create_header() -> void:
 	var divider := VSeparator.new()
 	divider.custom_minimum_size.x = 1
 	row.add_child(divider)
-	header_title = _small_label("", 17, Color("#fff6e5"))
+	header_title = _small_label("", 18, Color("#fff6e5"))
 	header_title.add_theme_font_override("font", SERIF_SEMIBOLD)
 	header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	header_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
@@ -173,7 +171,8 @@ func _create_header() -> void:
 
 func _create_stats() -> void:
 	stats_bar = PanelContainer.new()
-	stats_bar.add_theme_stylebox_override("panel", _panel_style(Color(TEAL, .97), Color(1,1,1,.18), 11, 1))
+	stats_bar.custom_minimum_size.y = 58
+	stats_bar.add_theme_stylebox_override("panel", _ornament_style(STATS_FRAME, 0, 0))
 	var margin := MarginContainer.new()
 	margin.add_theme_constant_override("margin_left", 8)
 	margin.add_theme_constant_override("margin_right", 8)
@@ -181,17 +180,28 @@ func _create_stats() -> void:
 	margin.add_theme_constant_override("margin_bottom", 7)
 	var row := HBoxContainer.new()
 	row.add_theme_constant_override("separation", 2)
+	var stat_icons := ["sole.png", "cibo.png", "meraviglia.png", "soldi.png"]
 	for index in range(4):
-		var cell := VBoxContainer.new()
+		var cell := HBoxContainer.new()
 		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		cell.add_theme_constant_override("separation", -3)
+		cell.alignment = BoxContainer.ALIGNMENT_CENTER
+		cell.add_theme_constant_override("separation", 2)
+		var icon := TextureRect.new()
+		icon.texture = load("res://assets/sprites/event/%s" % stat_icons[index])
+		icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+		icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+		icon.custom_minimum_size = Vector2(19, 19)
+		cell.add_child(icon)
+		var text_stack := VBoxContainer.new()
+		text_stack.add_theme_constant_override("separation", -4)
 		var value := _small_label("", 21, OCHRE)
 		value.add_theme_font_override("font", HAND)
 		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 		var caption := _small_label("", 10, Color("#ddd4c5"))
 		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		cell.add_child(value)
-		cell.add_child(caption)
+		text_stack.add_child(value)
+		text_stack.add_child(caption)
+		cell.add_child(text_stack)
 		row.add_child(cell)
 		stat_labels.append(value)
 		stat_labels.append(caption)
@@ -281,16 +291,32 @@ func _build_walking_drawer() -> void:
 
 func _choice_button(text_value: String, energy_delta: int, morale_delta: int, tag: String, emits_choice := true) -> Button:
 	var result := Button.new()
-	result.text = "%s  ·  %s  >" % [text_value, tag]
-	result.alignment = HORIZONTAL_ALIGNMENT_LEFT
-	result.custom_minimum_size.y = 42
-	result.add_theme_font_size_override("font_size", 14)
-	result.add_theme_font_override("font", SERIF_SEMIBOLD)
-	result.add_theme_color_override("font_color", INK)
-	result.add_theme_color_override("font_hover_color", RUST)
-	result.add_theme_stylebox_override("normal", _panel_style(Color("#f8ecd3d9"), Color("#c5b69a"), 7, 1))
-	result.add_theme_stylebox_override("hover", _panel_style(Color("#fff7e5"), RUST, 7, 1))
-	result.add_theme_stylebox_override("pressed", _panel_style(Color("#e6d4b3"), RUST, 7, 1))
+	result.custom_minimum_size.y = 46
+	result.add_theme_stylebox_override("normal", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
+	result.add_theme_stylebox_override("hover", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
+	result.add_theme_stylebox_override("pressed", _ornament_style(CHOICE_FRAME, 0, 0, 13, 9))
+	var row := HBoxContainer.new()
+	row.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	row.offset_left = 13
+	row.offset_right = -13
+	row.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	row.add_theme_constant_override("separation", 6)
+	var marker := _small_label("•", 18, RUST)
+	marker.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(marker)
+	var title := _small_label(text_value, 14, INK)
+	title.add_theme_font_override("font", SERIF_SEMIBOLD)
+	title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	title.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(title)
+	var action := _small_label(tag, 10, RUST)
+	action.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(action)
+	var arrow := _small_label("›", 25, RUST)
+	arrow.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	row.add_child(arrow)
+	result.add_child(row)
 	if emits_choice: result.pressed.connect(func(): choice_selected.emit(energy_delta, morale_delta))
 	return result
 
@@ -299,35 +325,50 @@ func _shortcut_row() -> HBoxContainer:
 	row.alignment = BoxContainer.ALIGNMENT_CENTER
 	row.add_theme_constant_override("separation", 34)
 	var notebook := Button.new()
-	notebook.text = "TACCUINO"
+	notebook.custom_minimum_size = Vector2(88, 42)
 	notebook.flat = true
-	notebook.add_theme_font_size_override("font_size", 12)
-	notebook.add_theme_font_override("font", SERIF_SEMIBOLD)
-	notebook.add_theme_color_override("font_color", INK)
+	notebook.add_child(_shortcut_content("TACCUINO", "res://assets/sprites/event/taccuino.png"))
 	row.add_child(notebook)
 	var divider := VSeparator.new()
 	divider.custom_minimum_size.y = 28
 	row.add_child(divider)
 	var pack := Button.new()
-	pack.text = "ZAINO"
+	pack.custom_minimum_size = Vector2(88, 42)
 	pack.flat = true
-	pack.add_theme_font_size_override("font_size", 12)
-	pack.add_theme_font_override("font", SERIF_SEMIBOLD)
-	pack.add_theme_color_override("font_color", INK)
+	pack.add_child(_shortcut_content("ZAINO", "res://assets/sprites/event/zaino.png"))
 	pack.pressed.connect(func(): pack_requested.emit())
 	row.add_child(pack)
 	return row
 
+func _shortcut_content(title: String, icon_path: String) -> HBoxContainer:
+	var content := HBoxContainer.new()
+	content.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	content.mouse_filter = Control.MOUSE_FILTER_IGNORE
+	content.alignment = BoxContainer.ALIGNMENT_CENTER
+	content.add_theme_constant_override("separation", 4)
+	var icon := TextureRect.new()
+	icon.texture = load(icon_path)
+	icon.expand_mode = TextureRect.EXPAND_IGNORE_SIZE
+	icon.stretch_mode = TextureRect.STRETCH_KEEP_ASPECT_CENTERED
+	icon.custom_minimum_size = Vector2(24, 28)
+	content.add_child(icon)
+	var caption := _small_label(title, 11, INK)
+	caption.add_theme_font_override("font", SERIF_SEMIBOLD)
+	caption.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	content.add_child(caption)
+	return content
+
 func _layout_interface() -> void:
 	if size.x <= 0 or not header: return
 	header.position = Vector2.ZERO
-	header.size = Vector2(size.x, 72)
+	header.size = Vector2(size.x, 82)
 	drawer.size.x = size.x - 20
 	drawer.position.x = 10
 	stats_bar.size.x = size.x - 24
+	stats_bar.size.y = 58
 	stats_bar.position.x = 12
-	footer_bar.size = Vector2(170, 34)
-	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 39)
+	footer_bar.size = Vector2(220, 42)
+	footer_bar.position = Vector2((size.x - footer_bar.size.x) * .5, size.y - 45)
 	_move_interface(true)
 
 func _move_interface(immediate := false) -> void:
@@ -338,7 +379,7 @@ func _move_interface(immediate := false) -> void:
 	drawer_height = minf(drawer_height, size.y * .56)
 	drawer.size.y = drawer_height
 	var drawer_y := size.y - drawer_height
-	var stats_y := drawer_y - 63.0
+	var stats_y := drawer_y - 66.0
 	if interface_tween and interface_tween.is_valid(): interface_tween.kill()
 	if immediate:
 		drawer.position.y = drawer_y
@@ -356,16 +397,16 @@ func _draw() -> void:
 	draw_rect(Rect2(Vector2.ZERO, size), TEAL)
 	if background:
 		var scene_bottom := maxf(220.0, stats_bar.position.y + 12.0)
-		var scene_rect := Rect2(Vector2(0, 55), Vector2(size.x, scene_bottom - 55.0))
+		var scene_rect := Rect2(Vector2(0, 64), Vector2(size.x, scene_bottom - 64.0))
 		_draw_texture_cover(background, scene_rect)
 	_draw_atmosphere()
 	_draw_progress_dots()
 
 func _draw_progress_dots() -> void:
-	var start_x := size.x - 65.0
+	var start_x := size.x - 68.0
 	for index in range(6):
 		var fill := OCHRE if index <= poi else Color("#a3b1b0")
-		draw_circle(Vector2(start_x + index * 9.0, 51.0), 2.5, fill)
+		draw_circle(Vector2(start_x + index * 9.0, 60.0), 2.5, fill)
 
 func _draw_texture_cover(texture: Texture2D, target: Rect2) -> void:
 	var texture_size := texture.get_size()
@@ -402,6 +443,19 @@ func _panel_style(fill: Color, border: Color, radius: int, width: int) -> StyleB
 	style.content_margin_right = 10
 	style.content_margin_top = 6
 	style.content_margin_bottom = 6
+	return style
+
+func _ornament_style(path: String, horizontal_margin: float, vertical_margin: float, content_horizontal := 8.0, content_vertical := 6.0) -> StyleBoxTexture:
+	var style := StyleBoxTexture.new()
+	style.texture = load(path)
+	style.set_texture_margin(SIDE_LEFT, horizontal_margin)
+	style.set_texture_margin(SIDE_RIGHT, horizontal_margin)
+	style.set_texture_margin(SIDE_TOP, vertical_margin)
+	style.set_texture_margin(SIDE_BOTTOM, vertical_margin)
+	style.set_content_margin(SIDE_LEFT, content_horizontal)
+	style.set_content_margin(SIDE_RIGHT, content_horizontal)
+	style.set_content_margin(SIDE_TOP, content_vertical)
+	style.set_content_margin(SIDE_BOTTOM, content_vertical)
 	return style
 
 func _paper_style() -> StyleBoxTexture:
