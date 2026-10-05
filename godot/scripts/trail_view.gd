@@ -1,180 +1,353 @@
 class_name TrailView
 extends Control
 
+signal choice_selected(energy_delta: int, morale_delta: int)
+signal pack_requested
+signal restart_requested
+
 const BACKGROUNDS := [
-	"res://assets/godot/poi-t1-waterfall-v1.png",
-	"res://assets/sprites/scene/spring.png",
-	"res://assets/sprites/scene/moose-birches.png",
-	"res://assets/sprites/scene/blueberry-slope.png",
-	"res://assets/sprites/scene/fisherman-lake.png",
-	"res://assets/backgrounds/poi-t1-06-vuolle-overlook.jpg",
+	"res://assets/godot/poi-t1-01-cascata-isometric.png",
+	"res://assets/godot/poi-t1-02-sorgente-isometric.png",
+	"res://assets/godot/poi-t1-03-betulle-isometric.png",
+	"res://assets/godot/poi-t1-04-mirtilli-isometric.png",
+	"res://assets/godot/poi-t1-05-baia-isometric.png",
+	"res://assets/godot/poi-t1-06-belvedere-isometric.png",
 ]
-const ROUTE := [
-	Vector2(.125,.79), Vector2(.263,.594), Vector2(.40,.715),
-	Vector2(.525,.466), Vector2(.674,.343), Vector2(.863,.134),
+
+const POI := [
+	{
+		"weather": "SERENO · 8°", "kicker": "PUNTO DI INTERESSE",
+		"title": "La Cascata di Lavvu",
+		"body": "L’acqua copre ogni rumore. Il sentiero prosegue accanto alla cascata.",
+		"choices": [["Riempi la borraccia", 1, 1], ["Fermati ad ascoltare", -1, 3], ["Continua sul sentiero", 0, 0]],
+	},
+	{
+		"weather": "VENTO LEGGERO · 7°", "kicker": "SOSTA",
+		"title": "La Sorgente Fredda",
+		"body": "L’acqua nasce tra due rocce. È così limpida che sembra immobile.",
+		"choices": [["Bevi alla sorgente", 4, 1], ["Bagna il viso", 1, 2], ["Passa oltre", 0, 0]],
+	},
+	{
+		"weather": "NUVOLOSO · 7°", "kicker": "TRACCIA",
+		"title": "Le Betulle dell’Alce",
+		"body": "Orme fresche attraversano il fango e scompaiono fra le betulle basse.",
+		"choices": [["Segui le orme per un tratto", -3, 4], ["Fai silenzio e aspetta", -1, 2], ["Resta sul sentiero", 0, 0]],
+	},
+	{
+		"weather": "SOLE E RAFFICHE · 9°", "kicker": "RACCOLTA",
+		"title": "La Costa dei Mirtilli",
+		"body": "Il pendio è blu di bacche. Il vento piega gli arbusti tutti insieme.",
+		"choices": [["Raccogli una manciata", 2, 3], ["Fermati per una foto", -1, 2], ["Continua a salire", 0, 0]],
+	},
+	{
+		"weather": "CALMA · 9°", "kicker": "INCONTRO",
+		"title": "La Baia del Pescatore",
+		"body": "Una barca vuota dondola accanto al pontile. Dal capanno non arriva rumore.",
+		"choices": [["Controlla che sia tutto a posto", -2, 3], ["Riposa sul pontile", 3, 2], ["Prosegui verso Vuolle", 0, 0]],
+	},
+	{
+		"weather": "LUCE DELLA SERA · 6°", "kicker": "ULTIMO SGUARDO",
+		"title": "Il Belvedere di Vuolle",
+		"body": "Oltre il lago si accendono le finestre del rifugio. La tappa è quasi finita.",
+		"choices": [["Raggiungi Rifugio Vuolle", -2, 5]],
+	},
 ]
-const INK := Color("#302822")
-const PAPER := Color("#f3ead8")
-const RUST := Color("#9b321d")
+
+const TEAL := Color("#0d3035")
+const PAPER := Color("#f1e5ca")
+const INK := Color("#2d2924")
+const RUST := Color("#943d1d")
+const OCHRE := Color("#dda63b")
+const MOSS := Color("#788346")
+const SOFT := Color("#6d6156")
 
 var poi := 0
 var walking := false
+var finished := false
 var time := 0.0
-var walk_elapsed := 0.0
 var background: Texture2D
-var map_texture: Texture2D
-var hiker: CharacterPreview
+var header: PanelContainer
+var header_title: Label
+var header_progress: Label
+var stats_bar: PanelContainer
+var stat_labels: Array[Label] = []
+var drawer: PanelContainer
+var drawer_content: VBoxContainer
+var interface_tween: Tween
 
 func _ready() -> void:
 	clip_contents = true
-	map_texture = load("res://assets/maps/stage-map-1.png")
-	hiker = CharacterPreview.new()
-	hiker.set_anchors_preset(Control.PRESET_TOP_LEFT)
-	hiker.size = Vector2(86, 86)
-	hiker.mirrored = true
-	add_child(hiker)
-	_create_title()
-	resized.connect(_place_hiker)
-	_place_hiker()
+	mouse_filter = Control.MOUSE_FILTER_PASS
+	_create_header()
+	_create_stats()
+	_create_drawer()
+	resized.connect(_layout_interface)
 	set_process(true)
-
-func _create_title() -> void:
-	var panel := PanelContainer.new()
-	panel.position = Vector2(12, 12)
-	panel.size = Vector2(292, 74)
-	var style := StyleBoxFlat.new()
-	style.bg_color = Color(PAPER, .94)
-	style.set_corner_radius_all(12)
-	style.content_margin_left = 13
-	style.content_margin_right = 13
-	style.content_margin_top = 7
-	style.content_margin_bottom = 7
-	panel.add_theme_stylebox_override("panel", style)
-	var column := VBoxContainer.new()
-	column.add_theme_constant_override("separation", 0)
-	var title := Label.new()
-	title.text = "Tappa 1"
-	title.add_theme_font_size_override("font_size", 29)
-	title.add_theme_color_override("font_color", INK)
-	var handwritten := SystemFont.new()
-	handwritten.font_names = PackedStringArray(["Caveat", "Segoe Print", "Comic Sans MS"])
-	handwritten.font_weight = 700
-	title.add_theme_font_override("font", handwritten)
-	column.add_child(title)
-	var subtitle := Label.new()
-	subtitle.text = "La Cascata di Lavvu · 14 km"
-	subtitle.add_theme_font_size_override("font_size", 14)
-	subtitle.add_theme_color_override("font_color", Color("#67594f"))
-	column.add_child(subtitle)
-	panel.add_child(column)
-	add_child(panel)
-
-func _map_rect() -> Rect2:
-	var width := minf(138.0, size.x * .34)
-	var height := width * 530.0 / 800.0
-	return Rect2(size.x-width-7.0, size.y-height-6.0, width, height)
-
-func _place_hiker() -> void:
-	if not hiker: return
-	var map_rect := _map_rect()
-	hiker.position = Vector2(size.x-hiker.size.x-1.0, map_rect.end.y-hiker.size.y)
+	call_deferred("_layout_interface")
 
 func configure(next_poi: int, is_walking: bool) -> void:
-	poi = clampi(next_poi, 0, 5)
+	poi = clampi(next_poi, 0, BACKGROUNDS.size() - 1)
 	walking = is_walking
-	if walking: walk_elapsed = 0.0
+	finished = false
 	background = load(BACKGROUNDS[poi])
-	if hiker:
-		hiker.mirrored = true
-		hiker.configure(GameState.person, bool(GameState.gear.poles), walking)
+	_refresh_header()
+	_refresh_stats()
+	_build_drawer()
+	_move_interface(not walking, true)
 	queue_redraw()
+
+func set_walking(value: bool) -> void:
+	walking = value
+	if walking:
+		_build_walking_drawer()
+	_move_interface(not walking)
+	queue_redraw()
+
+func show_finish() -> void:
+	walking = false
+	finished = true
+	header_title.text = "Rifugio Vuolle"
+	header_progress.text = "FINE TAPPA"
+	clear_children(drawer_content)
+	drawer_content.add_child(_small_label("TAPPA COMPLETATA", 12, RUST))
+	drawer_content.add_child(_title_label("Sei arrivato", 30))
+	drawer_content.add_child(_body_label("Le finestre sono accese. Dietro il rifugio sale il fumo della sauna."))
+	drawer_content.add_child(_small_label("14 km  ·  %s  ·  energia %d  ·  morale %d" % [GameState.clock_text(), GameState.energy, GameState.morale], 14, SOFT))
+	var restart := _choice_button("Ricomincia la prova della tappa", 0, 0, false)
+	restart.pressed.connect(func(): restart_requested.emit())
+	drawer_content.add_child(restart)
+	drawer_content.add_child(_shortcut_row())
+	_refresh_stats()
+	_move_interface(true)
+
+func _create_header() -> void:
+	header = PanelContainer.new()
+	header.add_theme_stylebox_override("panel", _panel_style(Color(TEAL, .88), Color(1,1,1,.11), 13, 1))
+	var margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]: margin.add_theme_constant_override(side, 15)
+	for side in ["margin_top", "margin_bottom"]: margin.add_theme_constant_override(side, 9)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 10)
+	var stage := _small_label("TAPPA 1", 12, OCHRE)
+	stage.custom_minimum_size.x = 60
+	row.add_child(stage)
+	row.add_child(VSeparator.new())
+	header_title = _small_label("", 18, Color("#fff7e8"))
+	header_title.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	header_title.text_overrun_behavior = TextServer.OVERRUN_TRIM_ELLIPSIS
+	row.add_child(header_title)
+	header_progress = _small_label("", 12, Color("#e5dcc9"))
+	header_progress.horizontal_alignment = HORIZONTAL_ALIGNMENT_RIGHT
+	row.add_child(header_progress)
+	margin.add_child(row)
+	header.add_child(margin)
+	add_child(header)
+
+func _create_stats() -> void:
+	stats_bar = PanelContainer.new()
+	stats_bar.add_theme_stylebox_override("panel", _panel_style(Color(TEAL, .94), Color(1,1,1,.13), 11, 1))
+	var margin := MarginContainer.new()
+	for side in ["margin_left", "margin_right"]: margin.add_theme_constant_override(side, 8)
+	for side in ["margin_top", "margin_bottom"]: margin.add_theme_constant_override(side, 6)
+	var row := HBoxContainer.new()
+	row.add_theme_constant_override("separation", 3)
+	for icon in ["◷", "ϟ", "♥", "€"]:
+		var cell := VBoxContainer.new()
+		cell.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		cell.add_theme_constant_override("separation", -2)
+		var value := _small_label(icon, 18, OCHRE)
+		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		var caption := _small_label("", 10, Color("#d7d0c2"))
+		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		cell.add_child(value)
+		cell.add_child(caption)
+		row.add_child(cell)
+		stat_labels.append(value)
+		stat_labels.append(caption)
+	margin.add_child(row)
+	stats_bar.add_child(margin)
+	add_child(stats_bar)
+
+func _create_drawer() -> void:
+	drawer = PanelContainer.new()
+	drawer.add_theme_stylebox_override("panel", _paper_style())
+	var margin := MarginContainer.new()
+	margin.add_theme_constant_override("margin_left", 20)
+	margin.add_theme_constant_override("margin_right", 20)
+	margin.add_theme_constant_override("margin_top", 13)
+	margin.add_theme_constant_override("margin_bottom", 12)
+	drawer_content = VBoxContainer.new()
+	drawer_content.add_theme_constant_override("separation", 5)
+	margin.add_child(drawer_content)
+	drawer.add_child(margin)
+	add_child(drawer)
+
+func _refresh_header() -> void:
+	header_title.text = str(POI[poi].title)
+	header_progress.text = "%d / 6" % (poi + 1)
+
+func _refresh_stats() -> void:
+	var values := [GameState.clock_text(), str(GameState.energy), str(GameState.morale), str(GameState.money)]
+	var captions := ["ORA", "ENERGIA", "MORALE", "SOLDI"]
+	for index in range(4):
+		stat_labels[index * 2].text = values[index]
+		stat_labels[index * 2 + 1].text = captions[index]
+
+func _build_drawer() -> void:
+	clear_children(drawer_content)
+	var top := HBoxContainer.new()
+	var weather := _small_label(str(POI[poi].weather), 12, MOSS)
+	weather.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	top.add_child(weather)
+	top.add_child(_small_label("POI %d DI 6" % (poi + 1), 11, SOFT))
+	drawer_content.add_child(top)
+	drawer_content.add_child(_small_label(str(POI[poi].kicker), 11, RUST))
+	drawer_content.add_child(_title_label(str(POI[poi].title), 25))
+	drawer_content.add_child(_body_label(str(POI[poi].body)))
+	for choice in POI[poi].choices:
+		drawer_content.add_child(_choice_button(str(choice[0]), int(choice[1]), int(choice[2])))
+	drawer_content.add_child(_shortcut_row())
+
+func _build_walking_drawer() -> void:
+	clear_children(drawer_content)
+	drawer_content.add_child(_small_label("IN CAMMINO", 11, RUST))
+	var destination := "Rifugio Vuolle" if poi == 5 else str(POI[poi + 1].title)
+	drawer_content.add_child(_title_label("Verso %s" % destination, 24))
+	drawer_content.add_child(_body_label("Il quadro si apre. Restano il vento, l’acqua e il rumore dei passi."))
+
+func _choice_button(text_value: String, energy_delta: int, morale_delta: int, emits_choice := true) -> Button:
+	var result := Button.new()
+	result.text = "%s    >" % text_value
+	result.alignment = HORIZONTAL_ALIGNMENT_LEFT
+	result.custom_minimum_size.y = 39
+	result.add_theme_font_size_override("font_size", 15)
+	result.add_theme_color_override("font_color", INK)
+	result.add_theme_color_override("font_hover_color", RUST)
+	result.add_theme_stylebox_override("normal", _panel_style(Color("#f7edd8"), Color("#c6b99f"), 8, 1))
+	result.add_theme_stylebox_override("hover", _panel_style(Color("#fff7e7"), RUST, 8, 1))
+	result.add_theme_stylebox_override("pressed", _panel_style(Color("#ead9bb"), RUST, 8, 1))
+	if emits_choice: result.pressed.connect(func(): choice_selected.emit(energy_delta, morale_delta))
+	return result
+
+func _shortcut_row() -> HBoxContainer:
+	var row := HBoxContainer.new()
+	row.alignment = BoxContainer.ALIGNMENT_CENTER
+	row.add_theme_constant_override("separation", 12)
+	var notebook := Button.new()
+	notebook.text = "Taccuino"
+	notebook.flat = true
+	notebook.add_theme_font_size_override("font_size", 13)
+	notebook.add_theme_color_override("font_color", SOFT)
+	row.add_child(notebook)
+	var pack := Button.new()
+	pack.text = "Zaino"
+	pack.flat = true
+	pack.add_theme_font_size_override("font_size", 13)
+	pack.add_theme_color_override("font_color", SOFT)
+	pack.pressed.connect(func(): pack_requested.emit())
+	row.add_child(pack)
+	return row
+
+func _layout_interface() -> void:
+	if size.x <= 0 or not header: return
+	header.position = Vector2(10, 10)
+	header.size = Vector2(size.x - 20, 58)
+	drawer.size.x = size.x - 14
+	drawer.position.x = 7
+	stats_bar.size = Vector2(size.x - 18, 62)
+	stats_bar.position.x = 9
+	_move_interface(not walking, true)
+
+func _move_interface(expanded: bool, immediate := false) -> void:
+	if not drawer or size.y <= 0: return
+	var required_height := clampf(drawer.get_combined_minimum_size().y + 8.0, 250.0, size.y * .54)
+	drawer.size.y = required_height
+	var drawer_y := size.y - (required_height + 8.0) if expanded else size.y - 190.0
+	var stats_y := drawer_y - 66.0
+	if interface_tween and interface_tween.is_valid(): interface_tween.kill()
+	if immediate:
+		drawer.position.y = drawer_y
+		stats_bar.position.y = stats_y
+	else:
+		interface_tween = create_tween().set_parallel(true).set_trans(Tween.TRANS_QUINT).set_ease(Tween.EASE_OUT)
+		interface_tween.tween_property(drawer, "position:y", drawer_y, .58)
+		interface_tween.tween_property(stats_bar, "position:y", stats_y, .58)
 
 func _process(delta: float) -> void:
 	time += delta
-	if walking: walk_elapsed = minf(4.2, walk_elapsed + delta)
 	queue_redraw()
 
 func _draw() -> void:
+	draw_rect(Rect2(Vector2.ZERO, size), TEAL)
 	if background:
-		var drift := Vector2(sin(time * .16) * 2.2, cos(time * .12) * 1.2)
-		var target_size := size + Vector2(10,8)
-		var texture_size := background.get_size()
-		var cover_scale := maxf(target_size.x/texture_size.x, target_size.y/texture_size.y)
-		var source_size := target_size/cover_scale
-		var source_position := (texture_size-source_size)*.5
-		draw_texture_rect_region(background, Rect2(Vector2(-5,-4)+drift,target_size), Rect2(source_position,source_size))
-	_draw_cloud_shadows()
-	_draw_waterfall_motion()
-	_draw_pool_motion()
-	_draw_vegetation_motion()
-	var map_rect := _map_rect()
-	if map_texture: draw_texture_rect(map_texture, map_rect, false)
-	_draw_route_progress(map_rect)
+		var scene_size := size.x + 28.0
+		var drift := Vector2(sin(time * .12) * 2.2, cos(time * .10) * 1.3)
+		draw_texture_rect(background, Rect2(Vector2(-14, 48) + drift, Vector2(scene_size, scene_size)), false)
+	_draw_atmosphere()
 
-func _draw_cloud_shadows() -> void:
+func _draw_atmosphere() -> void:
+	var scene_bottom := minf(size.y * .70, 48.0 + size.x + 24.0)
 	for index in range(3):
-		var x := fmod(time * (5.0 + index) + index * 170.0, size.x + 220.0) - 110.0
-		var center := Vector2(x, 118.0 + index * 54.0)
-		draw_circle(center, 64.0 + index * 12.0, Color(0.20, 0.27, 0.30, .035))
-		draw_circle(center + Vector2(52,8), 48.0, Color(0.20, 0.27, 0.30, .025))
+		var x := fmod(time * (7.0 + index * 1.7) + index * 147.0, size.x + 170.0) - 85.0
+		draw_circle(Vector2(x, 145.0 + index * 73.0), 52.0 + index * 9.0, Color(0.05,0.13,0.15,.035))
+	if poi in [0, 1, 2, 4, 5]:
+		for index in range(6):
+			var glint_x := fmod(time * (19.0 + index) + index * 71.0, size.x * .82)
+			var glint_y := 234.0 + (index % 3) * 19.0
+			draw_line(Vector2(glint_x, glint_y), Vector2(glint_x + 13, glint_y), Color(1,.95,.72,.24), 1.3, true)
+	if poi in [1, 2]:
+		for index in range(5):
+			var pulse := fmod(time * 18.0 + index * 17.0, 48.0)
+			draw_arc(Vector2(205 + index * 21, 288 + index % 2 * 14), 8 + pulse * .35, .2, 2.8, 22, Color(.78,.94,.94,.23), 1.2, true)
+	if poi in [2, 3]:
+		for index in range(9):
+			var leaf_x := fmod(time * (12.0 + index % 3) + index * 49.0, size.x + 30.0) - 15.0
+			var leaf_y := 120.0 + fmod(time * (5.0 + index % 2) + index * 37.0, maxf(80.0, scene_bottom - 135.0))
+			draw_circle(Vector2(leaf_x, leaf_y), 1.6, Color("#d5a33a"))
+	if poi == 4:
+		for index in range(2):
+			var bird_x := fmod(time * (15.0 + index * 3.0) + index * 210.0, size.x + 50.0) - 25.0
+			var bird_y := 115.0 + index * 18.0
+			draw_arc(Vector2(bird_x, bird_y), 5.0, PI, TAU, 10, Color(1,1,1,.48), 1.2, true)
 
-func _draw_waterfall_motion() -> void:
-	if poi != 0: return
-	for index in range(13):
-		var phase := fmod(time * (42.0 + index * 2.0) + index * 19.0, 126.0)
-		var x := 82.0 + index * 8.2 + sin(time * 1.4 + index) * 2.4
-		var top := 101.0 + phase * .30
-		var length := 17.0 + index % 4 * 4.0
-		draw_line(Vector2(x, top), Vector2(x-4.0, top+length), Color(0.86,0.95,0.96,.36), 2.2, true)
-	for index in range(8):
-		var spray_x := 95.0 + index * 13.0 + sin(time * 2.1 + index) * 8.0
-		var spray_y := 217.0 + cos(time * 1.7 + index) * 6.0
-		draw_circle(Vector2(spray_x,spray_y), 3.0 + index % 3, Color(0.91,0.96,0.95,.24))
+func _panel_style(fill: Color, border: Color, radius: int, width: int) -> StyleBoxFlat:
+	var style := StyleBoxFlat.new()
+	style.bg_color = fill
+	style.border_color = border
+	style.set_border_width_all(width)
+	style.set_corner_radius_all(radius)
+	style.content_margin_left = 10
+	style.content_margin_right = 10
+	style.content_margin_top = 6
+	style.content_margin_bottom = 6
+	return style
 
-func _draw_pool_motion() -> void:
-	if poi != 0: return
-	for index in range(6):
-		var pulse := fmod(time * 17.0 + index * 18.0, 54.0)
-		var alpha := maxf(0.0, .32 - pulse / 190.0)
-		var center := Vector2(139.0 + index * 25.0, 248.0 + index % 2 * 13.0)
-		draw_arc(center, 9.0+pulse*.55, PI*.08, PI*.92, 24, Color(0.83,0.94,0.92,alpha), 1.4, true)
-	for index in range(5):
-		var glint_x := fmod(time * (18.0+index) + index*77.0, size.x*.66)
-		var glint_y := 242.0 + index*12.0
-		draw_line(Vector2(glint_x,glint_y),Vector2(glint_x+12,glint_y),Color(1,1,.87,.28),1.4)
+func _paper_style() -> StyleBoxFlat:
+	var style := _panel_style(PAPER, Color("#aa9576"), 15, 1)
+	style.shadow_color = Color(0,0,0,.30)
+	style.shadow_size = 9
+	style.shadow_offset = Vector2(0,-3)
+	return style
 
-func _draw_vegetation_motion() -> void:
-	if poi != 0: return
-	for index in range(11):
-		var base := Vector2(18.0 + index * 36.0, 319.0 - index % 3 * 10.0)
-		var sway := sin(time * 1.15 + index * .73) * 3.5
-		draw_line(base, base+Vector2(sway,-13.0-index%2*4.0), Color(0.24,0.31,0.15,.42), 1.5, true)
+func _small_label(text_value: String, size_px: int, color: Color) -> Label:
+	var result := Label.new()
+	result.text = text_value
+	result.add_theme_font_size_override("font_size", size_px)
+	result.add_theme_color_override("font_color", color)
+	return result
 
-func _curve_points(map_rect: Rect2) -> PackedVector2Array:
-	var control := PackedVector2Array()
-	for point in ROUTE: control.append(map_rect.position + point * map_rect.size)
-	var smooth := PackedVector2Array()
-	for segment in range(control.size()-1):
-		var p0 := control[maxi(0, segment-1)]
-		var p1 := control[segment]
-		var p2 := control[segment+1]
-		var p3 := control[mini(control.size()-1, segment+2)]
-		for step in range(13):
-			var t := step / 12.0
-			var t2 := t*t
-			var t3 := t2*t
-			smooth.append(.5*((2.0*p1)+(-p0+p2)*t+(2.0*p0-5.0*p1+4.0*p2-p3)*t2+(-p0+3.0*p1-3.0*p2+p3)*t3))
-	return smooth
+func _title_label(text_value: String, size_px: int) -> Label:
+	var result := _small_label(text_value, size_px, INK)
+	result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	return result
 
-func _draw_route_progress(map_rect: Rect2) -> void:
-	var smooth := _curve_points(map_rect)
-	if smooth.size() < 2: return
-	var segment_fraction := clampf(walk_elapsed/4.2, 0.0, 1.0) if walking else 0.0
-	var total_fraction := clampf((poi + segment_fraction)/5.0, 0.0, 1.0)
-	var last_index := clampi(int(total_fraction*(smooth.size()-1)), 0, smooth.size()-1)
-	var complete := PackedVector2Array()
-	for index in range(last_index+1): complete.append(smooth[index])
-	if complete.size() > 1: draw_polyline(complete, RUST, 3.2, true)
-	var marker := smooth[last_index]
-	draw_circle(marker, 4.5, Color("#e2a53b"))
-	draw_arc(marker, 4.5, 0, TAU, 20, Color("#43352d"), 1.4, true)
+func _body_label(text_value: String) -> Label:
+	var result := _small_label(text_value, 14, SOFT)
+	result.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	result.max_lines_visible = 2
+	return result
+
+func clear_children(parent: Node) -> void:
+	for child in parent.get_children():
+		parent.remove_child(child)
+		child.queue_free()

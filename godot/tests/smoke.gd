@@ -5,7 +5,7 @@ func _init() -> void:
 
 func run() -> void:
 	var state = root.get_node("GameState")
-	assert(state.VERSION == "0.3.4")
+	assert(state.VERSION == "0.3.5")
 	assert(state.POI_NAMES.size() == 6)
 	state.person = "sara"
 	state.gear.poles = true
@@ -18,12 +18,12 @@ func run() -> void:
 	await process_frame
 	assert(main.trail != null)
 	assert(main.trail.background != null)
-	assert(main.trail.BACKGROUNDS[0].contains("assets/godot/poi-t1-waterfall-v1.png"))
-	assert(main.trail.hiker.texture.resource_path.contains("walk-poles/sara.png"))
-	assert(main.trail.hiker.mirrored)
-	assert(main.trail.hiker.size.x == main.trail.hiker.size.y)
+	assert(main.trail.BACKGROUNDS[0].contains("poi-t1-01-cascata-isometric.png"))
+	assert(main.trail.drawer != null)
+	assert(main.trail.stats_bar != null)
+	assert(main.trail.get_node_or_null("CharacterPreview") == null)
 	for poi in range(6):
 		main.trail.configure(poi, poi % 2 == 0)
 		assert(main.trail.background != null)
-	print("Godot smoke test: intro, equipaggiamento, 6 POI, mappa e animazioni complete OK")
+	print("Godot smoke test: intro, equipaggiamento, 6 POI isometrici e pannello mobile OK")
 	quit()

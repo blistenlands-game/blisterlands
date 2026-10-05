@@ -10,7 +10,6 @@ var page: Control
 var selected_person := "marco"
 var name_edit: LineEdit
 var trail: TrailView
-var walk_button: Button
 
 func _ready() -> void:
 	if OS.has_feature("web") and str(JavaScriptBridge.eval("window.location.search")).contains("preview=3d"):
@@ -176,35 +175,20 @@ func add_toggle(parent: VBoxContainer, title: String, key: String) -> void:
 	parent.add_child(toggle)
 
 func show_trail() -> void:
-	var column := clear_page()
+	if page:
+		remove_child(page)
+		page.queue_free()
+	var full := Control.new()
+	full.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	add_child(full)
+	page = full
 	trail = TrailView.new()
-	trail.custom_minimum_size = Vector2(388, 360)
-	trail.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-	column.add_child(trail)
+	trail.set_anchors_and_offsets_preset(Control.PRESET_FULL_RECT)
+	full.add_child(trail)
+	trail.choice_selected.connect(_trail_choice)
+	trail.pack_requested.connect(show_pack)
+	trail.restart_requested.connect(func(): GameState.reset_trek(); show_trail())
 	trail.configure(GameState.poi, GameState.walking)
-	var stats := HBoxContainer.new()
-	stats.alignment = BoxContainer.ALIGNMENT_CENTER
-	stats.add_theme_constant_override("separation", 12)
-	for entry in [[GameState.clock_text(),"ora"],[str(GameState.energy),"energia"],[str(GameState.morale),"morale"],[str(GameState.holidays),"ferie"],[str(GameState.money)+" €","soldi"]]:
-		var box := VBoxContainer.new()
-		box.size_flags_horizontal = Control.SIZE_EXPAND_FILL
-		var value := label(entry[0], 22, RUST if entry[1] == "morale" else INK)
-		value.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		var caption := label(entry[1], 12, SOFT)
-		caption.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-		box.add_child(value); box.add_child(caption); stats.add_child(box)
-	column.add_child(stats)
-	column.add_child(label("Vento leggero  ·  zaino 9,4 kg  ·  2,5 km/h", 17, RUST))
-	var pack := button("Apri lo zaino")
-	pack.custom_minimum_size.y = 38
-	pack.pressed.connect(show_pack)
-	column.add_child(pack)
-	column.add_child(heading(GameState.POI_NAMES[GameState.poi], 29))
-	column.add_child(label(ambient_description(GameState.poi), 17, SOFT))
-	column.add_child(label("Punto di interesse %d di 6" % (GameState.poi + 1), 16, RUST))
-	walk_button = button("Cammina", true)
-	walk_button.pressed.connect(_walk)
-	column.add_child(walk_button)
 
 func progress_dots() -> String:
 	var result := ""
@@ -221,17 +205,20 @@ func ambient_description(index: int) -> String:
 		"Le nuvole scorrono sopra il belvedere di Vuolle.",
 	][index]
 
-func _walk() -> void:
+func _trail_choice(energy_delta: int, morale_delta: int) -> void:
 	if GameState.walking: return
 	GameState.walking = true
-	walk_button.disabled = true
-	walk_button.text = "In cammino…"
-	trail.configure(GameState.poi, true)
-	await get_tree().create_timer(4.2).timeout
+	GameState.energy = clampi(GameState.energy + energy_delta, 0, 100)
+	GameState.morale = clampi(GameState.morale + morale_delta, 0, 100)
+	trail.set_walking(true)
+	await get_tree().create_timer(4.8).timeout
 	GameState.walking = false
-	GameState.poi = (GameState.poi + 1) % 6
 	GameState.hour_minutes += 45
 	GameState.energy = maxi(0, GameState.energy - 7)
-	GameState.morale = mini(100, GameState.morale + 2)
+	if GameState.poi >= 5:
+		GameState.save_game()
+		trail.show_finish()
+		return
+	GameState.poi += 1
 	GameState.save_game()
-	show_trail()
+	trail.configure(GameState.poi, false)
