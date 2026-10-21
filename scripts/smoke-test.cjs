@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.3.0').waitFor();
+  await page.getByText('Prototipo · versione 0.4.0').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -84,6 +84,12 @@ const server = http.createServer((request, response) => {
   });
   await page.reload({ waitUntil: 'networkidle' });
   await page.getByRole('heading', { name: 'Luglio, anno 1' }).waitFor();
+  const homeLook = await page.evaluate(() => ({
+    shell: !!document.querySelector('.home-ui.home-casa'),
+    atlas: getComputedStyle(document.querySelector('.home-diorama .scene-bg')).backgroundImage,
+    stats: document.querySelectorAll('.home-stats>div').length,
+  }));
+  if (!homeLook.shell || !homeLook.atlas.includes('home-scenes-isometric-v2.png') || homeLook.stats !== 4) throw new Error(`Nuova interfaccia di casa incompleta: ${JSON.stringify(homeLook)}`);
   await page.getByRole('button', { name: /Lavoro normale/ }).click();
   const migratedSave = await page.evaluate(() => ({
     current: JSON.parse(localStorage.getItem('blisterlands')),
@@ -104,6 +110,10 @@ const server = http.createServer((request, response) => {
   await page.getByText('I quattro marchi').waitFor();
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
   await page.getByRole('button', { name: /Torna a casa/ }).click();
+  await page.evaluate(() => { H.owned = new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']); prepareTrek(); });
+  const packLook = await page.evaluate(() => ({ shell:!!document.querySelector('.pack-ui'), product:document.querySelectorAll('.pack-product .gear-sprite').length, people:document.querySelectorAll('.pack-hero .pose-sprite').length }));
+  if (!packLook.shell || packLook.product !== 1 || packLook.people !== 0) throw new Error(`Nuova interfaccia zaino errata: ${JSON.stringify(packLook)}`);
+  await page.evaluate(() => { H.screen='casa'; S.screen=null; render(); });
   const equipmentLook = await page.evaluate(() => {
     S.kit = new Set(['aFjellvind', 'shStorm', 'sCappello', 'sGuanti', 'aStav']);
     const host = document.createElement('div'); host.innerHTML = poseSprite('walk', 'prova'); const pose = host.firstElementChild;
@@ -163,8 +173,10 @@ const server = http.createServer((request, response) => {
     ready: document.querySelector('.stage-one-diorama')?.classList.contains('diorama-ready'),
     poi: document.querySelector('.diorama-canvas')?.dataset.poi,
     src: document.querySelector('.diorama-canvas')?.dataset.src,
+    backgroundAnimation: getComputedStyle(document.querySelector('.stage-one-diorama>.scene-bg')).animationName,
+    backgroundOpacity: getComputedStyle(document.querySelector('.stage-one-diorama>.scene-bg')).opacity,
   }));
-  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
+  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.png') || diorama.backgroundAnimation !== 'none' || diorama.backgroundOpacity !== '1') throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
   const allStageLayouts = await page.evaluate(() => TAPPE.map((stage, index) => {
     S = newState(); S.screen = 'tappa'; S.tappa = index; S.seg = 3; S.current = null; S.wx = index % 2 ? 'nuvole' : 'sole'; render();
     return {

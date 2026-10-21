@@ -122,10 +122,9 @@ const baseRender=render;
 render=function(){const a=$('#app');
  stopStageDiorama();
  updatePaperWear();
- if(H&&H.screen){a.classList.toggle('flush',H.screen==='casa'||H.screen==='ritorno');let html='';
+ if(H&&H.screen){a.classList.add('flush');let html='';
   const st=(v,l,low)=>`<div class="stat ${low?'low':''}"><b>${v}</b><span>${l}</span></div>`;
-  const top=`<div class="top"><h2>${MONTHS[H.mese-1]}, anno ${H.anno}</h2><span class="sub">Livello ${lvl()} · esperienza ${H.xp}</span></div>
-   <div class="hud">${st(H.soldi+'€','Soldi',H.soldi<100)}${st(H.ferie,'Ferie',H.ferie<TREK_DAYS)}${st(H.forma,'Forma',H.forma<40)}${st(H.voglia,'Voglia',H.voglia<30)}${st(H.completati,'Cammini')}</div>`;
+  const top=homeCompactHeader(`${MONTHS[H.mese-1]}, anno ${H.anno}`);
   if(H.screen==='intro'){H.pg=H.pg||'marco';if(H.nome==null)H.nome='';
    html=`<h1>${esc(GAME_CONFIG.name)}</h1><p class="sub">Prototipo · versione ${VERSION}</p>
    <div class="card"><p>Hai un lavoro, uno stipendio e un sogno: la Via delle Renne, in Lapponia. I rifugi aprono da giugno a settembre.</p></div>
@@ -133,7 +132,7 @@ render=function(){const a=$('#app');
    <label class="namefield">Come ti chiamano lungo il cammino?<input id="nome" type="text" maxlength="18" required autocomplete="nickname" placeholder="Scrivi il tuo nome" value="${esc(H.nome)}" oninput="H.nome=this.value"></label>
    <button class="btn primary" onclick="beginGame()">Comincia ad aprile</button>`}
   else if(H.screen==='casa'){const ok=inSeason();eqInit();
-   html=homeHdr(H.scena||'ufficio',`${MONTHS[H.mese-1]}, anno ${H.anno}`,`livello ${lvl()} · esperienza ${H.xp}`)+`<p class="note">${formaTxt()} ${vogliaTxt()}</p>`+(H.esito?`<div class="out">${esc(H.esito)}</div>`:'')+`
+   html=homeHdr(H.scena||'ufficio',`${MONTHS[H.mese-1]}, anno ${H.anno}`,`LIVELLO ${lvl()}`)+`<section class="home-paper"><div class="home-status"><span>${esc(HOME_LABEL[H.scena||'ufficio'])}</span><b>${H.completati} ${H.completati===1?'cammino':'cammini'}</b></div><p class="note">${formaTxt()} ${vogliaTxt()}</p>`+(H.esito?`<div class="out">${esc(H.esito)}</div>`:'')+`
    <div class="tiles">
     <button class="tile ${ok?'go':''}" ${ok?'':'disabled'} onclick="prepareTrek()"><b>Parti</b><span>${ok?(H.ferie<TREK_DAYS?'poche ferie: '+H.ferie+' giorni':'la Via delle Renne'):'da giugno a settembre'}</span></button>
     <button class="tile" onclick="H.screen='negozio';render()"><b>Negozio</b><span>${H.sconto?'saldi −'+H.sconto+'%':'compra, ripara, vendi'}</span></button>
@@ -142,7 +141,7 @@ render=function(){const a=$('#app');
    </div>
    <h3>Come vivi questo mese?</h3>
    <div class="plans">${Object.entries(PLANS).map(([k,p])=>`<button class="plan" onclick="H.esito=null;liveMonth('${k}')"><b>${p.l}</b><span>${p.soldi>=0?'+':''}${p.soldi} € · forma ${p.forma>=0?'+':''}${p.forma} · voglia ${p.voglia>=0?'+':''}${p.voglia}</span></button>`).join('')}</div>
-   <p class="ver">versione ${VERSION}</p>`}
+   <p class="ver">versione ${VERSION}</p></section>`}
   else if(H.screen==='diario'){eqInit();
    html=top+`<button class="btn" onclick="H.screen='casa';render()">Torna a casa</button>
    <div class="card"><h3>Il tuo materiale</h3>${pdefs()}<div class="gallery">${[...H.owned].map(id=>{const it=ITEM_BY[id];const c=cond(id);return `<div class="gcell ${c<=0.33?'worn':''}">${gearSvg(id,56)}<span>${esc(it?(it.model||it.name):id)}</span>${it&&it.dur&&it.dur<9999?`<small>${condLabel(c)}</small>`:''}</div>`}).join('')}</div>
@@ -177,13 +176,13 @@ render=function(){const a=$('#app');
    html=top+`<button class="btn" onclick="H.screen='casa';render()">← Torna a casa</button><p class="sub">Ogni 100 punti di esperienza sali di livello e guadagni un punto. Punti disponibili: ${H.punti}.</p>
    ${Object.entries(ABIL).map(([k,v])=>`<div class="qrow"><span>${v} ${H.abil[k]}/5<small>${ABIL_NOTE[k]}</small></span><button class="btn" style="width:auto;margin:0" ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">+1</button></div>`).join('')}`}
   else if(H.screen==='ritorno'){const r=H.ritorno;
-   html=homeHdr('ritorno','Di nuovo a casa',r.completo?'con il diario pieno':'con qualche rimpianto')+`<p>${esc(r.fine)}</p><div class="card">
+   html=homeHdr('ritorno','Di nuovo a casa',r.completo?'DIARIO PIENO':'RITORNO')+`<section class="home-paper"><p>${esc(r.fine)}</p><div class="card">
    <p>Esperienza guadagnata: ${r.xp}.${r.up?` <b>Sali di livello!</b> Hai ${H.punti} punti abilità da spendere.`:''}</p>
    ${r.timbri.length?`<p>Nuovi timbri: ${r.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join('')}</p>`:'<p class="sub">Nessun timbro nuovo.</p>'}
    ${r.usura&&r.usura.length?`<div class="out">${r.usura.map(esc).join('<br>')}</div>`:''}${r.lost.length?`<p class="sub">Perso lungo il cammino: ${esc(r.lost.join(', '))}.</p>`:''}${r.gained.length?`<p class="sub">Trovato lungo il cammino: ${esc(r.gained.join(', '))}.</p>`:''}
     <p class="sub">Il cammino ti ha rimesso in forma. ${r.completo?'E la voglia di partire è alle stelle.':'La voglia di riprovarci resta.'}</p><p class="sub">Seed della partita: ${r.seed}.</p></div>
-   <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button>`}
-  a.innerHTML=html;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
+   <button class="btn primary" onclick="H.screen='casa';H.esito=null;save();render()">Torna alla vita di tutti i giorni</button></section>`}
+  a.innerHTML=`<div class="home-ui home-${H.screen}">${html}</div>`;if(H.screen!==lastHome)window.scrollTo(0,0);lastHome=H.screen;return}
  lastHome=null;
  baseRender();positionTrekMap();mountStageDiorama();
  if(S.screen==='zaino')homeZainoPatch(a);
@@ -194,7 +193,7 @@ function homeZainoPatch(a){
  a.insertAdjacentHTML('afterbegin',pdefs());a.querySelectorAll('label.item').forEach(l=>{const inp=l.querySelector('input');const m=(inp.getAttribute('onchange')||'').match(/'(\w+)'/);if(m&&!H.owned.has(m[1]))l.remove();else if(m&&ITEM_BY[m[1]]&&ITEM_BY[m[1]].dur<9999){const c=cond(m[1]);const sm=document.createElement('small');sm.textContent=`${condLabel(c)} ${Math.round(c*100)}%`+(c<=0?' · non serve a niente':c<=0.33?' · rende meno':'');const sp=l.querySelector('span');if(sp)sp.appendChild(sm)}if(m&&H.owned.has(m[1])){const g=gearSvg(m[1],46);if(g){const inp2=l.querySelector('input');inp2.insertAdjacentHTML('afterend',g)}}});
  a.querySelectorAll('.qrow').forEach(r=>{const btns=r.querySelectorAll('button');if(btns.length===2){const m=btns[0].getAttribute('onclick').match(/'(\w+)'/);if(m){const id=m[1];btns[0].setAttribute('onclick',`packQty('${id}',-1)`);btns[1].setAttribute('onclick',`packQty('${id}',1)`);const sm=r.querySelector('small');if(sm)sm.textContent+=` · a casa ne hai ${H.scorte[id]||0}, altre a ${CPRICE[id]} €`}}});
  const go=[...a.querySelectorAll('.btn.primary')].pop();if(go){go.setAttribute('onclick','homeDepart()');go.textContent=`Parti · ${S.soldi} € nel portafoglio`}
- const h=a.querySelector('h2');if(h)h.insertAdjacentHTML('afterend',`${att('cucina')>=1&&inv('gas')<1?'<div class="out bad">Hai il fornello ma niente gas: le cene saranno fredde. Aggiungi qualche carica di gas.</div>':''}<p class="note">${formaTxt()} ${vogliaTxt()}</p><button class="btn" onclick="H.soldi=S.soldi;H.screen='casa';save();render()">← Rimanda la partenza</button><p class="sub">Puoi portare solo quello che possiedi. Le scorte che non hai a casa le compri ora.</p>`)}
+ const lead=a.querySelector('.pack-lead');if(lead)lead.insertAdjacentHTML('beforebegin',`${att('cucina')>=1&&inv('gas')<1?'<div class="out bad">Hai il fornello ma niente gas: le cene saranno fredde. Aggiungi qualche carica di gas.</div>':''}<p class="note">${formaTxt()} ${vogliaTxt()}</p><button class="btn pack-back" onclick="H.soldi=S.soldi;H.screen='casa';save();render()">← Rimanda la partenza</button><p class="sub">Puoi portare solo quello che possiedi. Le scorte che non hai a casa le compri ora.</p>`)}
 H=load();
 if(!H){H=newHome();H.screen='intro'}
 if(H.trekking){H.trekking=false;H.screen='casa';H.esito='Il cammino interrotto a metà non è stato salvato: sei tornato a casa.'}

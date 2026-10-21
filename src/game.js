@@ -175,12 +175,12 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
   <div class="card"><h3>In che mese parti?</h3>${Object.entries(MESI).map(([k,v])=>`<button class="btn ${S.mese===k?'primary':''}" onclick="S.mese='${k}';render()">${v.label}<span class="meta" ${S.mese===k?'style="color:#fff"':''}>${esc(v.note)}</span></button>`).join('')}</div>
   <button class="btn primary" onclick="S.screen='zaino';render()">Prepara lo zaino</button>`}
  else if(S.screen==='zaino'){const kg=packKg();
-  a.innerHTML=`<h2>Lo zaino</h2><p class="sub">Vestiti, sacco lenzuolo e piccole cose pesano già ${BASE_KG} kg. Il resto lo scegli tu: oltre 7 kg ogni chilo costa energia, meno con uno zaino che porta bene; oltre 9 kg rallenta il passo.</p>
-  <div class="weight ${kg>10?'heavy':''}">Peso totale: ${kg.toFixed(1)} kg · passo ${speed().toFixed(1)} km/h</div>${figure()}
-  <p class="sub">${Object.keys(ATTR).filter(k=>att(k)>0).map(k=>ATTR[k]+' '+att(k)).join(' · ')||'Nessuna caratteristica'}</p>
+  a.innerHTML=`<div class="pack-ui">${packOverview()}<section class="pack-paper"><p class="pack-lead">Vestiti, sacco lenzuolo e piccole cose pesano già ${BASE_KG} kg. Oltre 7 kg consumi più energia; oltre 9 kg rallenti.</p>
+  <div class="weight ${kg>10?'heavy':''}">Peso ${kg.toFixed(1).replace('.',',')} kg · passo ${speed().toFixed(1).replace('.',',')} km/h</div>
+  <p class="pack-attributes">${Object.keys(ATTR).filter(k=>att(k)>0).map(k=>ATTR[k]+' '+att(k)).join(' · ')||'Nessuna caratteristica'}</p>
   ${SECTIONS.map(([title,g])=>`<h3>${title}</h3><div class="items">${ITEMS.filter(it=>(it.group||null)===g).map(it=>{const radio=!!it.group;return `<label class="item"><input type="${radio?'radio':'checkbox'}" name="${radio?it.group:it.id}" ${S.kit.has(it.id)?'checked':''} onchange="toggleItem('${it.id}')"><span>${esc(it.name)}<small>${esc(it.note)}</small>${it.a&&Object.keys(it.a).length?`<small>${Object.entries(it.a).map(([k,v])=>ATTR[k]+' '+v).join(' · ')}</small>`:''}</span><span class="kg">${it.kg} kg</span></label>`}).join('')}</div>`).join('')}
   <h3>Scorte</h3>${CONSUM.map(c=>`<div class="qrow"><span>${esc(c.name)}<small>${esc(c.note)} · ${c.kg} kg</small></span><span class="qty"><button aria-label="Meno ${esc(c.name)}" onclick="qty('${c.id}',-1)">−</button><b>${inv(c.id)}</b><button aria-label="Più ${esc(c.name)}" onclick="qty('${c.id}',1)">+</button></span></div>`).join('')}
-  <button class="btn primary" onclick="depart()">Parti da Lavvuby</button>`}
+  <button class="btn primary" onclick="depart()">Parti da Lavvuby</button></section></div>`}
  else if(S.screen==='tappa'){const t=TAPPE[S.tappa],body=S.current?stageOneEventPanel(S.current):stageOneTravelPanel(t);
   a.innerHTML=`<div class="stage-one-ui stage-${S.tappa+1} ${S.current?'has-event':''}">${stageOneHero(t)}${body}</div>`}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;

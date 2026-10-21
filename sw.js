@@ -39,7 +39,7 @@ const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js','./src/map-routes.js',
  './vendor/pixi.min.js','./src/diorama.js','./src/visuals.js','./src/home.js','./src/bootstrap.js',
- './assets/art/trail-scenes.png','./assets/art/home-scenes.png',...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...PAPERS,
+ './assets/art/trail-scenes.png','./assets/art/home-scenes.png','./assets/art/home-scenes-isometric-v2.png',...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...PAPERS,
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];

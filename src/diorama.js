@@ -19,10 +19,8 @@ async function mountStageDiorama(){
   await app.init({resizeTo:host,backgroundAlpha:0,antialias:true,resolution:Math.min(devicePixelRatio||1,2),autoDensity:true,powerPreference:'low-power'});
   if(token!==dioramaToken||!host.isConnected){app.destroy(true,{children:true,texture:false,textureSource:false});return}
   activeDiorama=app;host.appendChild(app.canvas);
-  const texture=await PIXI.Assets.load(src);
+  const w=host.clientWidth,h=host.clientHeight;
   if(token!==dioramaToken||!host.isConnected)return;
-  const bg=new PIXI.Sprite(texture),w=host.clientWidth,h=host.clientHeight;
-  coverDioramaSprite(bg,w,h);app.stage.addChild(bg);
   const ambient=new PIXI.Container();app.stage.addChild(ambient);
   const motes=[];
   const add=(node,x,y,kind,speed=.2)=>{node.position.set(x*w,y*h);node._originX=x*w;node._originY=y*h;node._phase=Math.random()*Math.PI*2;node._kind=kind;node._speed=speed;ambient.addChild(node);motes.push(node);return node};
@@ -44,7 +42,6 @@ async function mountStageDiorama(){
   let time=0;
   app.ticker.add(ticker=>{
    const dt=ticker.deltaTime;time+=dt;
-   bg.x=w/2+Math.sin(time/330)*w*.006;bg.y=h/2+Math.cos(time/440)*h*.004;bg.rotation=Math.sin(time/620)*.0015;
    for(const n of motes){const t=time*n._speed/28+n._phase;
     if(n._kind==='mist'){n.x=n._originX+Math.sin(t)*18;n.y=n._originY-Math.cos(t*.7)*8;n.alpha=.45+.2*Math.sin(t)}
     else if(n._kind==='water'){n.y+=dt*n._speed;if(n.y>h*.88)n.y=h*.18;n.alpha=.2+.2*Math.sin(t)}
