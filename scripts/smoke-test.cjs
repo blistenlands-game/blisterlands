@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.0').waitFor();
+  await page.getByText('Prototipo · versione 0.5.1').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -109,13 +109,13 @@ const server = http.createServer((request, response) => {
   const expandedHome = await page.evaluate(() => ({ cards: CARDS.length, statStates: document.querySelectorAll('.home-stat[class*="state-"]').length }));
   if (expandedHome.cards < 60 || expandedHome.statStates !== 4) throw new Error(`Casa non ampliata: ${JSON.stringify(expandedHome)}`);
   await page.getByRole('button', { name: /Personaggio/ }).click();
-  const characterLook = await page.evaluate(() => ({ front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length }));
-  if (!characterLook.front.includes('character-front-v1.png') || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
+  const characterLook = await page.evaluate(() => { const board=document.querySelector('.character-board').getBoundingClientRect(),avatar=document.querySelector('.character-avatar').getBoundingClientRect(),layers=[...document.querySelectorAll('.character-wear')];return { front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length, layers:layers.length, fullCanvas:layers.every(layer=>{const r=layer.getBoundingClientRect();return Math.abs(r.left-avatar.left)<1&&Math.abs(r.top-avatar.top)<1&&Math.abs(r.width-avatar.width)<1&&Math.abs(r.height-avatar.height)<1}), legacyIcons:document.querySelectorAll('.character-wear .gear-sprite').length, centerDelta:Math.abs((board.left+board.width/2)-(avatar.left+avatar.width/2)) }; });
+  if (!characterLook.front.includes('character-front-base-v2.png') || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2 || characterLook.layers < 4 || !characterLook.fullCanvas || characterLook.legacyIcons || characterLook.centerDelta > 1) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
   await page.getByRole('button', { name: /Indietro/ }).click();
   await page.getByRole('button', { name: /Negozio/ }).click();
   await page.getByText('Conosci i quattro marchi').waitFor();
-  const shopLook = await page.evaluate(() => ({ cards:document.querySelectorAll('.shop-card').length, categories:document.querySelectorAll('.shop-categories button').length, oldRows:document.querySelectorAll('.prod').length, detail:!!document.querySelector('.gear-detail') }));
-  if (shopLook.cards < 4 || shopLook.categories !== 6 || shopLook.oldRows !== 0 || !shopLook.detail) throw new Error(`Nuovo negozio incompleto: ${JSON.stringify(shopLook)}`);
+  const shopLook = await page.evaluate(() => ({ cards:document.querySelectorAll('.shop-card').length, categories:document.querySelectorAll('.shop-categories button').length, oldRows:document.querySelectorAll('.prod').length, detail:!!document.querySelector('.gear-detail'), shelfDisplay:getComputedStyle(document.querySelector('.shop-shelf')).display, shelfOverflow:getComputedStyle(document.querySelector('.shop-shelf')).overflowX, back:getComputedStyle(document.querySelector('.shop-back')).backgroundImage }));
+  if (shopLook.cards < 4 || shopLook.categories !== 6 || shopLook.oldRows !== 0 || !shopLook.detail || shopLook.shelfDisplay !== 'grid' || shopLook.shelfOverflow === 'auto' || shopLook.shelfOverflow === 'scroll' || shopLook.back === 'none') throw new Error(`Nuovo negozio incompleto: ${JSON.stringify(shopLook)}`);
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
   await page.getByRole('button', { name: /Torna a casa/ }).click();
   await page.evaluate(() => { H.owned = new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']); prepareTrek(); });
@@ -190,7 +190,7 @@ const server = http.createServer((request, response) => {
     return {
       stage: index + 1,
       ui: !!document.querySelector('.stage-one-ui'),
-      image: document.querySelector('.stage-one-diorama>.scene-bg')?.getAttribute('src'),
+      image: document.querySelector('.stage-one-diorama>.scene-bg')?.getAttribute('src') || document.querySelector('.stage-one-diorama>.scene-bg')?.dataset.atlas,
       map: document.querySelector('.stage-one-map-sheet>img')?.getAttribute('src'),
       route: document.querySelector('.stage-one-map .route-progress')?.dataset.stage,
       heading: document.querySelector('.stage-one-heading>b')?.textContent,
@@ -199,7 +199,7 @@ const server = http.createServer((request, response) => {
       walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
     };
   }));
-  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0)) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
+  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0 || (index>0&&!stage.image.includes(`stage-${index+1}-isometric-atlas-v1.png`)))) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
   if (new Set(allStageLayouts.map((stage) => stage.image)).size !== 8) throw new Error(`I panorami delle tappe non sono distinti: ${JSON.stringify(allStageLayouts)}`);
   const laterEventLayout = await page.evaluate(() => {
     S = newState(); S.screen = 'tappa'; S.tappa = 4; S.seg = 2; S.current = EV.find((event) => event.id === 'corvo') || EV[0]; render();

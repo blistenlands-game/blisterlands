@@ -114,9 +114,10 @@ if (!appVersion || appVersion !== documentedVersion || !worker.includes('GAME_CO
 }
 if (manifest.name !== config.name || manifest.short_name !== config.name) errors.push(`Nome non allineato: config=${config.name}, manifest=${manifest.name}/${manifest.short_name}`);
 if (/<svg\b/i.test(visuals)) errors.push('La nuova identità visiva deve usare risorse raster, non markup SVG');
-for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','home-scenes-isometric-v2.png','character-front-v1.png','protagonist-poses.png','walk-cycle-v2.png','walk-cycle-poles.png','event-scenes-water.png','event-scenes-terrain.png','event-scenes-places.png']) {
+for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','home-scenes-isometric-v2.png','character-front-v1.png','character-front-base-v2.png',...['shell','shoes','pack','hat-sun','hat-wool','head-net','gloves','gaiters','poles'].map((name)=>`wear-${name}-v1.png`),'protagonist-poses.png','walk-cycle-v2.png','walk-cycle-poles.png','event-scenes-water.png','event-scenes-terrain.png','event-scenes-places.png']) {
   if (!fs.existsSync(path.join(root, 'assets/art', relative))) errors.push(`Risorsa grafica mancante: ${relative}`);
 }
+for (let stage=2;stage<=8;stage++) if (!fs.existsSync(path.join(root,'assets','godot',`stage-${stage}-isometric-atlas-v1.png`))) errors.push(`Atlante isometrico mancante: tappa ${stage}`);
 for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 32, pose: 16, walk: 4, 'walk-poles': 4, 'pose-poles': 4, brand: 4, scene: 27 })) {
   const directory = path.join(root, 'assets', 'sprites', folder);
   const count = fs.existsSync(directory) ? fs.readdirSync(directory).filter((name) => name.endsWith('.png')).length : 0;
