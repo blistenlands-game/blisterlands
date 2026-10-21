@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.2').waitFor();
+  await page.getByText('Prototipo · versione 0.5.3').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -199,7 +199,7 @@ const server = http.createServer((request, response) => {
       walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
     };
   }));
-  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0 || (index>0&&!stage.image.includes(`stage-${index+1}-isometric-atlas-v1.png`)))) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
+  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0 || (index>0&&!stage.image.includes(`poi-t${index+1}-03-isometric-hd-v2.png`)))) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
   if (new Set(allStageLayouts.map((stage) => stage.image)).size !== 8) throw new Error(`I panorami delle tappe non sono distinti: ${JSON.stringify(allStageLayouts)}`);
   const laterEventLayout = await page.evaluate(() => {
     S = newState(); S.screen = 'tappa'; S.tappa = 4; S.seg = 2; S.current = EV.find((event) => event.id === 'corvo') || EV[0]; render();

@@ -154,9 +154,6 @@ const STAGE_ONE_ISOMETRIC=[
  'poi-t1-01-cascata-isometric.png','poi-t1-02-sorgente-isometric.png','poi-t1-03-betulle-isometric.png',
  'poi-t1-04-mirtilli-isometric.png','poi-t1-05-baia-isometric.png','poi-t1-06-belvedere-isometric.png'
 ];
-const STAGE_ISOMETRIC_ATLASES=[null,
- 'stage-2-isometric-atlas-v1.png','stage-3-isometric-atlas-v1.png','stage-4-isometric-atlas-v1.png','stage-5-isometric-atlas-v1.png','stage-6-isometric-atlas-v1.png','stage-7-isometric-atlas-v1.png','stage-8-isometric-atlas-v1.png'
-];
 const STAGE_ONE_COPY=[
  'L’acqua rompe il silenzio della valle. Il sentiero risale accanto alla cascata.',
  'Una vena d’acqua gelida emerge fra le pietre e attraversa il sentiero.',
@@ -217,8 +214,8 @@ const TRAIL_COPY=[STAGE_ONE_COPY,
   'I tetti di Njalla emergono oltre il lago: la Via delle Renne finisce qui.'
  ]];
 function stageLabel(t){return t.extra?'VETTA':`TAPPA ${t.label||t.n}`}
-function stageAsset(stage,index){return stage===0?`assets/godot/${STAGE_ONE_ISOMETRIC[index]}`:`assets/godot/${STAGE_ISOMETRIC_ATLASES[stage]}`}
-function stageVisual(stage,index){const image=stageAsset(stage,index);if(stage===0)return `<img class="scene-bg" src="${image}" alt=""><span class="diorama-canvas" data-src="${image}" data-poi="${index}" aria-hidden="true"></span>`;const x=[0,50,100][index%3],y=index<3?0:100;return `<span class="scene-bg stage-isometric-atlas" data-atlas="${image}" data-panel="${index+1}" aria-hidden="true" style="background-image:url('${image}');background-position:${x}% ${y}%"></span>`}
+function stageAsset(stage,index){return stage===0?`assets/godot/${STAGE_ONE_ISOMETRIC[index]}`:`assets/godot/poi-t${stage+1}-${String(index+1).padStart(2,'0')}-isometric-hd-v2.png`}
+function stageVisual(stage,index){const image=stageAsset(stage,index);return `<img class="scene-bg" src="${image}" alt="">${stage===0?`<span class="diorama-canvas" data-src="${image}" data-poi="${index}" aria-hidden="true"></span>`:''}`}
 function stageToolIcon(kind){const file=kind==='book'?'taccuino':'zaino';return `<img src="${SPRITE_ROOT}event/${file}.png" alt="">`}
 function stageOneDistance(t){return Math.max(0,Math.round(t.km*(1-Math.min(S.seg,t.terr.length)/t.terr.length)))}
 function stageOneHero(t){const stage=S.tappa,index=poiIndex(stage,S.seg),name=poiName(stage,S.seg),done=Math.min(t.terr.length,Math.max(1,S.seg||1)),route=routeOverlay(stage,t.terr.length,Math.min(S.seg,t.terr.length));
