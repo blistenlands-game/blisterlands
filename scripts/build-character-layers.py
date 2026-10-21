@@ -1,5 +1,6 @@
+from collections import deque
 from pathlib import Path
-from PIL import Image, ImageDraw, ImageOps
+from PIL import Image, ImageChops, ImageDraw, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "assets" / "art"
@@ -23,12 +24,35 @@ MASTERS = {
     "poles": "wear-poles-v1.png",
 }
 BRAND_SHEETS = {
+    "pack-classic": "wear-pack-classic-brands-v1.png",
+    "pack-ul": "wear-pack-ul-brands-v1.png",
+    "shoe-trail": "wear-shoe-trail-brands-v1.png",
+    "shoe-low": "wear-shoe-low-brands-v1.png",
+    "shoe-boot": "wear-shoe-boot-brands-v1.png",
     "shell": "wear-shell-brands-v1.png",
     "pile": "wear-pile-brands-v1.png",
     "pants": "wear-pants-brands-v1.png",
     "gaiters": "wear-gaiters-brands-v1.png",
+    "poles": "wear-poles-brands-v1.png",
 }
-GEAR_NAMES = {"shell": "guscio", "pile": "pile", "pants": "pantaloni", "gaiters": "ghette"}
+GEAR_NAMES = {
+    "pack-classic": "zainoClassico", "pack-ul": "zainoUL",
+    "shoe-trail": "trail", "shoe-low": "basse", "shoe-boot": "scarponi",
+    "shell": "guscio", "pile": "pile", "pants": "pantaloni", "gaiters": "ghette",
+    "poles": "bastoncini",
+}
+CATALOG_BASES = [
+    "zainoClassico", "zainoUL", "saccoPiuma", "saccoSint", "quiltPiuma", "quiltSint",
+    "matGonfiabile", "matSchiuma", "trail", "scarponi", "basse", "guscio", "pile",
+    "pantaloni", "ghette", "bastoncini", "sandali", "rete", "cappello", "cappelloLana",
+    "guanti", "filtro", "mappa", "orologio", "faro", "kit", "fornello", "tenda", "carte",
+]
+BRAND_PALETTES = {
+    "A": ((38, 44, 29), (132, 143, 83), (154, 111, 61, 210)),
+    "S": ((24, 35, 53), (65, 103, 145), (190, 66, 48, 220)),
+    "Sh": ((48, 44, 42), (224, 123, 36), (34, 34, 36, 220)),
+    "D": ((78, 48, 35), (219, 202, 157), (177, 68, 43, 220)),
+}
 
 
 def normalized(path: Path) -> Image.Image:
@@ -79,7 +103,7 @@ def targets(base: Image.Image, kind: str):
             # partire piu in alto del pile, senza scivolare sul bacino.
             box = (max(0, torso[0] - 8), 168, min(cell_width, torso[2] + 8), 513)
         elif kind == "pile":
-            box = (max(0, torso[0] - 8), 190, min(cell_width, torso[2] + 8), 535)
+            box = (max(0, torso[0] - 4), 205, min(cell_width, torso[2] + 4), 505)
         elif kind.startswith("pack-"):
             box = (max(0, torso[0] + 22), 185, min(cell_width, torso[2] - 22), 520)
         elif kind.startswith("shoe-"):
@@ -89,9 +113,10 @@ def targets(base: Image.Image, kind: str):
             box = (center - 108, 342, center + 108, 642)
         elif kind == "gaiters":
             center = cell_width // 2
-            box = (center - 66, 522, center + 66, 650)
+            box = (center - 120, 462, center + 120, 655)
         elif kind == "gloves":
-            box = (max(0, torso[0] - 6), 345, min(cell_width, torso[2] + 6), 525)
+            center = cell_width // 2
+            box = (center - 150, 355, center + 150, 462)
         elif kind == "hat-sun":
             box = (max(0, head[0] - 18), max(0, head[1] - 28), min(cell_width, head[2] + 18), min(170, head[1] + 130))
         elif kind == "hat-wool":
@@ -118,11 +143,47 @@ def fit_cells(image: Image.Image, boxes) -> Image.Image:
     return sheet
 
 
-def fit_brand_cell(image: Image.Image, brand_index: int, boxes) -> Image.Image:
+def keep_largest_components(image: Image.Image, limit: int = 2) -> Image.Image:
+    """Remove neighboring-cell fragments while preserving paired equipment."""
+    alpha = image.getchannel("A")
+    binary = alpha.point(lambda value: 255 if value >= 32 else 0)
+    pixels = binary.load()
+    width, height = binary.size
+    seen = bytearray(width * height)
+    components = []
+    for y in range(height):
+        for x in range(width):
+            index = y * width + x
+            if seen[index] or not pixels[x, y]:
+                continue
+            seen[index] = 1
+            queue = deque([(x, y)])
+            points = []
+            while queue:
+                px, py = queue.popleft()
+                points.append((px, py))
+                for nx, ny in ((px - 1, py), (px + 1, py), (px, py - 1), (px, py + 1)):
+                    if 0 <= nx < width and 0 <= ny < height:
+                        neighbor = ny * width + nx
+                        if not seen[neighbor] and pixels[nx, ny]:
+                            seen[neighbor] = 1
+                            queue.append((nx, ny))
+            components.append(points)
+    keep = sorted(components, key=len, reverse=True)[:limit]
+    mask = Image.new("L", image.size)
+    draw = ImageDraw.Draw(mask)
+    for points in keep:
+        draw.point(points, fill=255)
+    result = image.copy()
+    result.putalpha(ImageChops.multiply(alpha, mask))
+    return result
+
+
+def fit_brand_cell(image: Image.Image, brand_index: int, boxes, parts: int = 1) -> Image.Image:
     """Reuse one brand design across the four registered character cells."""
     sheet = Image.new("RGBA", SIZE)
     cell_width = SIZE[0] // 4
-    cell = image.crop((brand_index * cell_width, 0, (brand_index + 1) * cell_width, SIZE[1]))
+    cell = keep_largest_components(image.crop((brand_index * cell_width, 0, (brand_index + 1) * cell_width, SIZE[1])), parts)
     source = visible_bbox(cell)
     if not source:
         return sheet
@@ -140,6 +201,30 @@ def tint(image: Image.Image, color: str) -> Image.Image:
     colored = ImageOps.colorize(gray, black=(18, 17, 16), white=pale).convert("RGBA")
     colored.putalpha(image.getchannel("A"))
     return colored
+
+
+def brandize_catalog_icon(image: Image.Image, brand: str) -> Image.Image:
+    """Apply the complete brand language, not just a flat hue, to shop art."""
+    image = image.convert("RGBA").resize((192, 192), Image.Resampling.LANCZOS)
+    dark, light, accent = BRAND_PALETTES[brand]
+    gray = ImageOps.grayscale(image)
+    colored = ImageOps.colorize(gray, black=dark, white=light).convert("RGBA")
+    colored.putalpha(image.getchannel("A"))
+    marks = Image.new("RGBA", image.size)
+    draw = ImageDraw.Draw(marks)
+    if brand == "A":
+        draw.rounded_rectangle((112, 25, 132, 166), 6, fill=accent, outline=(45, 35, 24, 220), width=3)
+    elif brand == "S":
+        draw.rounded_rectangle((24, 116, 168, 137), 5, fill=accent, outline=(45, 35, 34, 220), width=2)
+    elif brand == "Sh":
+        draw.polygon(((38, 160), (60, 174), (158, 35), (137, 24)), fill=accent)
+    else:
+        draw.rounded_rectangle((20, 20, 171, 171), 20, outline=accent, width=7)
+        for x in range(34, 164, 20):
+            draw.line((x, 24, x + 8, 24), fill=(86, 45, 30, 230), width=2)
+            draw.line((x, 168, x + 8, 168), fill=(86, 45, 30, 230), width=2)
+    marks.putalpha(ImageChops.multiply(marks.getchannel("A"), image.getchannel("A")))
+    return Image.alpha_composite(colored, marks)
 
 
 def clear_outerwear_face(image: Image.Image) -> Image.Image:
@@ -173,13 +258,20 @@ def save_gear_icon(image: Image.Image, name: str):
 base = center_base(normalized(ART / "character-front-swimsuit-v3.png"))
 base.save(ART / "character-front-swimsuit-v3.png", optimize=True)
 
+gear_folder = ROOT / "assets" / "sprites" / "gear"
+for gear_name in CATALOG_BASES:
+    source = Image.open(gear_folder / f"{gear_name}.png").convert("RGBA")
+    for brand in BRANDS:
+        brandize_catalog_icon(source, brand).save(gear_folder / f"{gear_name}-{brand}.png", optimize=True)
+
 for kind, filename in MASTERS.items():
     boxes = targets(base, kind)
     master = fit_cells(normalized(ART / filename), boxes)
     brand_sheet = normalized(ART / BRAND_SHEETS[kind]) if kind in BRAND_SHEETS else None
     for brand_index, (brand, color) in enumerate(BRANDS.items()):
         if brand_sheet:
-            rendered = fit_brand_cell(brand_sheet, brand_index, boxes)
+            parts = 2 if kind.startswith("shoe-") or kind in {"gaiters", "poles"} else 1
+            rendered = fit_brand_cell(brand_sheet, brand_index, boxes, parts)
         else:
             rendered = tint(master, color)
         if kind in {"shell", "pile"}:

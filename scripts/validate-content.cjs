@@ -124,7 +124,7 @@ for (let stage=2;stage<=8;stage++) for (let panel=1;panel<=6;panel++) {
   if (!fs.existsSync(file)) errors.push(`Panorama isometrico HD mancante: ${name}`);
   else if (fs.statSync(file).size<1_000_000) errors.push(`Panorama isometrico HD troppo piccolo: ${name}`);
 }
-for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 49, pose: 16, walk: 4, 'walk-poles': 4, 'pose-poles': 4, brand: 4, scene: 27 })) {
+for (const [folder, expected] of Object.entries({ portrait: 4, cast: 12, event: 20, gear: 149, pose: 16, walk: 4, 'walk-poles': 4, 'pose-poles': 4, brand: 4, scene: 27 })) {
   const directory = path.join(root, 'assets', 'sprites', folder);
   const count = fs.existsSync(directory) ? fs.readdirSync(directory).filter((name) => name.endsWith('.png')).length : 0;
   if (count !== expected) errors.push(`Sprite ${folder}: attesi ${expected}, trovati ${count}`);

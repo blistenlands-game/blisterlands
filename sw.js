@@ -13,7 +13,8 @@ const SPRITE_GROUPS={
  scene:['waterfall','suspension-bridge','ford','spring','fisherman-lake','stream-camp','lake-boat','double-rainbow','broken-bridge','deep-mud','bog-boardwalk','boulder-field','landslide','flower-meadow','blueberry-slope','snowfield','moose-birches','forest-smoke','reindeer-corral','sacred-boulder','turf-hut','ridge-routes','summit-panorama','narrow-canyon','evening-refuge','aurora-camp','trail-station']
 };
 const SPRITES=Object.entries(SPRITE_GROUPS).flatMap(([folder,names])=>names.map(name=>`./assets/sprites/${folder}/${name}.png`));
-for(const garment of ['guscio','pile','pantaloni','ghette'])for(const brand of ['A','S','Sh','D'])SPRITES.push(`./assets/sprites/gear/${garment}-${brand}.png`);
+const BRANDED_GEAR=['zainoClassico','zainoUL','saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma','trail','scarponi','basse','guscio','pile','pantaloni','ghette','bastoncini','sandali','rete','cappello','cappelloLana','guanti','filtro','mappa','orologio','faro','kit','fornello','tenda','carte'];
+for(const gear of BRANDED_GEAR)for(const brand of ['A','S','Sh','D'])SPRITES.push(`./assets/sprites/gear/${gear}-${brand}.png`);
 for(const person of SPRITE_GROUPS.portrait)for(const pose of ['walk','stand','sit','victory'])SPRITES.push(`./assets/sprites/pose/${person}-${pose}.png`);
 for(const person of SPRITE_GROUPS.portrait)SPRITES.push(`./assets/sprites/rig/base/${person}.png`);
 for(const gear of ['pack-classic','pack-ul','hat-wool','hat-sun','net','shell','gloves','shoe-trail','shoe-low','shoe-boot','poles'])SPRITES.push(`./assets/sprites/rig/gear/${gear}.png`);
