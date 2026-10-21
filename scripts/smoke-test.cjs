@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.4.0').waitFor();
+  await page.getByText('Prototipo · versione 0.5.0').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -95,7 +95,7 @@ const server = http.createServer((request, response) => {
     current: JSON.parse(localStorage.getItem('blisterlands')),
     backup: JSON.parse(localStorage.getItem('blisterlands-backup-v0')),
   }));
-  if (migratedSave.current.saveVersion !== 1 || !migratedSave.backup || 'saveVersion' in migratedSave.backup) {
+  if (migratedSave.current.saveVersion !== 2 || !migratedSave.backup || 'saveVersion' in migratedSave.backup) {
     throw new Error('Migrazione del salvataggio precedente non riuscita');
   }
 
@@ -106,8 +106,16 @@ const server = http.createServer((request, response) => {
   await page.getByRole('button', { name: /Comincia ad aprile/ }).click();
   await page.getByRole('heading', { name: 'Aprile, anno 1' }).waitFor();
   if (await page.locator('.hdr .pose-sprite').count()) throw new Error('Il personaggio non deve comparire nelle scene di casa');
+  const expandedHome = await page.evaluate(() => ({ cards: CARDS.length, statStates: document.querySelectorAll('.home-stat[class*="state-"]').length }));
+  if (expandedHome.cards < 60 || expandedHome.statStates !== 4) throw new Error(`Casa non ampliata: ${JSON.stringify(expandedHome)}`);
+  await page.getByRole('button', { name: /Personaggio/ }).click();
+  const characterLook = await page.evaluate(() => ({ front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length }));
+  if (!characterLook.front.includes('character-front-v1.png') || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
+  await page.getByRole('button', { name: /Indietro/ }).click();
   await page.getByRole('button', { name: /Negozio/ }).click();
-  await page.getByText('I quattro marchi').waitFor();
+  await page.getByText('Conosci i quattro marchi').waitFor();
+  const shopLook = await page.evaluate(() => ({ cards:document.querySelectorAll('.shop-card').length, categories:document.querySelectorAll('.shop-categories button').length, oldRows:document.querySelectorAll('.prod').length, detail:!!document.querySelector('.gear-detail') }));
+  if (shopLook.cards < 4 || shopLook.categories !== 6 || shopLook.oldRows !== 0 || !shopLook.detail) throw new Error(`Nuovo negozio incompleto: ${JSON.stringify(shopLook)}`);
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
   await page.getByRole('button', { name: /Torna a casa/ }).click();
   await page.evaluate(() => { H.owned = new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']); prepareTrek(); });

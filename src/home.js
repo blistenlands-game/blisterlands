@@ -8,16 +8,16 @@ const CPRICE={pasti:7,barrette:2,gas:3,cerotti:1,repellente:3,calze:15,powerbank
 const SALARY=70,FERIE_MESE=2,FERIE_MAX=20,TREK_DAYS=8;
 const ABIL={resistenza:'Resistenza',orientamento:'Orientamento',tecnica:'Tecnica di montagna',adattamento:'Adattamento'};
 const ABIL_NOTE={resistenza:'Meno fatica a ogni chilometro',orientamento:'Un punto di orientamento in più ogni due livelli',tecnica:'Aderenza e appoggio in più ogni due livelli',adattamento:'Meteo, insetti e acciacchi pesano meno sul morale'};
-const SAVE_KEY=GAME_CONFIG.storageKey,SAVE_VERSION=1;
+const SAVE_KEY=GAME_CONFIG.storageKey,SAVE_VERSION=2;
 let H=null;
 function newHome(){return{mese:4,anno:1,soldi:300,ferie:8,forma:60,voglia:70,xp:0,punti:0,abil:{resistenza:0,orientamento:0,tecnica:0,adattamento:0},
  owned:new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']),catalogo:true,scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
- timbri:[],storia:[],fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio',pg:'marco',nome:'',saveVersion:SAVE_VERSION}}
+ timbri:[],storia:[],cardHistory:[],loadout:{},fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio',pg:'marco',nome:'',charTab:'equip',inspectItem:null,shopCat:'Zaini',shopItem:null,saveVersion:SAVE_VERSION}}
 const lvl=()=>Math.floor(H.xp/100);
 function migrateHome(o){const d=newHome(),defaultOwned=[...d.owned],m=Object.assign(d,o||{});
  m.saveVersion=SAVE_VERSION;m.owned=new Set(Array.isArray(o&&o.owned)?o.owned:defaultOwned);
  m.abil=Object.assign({},newHome().abil,o&&o.abil||{});m.scorte=Object.assign({},newHome().scorte,o&&o.scorte||{});
- m.timbri=Array.isArray(m.timbri)?m.timbri:[];m.storia=Array.isArray(m.storia)?m.storia:[];m.ordini=Array.isArray(m.ordini)?m.ordini:[];
+ m.timbri=Array.isArray(m.timbri)?m.timbri:[];m.storia=Array.isArray(m.storia)?m.storia:[];m.cardHistory=Array.isArray(m.cardHistory)?m.cardHistory:[];m.loadout=m.loadout&&typeof m.loadout==='object'?m.loadout:{};m.ordini=Array.isArray(m.ordini)?m.ordini:[];
  return m}
 function save(){try{const o=Object.assign({},H,{saveVersion:SAVE_VERSION,owned:[...H.owned]});localStorage.setItem(SAVE_KEY,JSON.stringify(o))}catch(e){}}
 function load(){try{const t=localStorage.getItem(SAVE_KEY);if(!t)return null;const o=JSON.parse(t),v=Number(o.saveVersion)||0;
@@ -40,7 +40,7 @@ const CARDS=[
  {id:'pioggia',w:()=>[11,12,1,2].includes(H.mese)?3:0.5,title:'Il mese grigio',text:'Piove da tre settimane. Esci di casa solo per lavorare.',
   o:[{l:'Pianifichi il prossimo cammino sulle mappe',f:{voglia:6,xp:5},txt:'Mappe, profili, rifugi: viaggi con la testa.'},{l:'Ti chiudi in casa',f:{voglia:-6,forma:-3},txt:'Il mese passa e basta.'}]},
  {id:'compleanno',w:()=>1.5,title:'Il tuo compleanno',text:'Gli amici vogliono farti un regalo e ti chiedono cosa vorresti.',
-  o:[{l:'Qualcosa per il trekking',f:{gift:'bastoncini'},txt:'Un paio di bastoncini. Se li avevi già, li rivenderai.',giftAlt:{soldi:60}},{l:'Una cena tutti insieme',f:{voglia:10},txt:'Serata bellissima.'}]},
+  o:[{l:'Qualcosa per il trekking',giftRandom:true,txt:['Hanno scelto qualcosa che non avevi ancora.','Il negoziante li ha aiutati a trovare un regalo davvero utile.']},{l:'Una cena tutti insieme',f:{voglia:10},txt:'Serata bellissima.'}]},
  {id:'bolletta',w:()=>2,title:'La bolletta',text:'Arriva una bolletta del gas molto più alta del previsto.',
   o:[{l:'Paghi',f:{soldi:-120},txt:'Addio a mezzo zaino ultralight.'},{l:'Rateizzi',f:{soldi:-50,voglia:-3},txt:'La paghi a rate, e ci pensi ogni mese.'}]},
  {id:'corso',w:()=>1.5,title:'Corso di orientamento',text:'Il CAI organizza un corso di orientamento con mappa e bussola.',
@@ -60,7 +60,8 @@ const CARDS=[
  {id:'ordine',w:()=>H.soldi>400?1:0,title:'Il laboratorio artigianale',text:'Un piccolo laboratorio americano vende zaini ultralight cuciti a mano. Consegna in tre mesi, ma il prezzo è basso per la qualità.',
   o:[{l:'Lo ordini',f:{soldi:-200},order:'zainoUL',txt:'Arriverà tra tre mesi. Speri prima della stagione.'},{l:'Non ora',f:{},txt:'Lo zaino dei sogni può aspettare.'}]}
 ];
-function pickCard(){const w={};CARDS.forEach(c=>{const v=c.w();if(v>0)w[c.id]=v});const id=pickW(w);return CARDS.find(c=>c.id===id)}
+if(typeof EXTRA_HOME_CARDS!=='undefined')CARDS.push(...EXTRA_HOME_CARDS);
+function pickCard(){const recent=new Set((H.cardHistory||[]).slice(0,6)),eligible=CARDS.filter(c=>c.w()>0),fresh=eligible.filter(c=>!recent.has(c.id)),pool=fresh.length?fresh:eligible,w={};pool.forEach(c=>w[c.id]=c.w());const id=pickW(w);return CARDS.find(c=>c.id===id)}
 const PLANS={
  normale:{l:'Lavoro normale',soldi:SALARY,forma:-6,voglia:-4,note:'Risparmi lo stipendio. Forma e voglia calano.'},
  straordinari:{l:'Straordinari',soldi:SALARY+80,forma:-9,voglia:-11,fila:1,note:'Molti più soldi, ma ti consumano. Troppi mesi di fila portano al burnout.'},
@@ -75,11 +76,16 @@ function liveMonth(plan){const P=PLANS[plan]||PLANS.normale;H.scena={normale:'uf
  H.sconto=0;
  H.carta=pickCard();H.cartaMsg=msg;H.screen='carta';save();render()}
 const CARD_SCENE={malanno:'letto',burnout:'divano',pioggia:'divano',documentario:'divano',appennino:'gita'};
-function chooseCard(i){const c=H.carta,o=c.o[i];if(c.id==='appennino')H.scena=i===0?'gita':'divano';else if(CARD_SCENE[c.id]&&!(c.id==='pioggia'&&i===0))H.scena=CARD_SCENE[c.id];
+function awardRandomGear(){eqInit();const candidates=ITEMS.filter(it=>it.brand&&!H.owned.has(it.id)&&(it.lvl||0)<=lvl()+1&&!H.ordini.some(o=>o.id===it.id));if(!candidates.length){const credit=80+Math.floor(rnd()*41);H.soldi+=credit;return `Il modello giusto non c'era: ti hanno lasciato un buono da ${credit} €.`}const stocked=candidates.filter(it=>it.brand==='D'||H.stock.includes(it.id)),pool=stocked.length?stocked:candidates,it=pool[Math.floor(rnd()*pool.length)];H.owned.add(it.id);H.wear[it.id]=0;return `Nel pacco trovi ${it.name}, ${it.model||'un modello appena arrivato'} di ${BRANDS[it.brand].name}.`}
+function repairRandomOwned(){eqInit();const worn=[...H.owned].map(id=>ITEM_BY[id]).filter(it=>it&&it.dur<9999&&(H.wear[it.id]||0)>0).sort((a,b)=>cond(a.id)-cond(b.id));if(!worn.length){H.soldi+=35;return 'Non c’era nulla da riparare: il laboratorio ti lascia un buono da 35 €.'}const it=worn[0];H.wear[it.id]=0;return `${it.name} torna come nuovo.`}
+function randomSupplyGift(){const c=CONSUM[Math.floor(rnd()*CONSUM.length)],n=1+Math.floor(rnd()*Math.min(3,c.max));H.scorte[c.id]=(H.scorte[c.id]||0)+n;return `Ricevi ${n} ${c.name.toLowerCase()}.`}
+function chooseCard(i){const c=H.carta,o=c.o[i];if(o.cost&&H.soldi<o.cost)return;if(c.id==='appennino')H.scena=i===0?'gita':'divano';else if(CARD_SCENE[c.id]&&!(c.id==='pioggia'&&i===0))H.scena=CARD_SCENE[c.id];
  if(o.f&&o.f.gift&&H.owned.has(o.f.gift)&&o.giftAlt){hfx(o.giftAlt)}else hfx(o.f);
- let txt=o.txt;
+ if(o.cost)H.soldi-=o.cost;let txt=Array.isArray(o.txt)?o.txt[Math.floor(rnd()*o.txt.length)]:o.txt;
+ if(o.giftRandom)txt=`${txt} ${awardRandomGear()}`;if(o.repairRandom)txt=`${txt} ${repairRandomOwned()}`;if(o.scorteRandom)txt=`${txt} ${randomSupplyGift()}`;
  if(o.sell){const cand=[...H.owned].filter(id=>PRICE[id]).sort((a,b)=>PRICE[a]-PRICE[b]);if(cand.length){const id=cand[0];H.owned.delete(id);const v=Math.round(PRICE[id]/2);H.soldi+=v;txt=`Vendi ${ITEMS.find(x=>x.id===id).name} per ${v} €.`}}
  if(o.order)H.ordine={id:o.order,m:3};
+ H.cardHistory.unshift(c.id);H.cardHistory=H.cardHistory.slice(0,12);
  H.storia.unshift(`${MONTHS[H.mese-1]} anno ${H.anno}: ${c.title}. ${txt}`);
  H.mese++;if(H.mese>12){H.mese=1;H.anno++}
  H.esito=txt;H.carta=null;H.screen='casa';save();render()}
@@ -112,12 +118,53 @@ function goHome(){const r={xp:S.xp,seed:S.seed,timbri:S.timbri.filter(t=>!H.timb
  H.scena='ritorno';H.trekking=false;H.ritorno=r;H.screen='ritorno';S.screen=null;save();render()}
 function spendPoint(k){if(H.punti<1||H.abil[k]>=5)return;H.punti--;H.abil[k]++;save();render()}
 
+/* armadio, personaggio e nuovo emporio */
+const GEAR_SLOTS=[
+ ['zaino','Zaino','zaino'],['sacco','Sonno','sacco'],['materassino','Materassino','materassino'],['scarpe','Calzature','scarpe'],
+ ['guscio','Guscio','guscio'],['pile','Strato caldo','pile'],['bastoncini','Bastoncini','bastoncini'],['ghette','Ghette','ghette'],
+ ['sandali','Guado','sandali'],['testa','Testa','rete|cappello|cappelloLana'],['guanti','Guanti','guanti'],['filtro','Acqua','filtro'],
+ ['mappa','Mappa','mappa'],['orologio','Orologio','orologio'],['faro','Sicurezza','faro'],['kit','Riparazione','kit'],
+ ['fornello','Cucina','fornello'],['tenda','Riparo','tenda'],['carte','Svago','carte']
+];
+const slotDef=id=>GEAR_SLOTS.find(s=>s[0]===id);
+function itemBase(it){return it?(it.base||it.id):''}
+function itemSlot(it){if(!it)return null;if(it.group)return it.group;const b=itemBase(it);return ['rete','cappello','cappelloLana'].includes(b)?'testa':b}
+function bestOwnedFor(slot){const own=ITEMS.filter(it=>H.owned.has(it.id)&&itemSlot(it)===slot&&cond(it.id)>0);return own.sort((a,b)=>itPrice(b.id)-itPrice(a.id))[0]}
+function initLoadout(){H.loadout=H.loadout||{};for(const [slot] of GEAR_SLOTS){const id=H.loadout[slot];if(id&&!H.owned.has(id))delete H.loadout[slot];if(!H.loadout[slot]){const it=bestOwnedFor(slot);if(it)H.loadout[slot]=it.id}}}
+function equipHome(id){eqInit();const it=ITEM_BY[id],slot=itemSlot(it);if(!it||!slot||!H.owned.has(id)||cond(id)<=0)return;H.loadout[slot]=id;H.inspectItem=id;save();render()}
+function inspectGear(id){H.inspectItem=id;save();render()}
+function setCharTab(tab){H.charTab=tab;save();render()}
+function gearAttrs(it,owned=true){if(!it)return '';const a=owned?effAttrs(it.id):it.a||{};return Object.entries(a).filter(([,v])=>v>0).map(([k,v])=>`${ATTR[k]} ${'●'.repeat(v)}`).join(' · ')}
+function gearDetail(id,mode='wardrobe'){const it=ITEM_BY[id];if(!it)return '<div class="gear-detail empty"><p>Scegli un oggetto per vederne caratteristiche e stato.</p></div>';const own=H.owned.has(id),c=own?cond(id):1,slot=itemSlot(it),equipped=H.loadout[slot]===id;
+ const brand=it.brand?`<div class="detail-brand">${brandLogo(it.brand,38)}<span style="color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</span></div>`:'';
+ const actions=mode==='shop'?shopAction(it):`<button class="btn character-equip ${equipped?'equipped':''}" ${c<=0?'disabled':''} onclick="equipHome('${id}')">${equipped?'Equipaggiato':'Equipaggia'}</button>`;
+ return `<article class="gear-detail">${brand}<div class="gear-detail-main">${gearSvg(id,116)}<div><small>${esc((slotDef(slot)||[,'Oggetto'])[1].toUpperCase())}</small><h3>${esc(it.model||it.name)}</h3><p>${esc(it.note||'')}</p></div></div><div class="gear-specs"><span><b>${String(it.kg).replace('.',',')} kg</b>PESO</span>${own&&it.dur<9999?`<span><b>${Math.round(c*100)}%</b>${esc(condLabel(c).toUpperCase())}</span>`:''}<span><b>${it.lvl||0}</b>LIVELLO</span></div>${gearAttrs(it,own)?`<p class="gear-attrs">${gearAttrs(it,own)}</p>`:''}${it.trait?`<p class="gear-trait">${esc(TRAITS[it.trait])}</p>`:''}${actions}</article>`}
+function characterScreen(){eqInit();initLoadout();const tab=H.charTab||'equip';if(tab==='abilita')return characterSkills();const selected=H.inspectItem&&H.owned.has(H.inspectItem)?H.inspectItem:(Object.values(H.loadout)[0]||[...H.owned][0]);H.inspectItem=selected;
+ const primary=GEAR_SLOTS.slice(0,12).map(([slot,label])=>{const id=H.loadout[slot],it=ITEM_BY[id];return `<button class="equipment-slot ${id?'filled':''}" onclick="${id?`inspectGear('${id}')`:`document.querySelector('.wardrobe-card')?.focus()`}"><span>${id?gearSvg(id,42):'＋'}</span><small>${esc(label)}</small><b>${it?esc(it.model||it.name):'Vuoto'}</b></button>`}).join('');
+ const wardrobe=[...H.owned].map(id=>ITEM_BY[id]).filter(Boolean).sort((a,b)=>itemSlot(a).localeCompare(itemSlot(b))||itPrice(b.id)-itPrice(a.id));
+ return `${homeCompactHeader('Personaggio')}<main class="character-page">${characterTabs('equip')}<section class="character-board"><div class="equipment-slots">${primary}</div><div class="character-center"><div class="character-front pg-${esc(H.pg)}" role="img" aria-label="${esc(pgName())}, vista frontale"></div><h2>${esc(pgName())}</h2><p>Livello ${lvl()} · ${Object.keys(H.loadout).length} slot preparati</p></div></section>${gearDetail(selected)}<section class="wardrobe"><div class="section-title"><small>ARMADIO</small><h2>Il tuo materiale</h2><span>${wardrobe.length} oggetti</span></div><div class="wardrobe-grid">${wardrobe.map(it=>{const slot=itemSlot(it),on=H.loadout[slot]===it.id,c=cond(it.id);return `<button class="wardrobe-card ${on?'on':''} ${c<=.33?'worn':''}" onclick="inspectGear('${it.id}')">${gearSvg(it.id,66)}<span><b>${esc(it.model||it.name)}</b><small>${esc((slotDef(slot)||[,'Oggetto'])[1])} · ${Math.round(c*100)}%</small></span>${on?'<em>IN USO</em>':''}</button>`}).join('')}</div></section></main>`}
+function characterTabs(active){return `<nav class="character-tabs"><button class="${active==='equip'?'on':''}" onclick="setCharTab('equip')">EQUIPAGGIAMENTO</button><button class="${active==='abilita'?'on':''}" onclick="setCharTab('abilita')">ABILITÀ ${H.punti?`<b>${H.punti}</b>`:''}</button></nav>`}
+function characterSkills(){return `${homeCompactHeader('Personaggio')}<main class="character-page">${characterTabs('abilita')}<section class="skill-hero"><small>PROGRESSIONE</small><h2>Competenze sul sentiero</h2><p>Ogni 100 punti esperienza ottieni un punto. Disponibili: <b>${H.punti}</b>.</p></section><div class="skill-tree">${Object.entries(ABIL).map(([k,v],i)=>`<article class="skill-branch skill-${i}"><span class="skill-glyph">${['ϟ','⌖','▲','✦'][i]}</span><div><h3>${v}</h3><p>${ABIL_NOTE[k]}</p><div class="skill-pips">${Array.from({length:5},(_,n)=>`<i class="${n<H.abil[k]?'on':''}"></i>`).join('')}</div></div><button ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">${H.abil[k]>=5?'MAX':'+1'}</button></article>`).join('')}</div></main>`}
+
+const SHOP_SECTIONS=[
+ ['Zaini',['zainoClassico','zainoUL']],['Sonno',['saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma']],['Calzature',['trail','basse','scarponi','ghette','sandali']],['Abbigliamento',['guscio','pile','rete','cappello','cappelloLana','guanti']],['Campo',['tenda','fornello','filtro']],['Tecnica',['bastoncini','mappa','orologio','faro','kit','carte']]
+];
+function shopItems(cat){const bases=(SHOP_SECTIONS.find(s=>s[0]===cat)||SHOP_SECTIONS[0])[1];return ITEMS.filter(it=>it.brand&&bases.includes(itemBase(it)))}
+function setShopCat(cat){H.shopCat=cat;H.shopItem=null;save();render()}
+function inspectShop(id){H.shopItem=id;save();render()}
+function shopAction(it){const own=H.owned.has(it.id),p=price(it.id),lock=(it.lvl||0)>lvl(),ord=H.ordini.find(o=>o.id===it.id),avail=it.brand==='D'||H.stock.includes(it.id);if(own)return `<div class="shop-actions">${H.wear[it.id]>0?`<button class="btn mini" ${H.soldi<repairCost(it.id)?'disabled':''} onclick="repairItem('${it.id}')">Ripara · ${repairCost(it.id)} €</button>`:''}<button class="btn mini quiet" onclick="sellItem('${it.id}')">Vendi · ${sellValue(it.id)} €</button></div>`;if(ord)return `<p class="shop-state">IN ARRIVO TRA ${ord.m} ${ord.m===1?'MESE':'MESI'}</p>`;if(lock)return `<p class="shop-state">SI SBLOCCA AL LIVELLO ${it.lvl}</p>`;if(!avail)return '<p class="shop-state">ESAURITO QUESTO MESE</p>';return `<button class="btn character-equip" ${H.soldi<p?'disabled':''} onclick="buyItem('${it.id}')">${it.brand==='D'?'Ordina':'Compra'} · ${p} €</button>`}
+function storeScreen(){eqInit();const cat=H.shopCat&&SHOP_SECTIONS.some(s=>s[0]===H.shopCat)?H.shopCat:SHOP_SECTIONS[0][0],items=shopItems(cat),selected=H.shopItem&&items.some(it=>it.id===H.shopItem)?H.shopItem:(items.find(it=>H.owned.has(it.id))||items[0]).id;H.shopCat=cat;H.shopItem=selected;
+ const shelf=items.map(it=>{const own=H.owned.has(it.id),avail=it.brand==='D'||H.stock.includes(it.id),lock=(it.lvl||0)>lvl();return `<button class="shop-card ${it.id===selected?'on':''} ${(!avail||lock)&&!own?'unavailable':''}" onclick="inspectShop('${it.id}')"><span class="shop-card-art">${gearSvg(it.id,92)}</span><small>${esc(BRANDS[it.brand].name)}</small><b>${esc(it.model)}</b><em>${own?`${Math.round(cond(it.id)*100)}% · NELL'ARMADIO`:lock?`LIVELLO ${it.lvl}`:avail?`${price(it.id)} €`:'ESAURITO'}</em></button>`}).join('');
+ return `${homeHdr('negozio','Emporio del sentiero',H.sconto?`SALDI −${H.sconto}%`:`LIVELLO ${lvl()}`)}<main class="shop-page"><button class="shop-back" onclick="H.screen='casa';H.esitoNeg=null;render()">‹ <span>Torna a casa</span></button>${H.esitoNeg?`<div class="out">${esc(H.esitoNeg)}</div>`:''}<nav class="shop-categories">${SHOP_SECTIONS.map(([name])=>`<button class="${name===cat?'on':''}" onclick="setShopCat('${name}')">${name}</button>`).join('')}</nav><section class="shop-intro"><small>ASSORTIMENTO DEL MESE</small><h2>${esc(cat)}</h2><p>Prova, confronta, poi scegli. Il materiale già tuo può essere riparato o rivenduto.</p></section><div class="shop-shelf">${shelf}</div>${gearDetail(selected,'shop')}<details class="brand-book"><summary>Conosci i quattro marchi</summary>${Object.entries(BRANDS).map(([k,b])=>`<div class="brand-rule">${brandLogo(k,46)}<p><b style="color:${b.color}">${esc(b.name)}</b>: ${esc(b.rule)}</p></div>`).join('')}</details></main>`}
+
 /* schermate di casa */
 let lastHome=null;
 function pickPg(k){H.pg=k;save();render()}
 function beginGame(){const input=$('#nome'),name=((input&&input.value)||H.nome||'').trim();
  if(!name){if(input){input.focus();input.setCustomValidity('Scrivi il nome del personaggio.');input.reportValidity();input.setCustomValidity('')}return}
  H.nome=name;H.screen='casa';save();render()}
+function homeOptionMeta(o){const f=o.f||{},parts=[];for(const [k,label] of [['soldi','€'],['ferie',' ferie'],['forma',' forma'],['voglia',' voglia'],['xp',' esperienza']])if(f[k])parts.push(`${f[k]>0?'+':''}${f[k]}${label}`);if(o.cost)parts.push(`−${o.cost} €`);if(o.giftRandom)parts.push('regalo a sorpresa');if(o.repairRandom)parts.push('riparazione');if(o.scorteRandom)parts.push('scorte a sorpresa');return parts.join(' · ')||'nessun costo immediato'}
+function homeCardPortrait(c){if(CARD_PORTRAIT[c.id])return CARD_PORTRAIT[c.id];const people=['marta','paolo','giulia','gatto','capo','negoziante'];return people[[...c.id].reduce((n,ch)=>n+ch.charCodeAt(0),0)%people.length]}
 const baseRender=render;
 render=function(){const a=$('#app');
  stopStageDiorama();
@@ -136,45 +183,23 @@ render=function(){const a=$('#app');
    <div class="tiles">
     <button class="tile ${ok?'go':''}" ${ok?'':'disabled'} onclick="prepareTrek()"><b>Parti</b><span>${ok?(H.ferie<TREK_DAYS?'poche ferie: '+H.ferie+' giorni':'la Via delle Renne'):'da giugno a settembre'}</span></button>
     <button class="tile" onclick="H.screen='negozio';render()"><b>Negozio</b><span>${H.sconto?'saldi −'+H.sconto+'%':'compra, ripara, vendi'}</span></button>
-    <button class="tile" onclick="H.screen='abilita';render()"><b>Abilità</b><span>${H.punti?H.punti+' punti da spendere':'livello '+lvl()}</span></button>
-    <button class="tile" onclick="H.screen='diario';render()"><b>Diario</b><span>materiale e timbri</span></button>
+    <button class="tile" onclick="H.screen='personaggio';H.charTab='equip';render()"><b>Personaggio</b><span>${H.punti?H.punti+' punti da spendere':'equipaggiamento e abilità'}</span></button>
+    <button class="tile" onclick="H.screen='diario';render()"><b>Taccuino</b><span>timbri e storia</span></button>
    </div>
    <h3>Come vivi questo mese?</h3>
    <div class="plans">${Object.entries(PLANS).map(([k,p])=>`<button class="plan" onclick="H.esito=null;liveMonth('${k}')"><b>${p.l}</b><span>${p.soldi>=0?'+':''}${p.soldi} € · forma ${p.forma>=0?'+':''}${p.forma} · voglia ${p.voglia>=0?'+':''}${p.voglia}</span></button>`).join('')}</div>
    <p class="ver">versione ${VERSION}</p></section>`}
   else if(H.screen==='diario'){eqInit();
    html=top+`<button class="btn" onclick="H.screen='casa';render()">Torna a casa</button>
-   <div class="card"><h3>Il tuo materiale</h3>${pdefs()}<div class="gallery">${[...H.owned].map(id=>{const it=ITEM_BY[id];const c=cond(id);return `<div class="gcell ${c<=0.33?'worn':''}">${gearSvg(id,56)}<span>${esc(it?(it.model||it.name):id)}</span>${it&&it.dur&&it.dur<9999?`<small>${condLabel(c)}</small>`:''}</div>`}).join('')}</div>
-   <p class="sub">Scorte: ${Object.entries(H.scorte).filter(([k,v])=>v>0).map(([k,v])=>CONSUM.find(c=>c.id===k).name+' '+v).join(' · ')||'nessuna'}${H.ordini.length?' · in arrivo: '+H.ordini.map(o=>ITEM_BY[o.id].model+' tra '+o.m+' mesi').join(', '):''}</p></div>
-   <div class="card"><h3>Timbri</h3><p>${H.timbri.length?H.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join(''):'<span class="sub">Ancora nessuno.</span>'}</p></div>
+   <div class="card diary-cover"><small>TACCUINO DI ${esc(pgName().toUpperCase())}</small><h2>Ricordi dalla Via delle Renne</h2><p>${H.completati} cammini · ${H.vette} vette · ${H.xp} punti esperienza</p></div>
+   <div class="card"><h3>Timbri</h3><p>${H.timbri.length?H.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join(''):'<span class="sub">La prima pagina aspetta ancora il suo timbro.</span>'}</p></div>
    ${H.storia.length?`<details class="log"><summary>Storia</summary><ul>${H.storia.slice(0,40).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></details>`:''}
    <button class="btn" onclick="if(confirm('Ricominciare da capo? Perderai tutti i progressi.')){H=newHome();H.screen='intro';save();render()}">Ricomincia da capo</button>
    <p class="ver">${esc(pgName())} · versione ${VERSION}</p>`}
   else if(H.screen==='carta'){const c=H.carta;
-   html=top+H.cartaMsg.map(m=>`<p class="note">${esc(m)}</p>`).join('')+`<div class="card">${tapedCard(CARD_PORTRAIT[c.id],190,196,'ritratto grande')}<h2>${esc(c.title)}</h2><p>${esc(c.text)}</p>${c.o.map((o,i)=>`<button class="btn" onclick="chooseCard(${i})">${esc(o.l)}</button>`).join('')}</div>`}
-  else if(H.screen==='negozio'){eqInit();
-   const SEZ=[['Zaini',['zainoClassico','zainoUL']],['Sacchi a pelo e quilt',['saccoPiuma','saccoSint','quiltPiuma','quiltSint']],['Materassini',['matGonfiabile','matSchiuma']],['Scarpe',['trail','basse','scarponi']],['Gusci',['guscio']],['Strato caldo',['pile']],['Tende e ripari',['tenda']],['Bastoncini e ghette',['bastoncini','ghette','sandali']],['Cucina e acqua',['fornello','filtro']],['Orientamento e sicurezza',['mappa','orologio','faro','kit']],['Testa, mani e svago',['rete','cappello','cappelloLana','guanti','carte']]];
-   const row=it=>{const own=H.owned.has(it.id),p=price(it.id),lock=(it.lvl||0)>lvl(),ord=H.ordini.find(o=>o.id===it.id),avail=it.brand==='D'||H.stock.includes(it.id);
-    const c=own?cond(it.id):1,q=own&&it.brand==='Sh'?(H.known[it.id]?{difetto:' · difettoso',gioiello:' · esemplare eccellente',normale:''}[H.qual[it.id]]:' · qualità da scoprire'):'';
-    const attrs=Object.entries(own?effAttrs(it.id):it.a).filter(([k,v])=>v>0).map(([k,v])=>ATTR[k]+' '+v).join(' · ');
-    let act;
-    if(own)act=`<div class="act">${H.wear[it.id]>0?`<button class="btn mini" ${H.soldi<repairCost(it.id)?'disabled':''} onclick="repairItem('${it.id}')">Ripara ${repairCost(it.id)} €</button>`:''}<button class="btn mini" onclick="sellItem('${it.id}')">Vendi ${sellValue(it.id)} €</button></div>`;
-    else if(ord)act=`<span class="tagline">in arrivo tra ${ord.m} ${ord.m===1?'mese':'mesi'}</span>`;
-    else if(lock)act=`<span class="tagline">dal livello ${it.lvl}</span>`;
-    else if(!avail)act=`<span class="tagline">non c'è questo mese</span>`;
-    else act=`<button class="btn mini" ${H.soldi<p?'disabled':''} onclick="buyItem('${it.id}')">${it.brand==='D'?'Ordina':'Compra'} ${p} €</button>`;
-    return `<div class="prod ${lock?'locked':''}"><div class="pthumb">${gearSvg(it.id,78)}</div><div class="pbody"><div class="pbrandline">${brandLogo(it.brand)}<div class="pbrand" style="border-color:${BRANDS[it.brand].color};color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</div></div>
-     <div class="pname">${esc(it.model)} <span class="pline">${it.line}</span></div>
-     <div class="pmeta">${it.kg.toString().replace('.',',')} kg${it.dur<9999?` · dura ${it.dur} km`:''}${own&&it.dur<9999?` · <b>${condLabel(c)} ${Math.round(c*100)}%</b>`:''}${q}</div>
-     ${attrs?`<div class="pattr">${attrs}</div>`:''}${it.trait?`<div class="ptrait">${esc(TRAITS[it.trait])}</div>`:''}${act}</div></div>`};
-   html=pdefs()+top+`<button class="btn" onclick="H.screen='casa';H.esitoNeg=null;render()">Torna a casa<span class="meta">Livello ${lvl()}: gli oggetti migliori si sbloccano salendo di livello</span></button>
-   ${H.esitoNeg?`<div class="out">${esc(H.esitoNeg)}</div>`:''}
-   <details class="log"><summary>I quattro marchi</summary>${Object.entries(BRANDS).map(([k,b])=>`<div class="brand-rule">${brandLogo(k,46)}<p><b style="color:${b.color}">${esc(b.name)}</b>: ${esc(b.rule)}</p></div>`).join('')}</details>
-   <p class="sub">L'assortimento cambia ogni mese.${H.sconto?` Saldi: -${H.sconto}% su tutto.`:''} Le scorte si comprano preparando lo zaino.</p>
-   ${SEZ.map(([t,bases])=>{const its=ITEMS.filter(i=>i.brand&&bases.includes(i.base));return its.length?`<h3>${t}</h3>`+its.map(row).join(''):''}).join('')}`}
-  else if(H.screen==='abilita'){
-   html=top+`<button class="btn" onclick="H.screen='casa';render()">← Torna a casa</button><p class="sub">Ogni 100 punti di esperienza sali di livello e guadagni un punto. Punti disponibili: ${H.punti}.</p>
-   ${Object.entries(ABIL).map(([k,v])=>`<div class="qrow"><span>${v} ${H.abil[k]}/5<small>${ABIL_NOTE[k]}</small></span><button class="btn" style="width:auto;margin:0" ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">+1</button></div>`).join('')}`}
+   html=top+H.cartaMsg.map(m=>`<p class="note">${esc(m)}</p>`).join('')+`<div class="card home-event-card">${tapedCard(homeCardPortrait(c),190,196,'ritratto grande')}<small>— VITA A CASA</small><h2>${esc(c.title)}</h2><p>${esc(c.text)}</p>${c.o.map((o,i)=>`<button class="home-event-choice" ${o.cost&&H.soldi<o.cost?'disabled':''} onclick="chooseCard(${i})"><span><b>${esc(o.l)}</b><small>${esc(homeOptionMeta(o))}</small></span><strong>→</strong></button>`).join('')}</div>`}
+  else if(H.screen==='negozio'){html=pdefs()+storeScreen()}
+  else if(H.screen==='personaggio'||H.screen==='abilita'){if(H.screen==='abilita')H.charTab='abilita';H.screen='personaggio';html=pdefs()+characterScreen()}
   else if(H.screen==='ritorno'){const r=H.ritorno;
    html=homeHdr('ritorno','Di nuovo a casa',r.completo?'DIARIO PIENO':'RITORNO')+`<section class="home-paper"><p>${esc(r.fine)}</p><div class="card">
    <p>Esperienza guadagnata: ${r.xp}.${r.up?` <b>Sali di livello!</b> Hai ${H.punti} punti abilità da spendere.`:''}</p>
@@ -218,14 +243,11 @@ function buyItem(id){eqInit();const it=ITEM_BY[id];if(!it||H.owned.has(id)||H.so
   H.esitoNeg=`Comprato: ${it.name}.`}
  save();render()}
 function sellValue(id){const it=ITEM_BY[id];const base=itPrice(id)*(it&&it.brand==='A'?0.65:0.5);return Math.round(base*Math.max(0.15,cond(id)))}
-function sellItem(id){eqInit();if(!H.owned.has(id))return;H.soldi+=sellValue(id);H.owned.delete(id);delete H.wear[id];H.esitoNeg=`Venduto: ${ITEM_BY[id]?ITEM_BY[id].name:id}.`;save();render()}
+function sellItem(id){eqInit();if(!H.owned.has(id))return;H.soldi+=sellValue(id);H.owned.delete(id);delete H.wear[id];for(const slot in H.loadout)if(H.loadout[slot]===id)delete H.loadout[slot];if(H.inspectItem===id)H.inspectItem=null;H.esitoNeg=`Venduto: ${ITEM_BY[id]?ITEM_BY[id].name:id}.`;save();render()}
 function repairCost(id){const it=ITEM_BY[id];return Math.max(5,Math.round(itPrice(id)*(it&&it.brand==='D'?0.15:0.3)))}
 function repairItem(id){eqInit();const it=ITEM_BY[id];if(!it||!H.wear[id]||H.soldi<repairCost(id))return;H.soldi-=repairCost(id);H.wear[id]=Math.max(0,H.wear[id]-0.6*it.dur);H.esitoNeg=`Riparato: ${it.name}.`;save();render()}
-function prepareTrek(){eqInit();S=newState();S.mese=SEASON[H.mese];S.kit=new Set();
- const best=list=>list.sort((x,y)=>(cond(y.id)>0)-(cond(x.id)>0)||itPrice(y.id)-itPrice(x.id))[0];
- for(const g of ['zaino','sacco','materassino','scarpe']){const own=ITEMS.filter(i=>i.group===g&&H.owned.has(i.id));if(own.length)S.kit.add(best(own).id)}
- const seen=new Set();ITEMS.filter(i=>!i.group&&!i.slot&&H.owned.has(i.id)&&!['carte','faro','tenda','orologio'].includes(i.base||i.id)).sort((x,y)=>itPrice(y.id)-itPrice(x.id)).forEach(i=>{const b=i.base||i.id;if(!seen.has(b)&&cond(i.id)>0){seen.add(b);S.kit.add(i.id)}});
- for(const slot of new Set(ITEMS.filter(i=>i.slot).map(i=>i.slot))){const own=ITEMS.filter(i=>i.slot===slot&&H.owned.has(i.id)&&cond(i.id)>0);if(own.length)S.kit.add(best(own).id)}
+function prepareTrek(){eqInit();initLoadout();S=newState();S.mese=SEASON[H.mese];S.kit=new Set();
+ Object.values(H.loadout).forEach(id=>{if(H.owned.has(id)&&cond(id)>0)S.kit.add(id)});
  S.eff={};H.owned.forEach(id=>S.eff[id]=effAttrs(id));
  for(const k in S.inv)if(k!=='batteria')S.inv[k]=Math.min(H.scorte[k]||0,{pasti:3,barrette:4,gas:4,cerotti:3,repellente:2,calze:1,powerbank:1}[k]);
  S.soldi=H.soldi;S.ferie=H.ferie;S.morale=startMorale();S.screen='zaino';H.screen=null;render()}
