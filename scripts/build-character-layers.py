@@ -66,7 +66,11 @@ def targets(base: Image.Image, kind: str):
         torso = region_box(cell, 180, 530)
         feet = region_box(cell, 590, 724)
         legs = region_box(cell, 455, 724)
-        if kind in {"shell", "pile"}:
+        if kind == "shell":
+            # Il cappuccio abbassato resta dietro al collo: il guscio deve
+            # partire piu in alto del pile, senza scivolare sul bacino.
+            box = (max(0, torso[0] - 8), 168, min(cell_width, torso[2] + 8), 513)
+        elif kind == "pile":
             box = (max(0, torso[0] - 8), 190, min(cell_width, torso[2] + 8), 535)
         elif kind.startswith("pack-"):
             box = (max(0, torso[0] + 22), 185, min(cell_width, torso[2] - 22), 520)
@@ -116,7 +120,9 @@ base.save(ART / "character-front-swimsuit-v3.png", optimize=True)
 for kind, filename in MASTERS.items():
     master = fit_cells(normalized(ART / filename), targets(base, kind))
     for brand, color in BRANDS.items():
-        tint(master, color).save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
+        # StormShell riprende esattamente il giallo ocra dell'icona inventario.
+        rendered = master if kind == "shell" and brand == "Sh" else tint(master, color)
+        rendered.save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
 
 for source, target in {
     "wear-gloves-v1.png": "wear-gloves-v2.png",

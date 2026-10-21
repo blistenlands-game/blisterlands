@@ -28,13 +28,13 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.5.5`.
+Prototipo `0.5.6`.
 
 Le tappe 2–8 usano 42 panorami isometrici autonomi in alta risoluzione (1254×1254), senza ritagli da atlanti condivisi.
 
-Gli indicatori di ora, energia, morale e distanza durante il cammino mostrano stato, colore e barra dinamici. Il paperdoll evita gli strati incompatibili: guscio/pile e ghette/scarpe non vengono più disegnati contemporaneamente.
+Gli indicatori di ora, energia, morale e distanza durante il cammino mostrano stato, colore e barra dinamici. Nel paperdoll le ghette sostituiscono le scarpe, mentre pile e guscio possono essere indossati insieme nell'ordine anatomico corretto.
 
-Il paperdoll usa ora l'asse della sagoma opaca reale: corpo, guscio, parte bassa, guanti e copricapo condividono lo stesso centro in tutti e quattro i personaggi. Zaino e bastoncini non attraversano più la vista frontale.
+Il paperdoll usa ora l'asse della sagoma opaca reale: corpo, parte bassa, pile, guscio e guanti condividono lo stesso centro in tutti e quattro i personaggi. Il guscio StormShell è giallo ocra come l'icona dell'inventario e ha il cappuccio abbassato per non interferire con i copricapi. Zaino e bastoncini non attraversano più la vista frontale.
 
 Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Le otto tratte dispongono di 48 POI nominati e di 48 sfondi distinti; arrivi serali, mattine dopo il rifugio o la tenda e traguardo di Njalla hanno scene dedicate. Ogni tappa ha inoltre una mappa piegata semplificata con una curva incorporata nel raster e coerente con i sei landmark; l'avanzamento colora la stessa curva. Il taccuino ha quattro livelli di usura raster per tappa. Ventisette paesaggi specifici restano disponibili per futuri sfondi legati agli imprevisti.
 
