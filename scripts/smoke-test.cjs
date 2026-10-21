@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.10').waitFor();
+  await page.getByText('Prototipo · versione 0.5.11').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -131,8 +131,8 @@ const server = http.createServer((request, response) => {
   });
   if (apparelLook.shellIcons !== 4 || apparelLook.pileIcons !== 3) throw new Error(`Varianti abbigliamento incomplete: ${JSON.stringify(apparelLook)}`);
   await page.getByRole('button', { name: 'Pantaloni', exact: true }).click();
-  const pantsLook = await page.evaluate(() => ({ cards:document.querySelectorAll('.shop-card').length, icons:new Set([...document.querySelectorAll('.shop-card img')].map(img=>img.getAttribute('src'))).size }));
-  if (pantsLook.cards !== 4 || pantsLook.icons !== 4) throw new Error(`Pantaloni non visibili nel negozio: ${JSON.stringify(pantsLook)}`);
+  const pantsLook = await page.evaluate(() => ({ title:document.querySelector('.shop-intro h2')?.textContent, pressed:document.querySelector('.shop-categories button[aria-pressed="true"]')?.textContent, cards:document.querySelectorAll('.shop-card').length, icons:new Set([...document.querySelectorAll('.shop-card img')].map(img=>img.getAttribute('src'))).size }));
+  if (pantsLook.title !== 'Pantaloni' || pantsLook.pressed !== 'Pantaloni' || pantsLook.cards !== 4 || pantsLook.icons !== 4) throw new Error(`Pantaloni non visibili nel negozio: ${JSON.stringify(pantsLook)}`);
   await page.getByRole('button', { name: 'Calzature', exact: true }).click();
   const gaiterLook = await page.evaluate(() => { const cards=[...document.querySelectorAll('.shop-card')].filter(card=>card.textContent.includes('Ghette'));return { cards:cards.length, icons:new Set(cards.map(card=>card.querySelector('img')?.getAttribute('src'))).size }; });
   if (gaiterLook.cards !== 3 || gaiterLook.icons !== 3) throw new Error(`Varianti ghette incomplete: ${JSON.stringify(gaiterLook)}`);

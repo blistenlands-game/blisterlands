@@ -28,7 +28,7 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.5.10`.
+Prototipo `0.5.11`.
 
 Le tappe 2–8 usano 42 panorami isometrici autonomi in alta risoluzione (1254×1254), senza ritagli da atlanti condivisi.
 
@@ -38,7 +38,7 @@ Il paperdoll usa ora l'asse della sagoma opaca reale. Pantaloni e ghette sono du
 
 Il personaggio conserva il protagonista scelto e usa una vera animazione alternativa quando porta i bastoncini, impugnati e sincronizzati col passo. I colori di vestiti e zaino restano parte del disegno del protagonista; i quattro marchi conservano gli emblemi raster nel negozio e nel catalogo. Le otto tratte dispongono di 48 POI nominati e di 48 sfondi distinti; arrivi serali, mattine dopo il rifugio o la tenda e traguardo di Njalla hanno scene dedicate. Ogni tappa ha inoltre una mappa piegata semplificata con una curva incorporata nel raster e coerente con i sei landmark; l'avanzamento colora la stessa curva. Il taccuino ha quattro livelli di usura raster per tappa. Ventisette paesaggi specifici restano disponibili per futuri sfondi legati agli imprevisti.
 
-La scheda personaggio usa un paper-doll raster: quattro corpi neutri e cinquantasei livelli trasparenti a canvas intero. Nel negozio ogni scheda conserva l'illustrazione completa dell'oggetto: zaini interi, capi non ritagliati e calzature nella vista di profilo dall'alto. Il colore identifica il marchio senza fasce o decorazioni arbitrarie. Nel paperdoll scarpe, zaini, guanti, cappelli e bastoncini usano invece livelli anatomici dedicati. `python scripts/build-character-layers.py` riallinea ogni livello agli ancoraggi ed esporta gli sprite usati dall'interfaccia.
+La scheda personaggio usa un paper-doll raster: quattro corpi neutri e cinquantasei livelli trasparenti a canvas intero. Nel negozio ogni scheda conserva l'illustrazione completa dell'oggetto, con margine interno: zaini interi, capi non ritagliati e calzature nella vista di profilo dall'alto. I file dell'interfaccia sono caricati con la versione esplicita, così le categorie del negozio non possono mescolare cataloghi vecchi e nuovi. Nel paperdoll scarpe, zaini, guanti, cappelli e bastoncini usano livelli anatomici dedicati. `python scripts/build-character-layers.py` riallinea ogni livello agli ancoraggi ed esporta gli sprite usati dall'interfaccia.
 
 I raster destinati al gioco sono ottimizzati in tavolozza durante la generazione degli sprite, per mantenere più leggeri pubblicazione, cache offline e aggiornamenti della PWA.
 

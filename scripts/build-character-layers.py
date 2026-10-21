@@ -105,7 +105,9 @@ def targets(base: Image.Image, kind: str):
         elif kind == "pile":
             box = (max(0, torso[0] - 4), 205, min(cell_width, torso[2] + 4), 505)
         elif kind.startswith("pack-"):
-            box = (max(0, torso[0] + 22), 185, min(cell_width, torso[2] - 22), 520)
+            # Sul fronte si vedono solo gli spallacci: devono seguire il torace,
+            # non coprire maniche e guanti come una seconda giacca.
+            box = (max(0, torso[0] + 58), 205, min(cell_width, torso[2] - 58), 478)
         elif kind.startswith("shoe-"):
             box = (max(0, feet[0] - 8), 580, min(cell_width, feet[2] + 8), 710)
         elif kind == "pants":
@@ -113,7 +115,7 @@ def targets(base: Image.Image, kind: str):
             box = (center - 108, 342, center + 108, 642)
         elif kind == "gaiters":
             center = cell_width // 2
-            box = (center - 120, 462, center + 120, 655)
+            box = (center - 110, 482, center + 110, 618)
         elif kind == "gloves":
             center = cell_width // 2
             box = (center - 210, 335, center + 210, 485)
@@ -125,7 +127,7 @@ def targets(base: Image.Image, kind: str):
             box = (max(0, head[0] - 8), max(0, head[1] - 8), min(cell_width, head[2] + 8), 315)
         else:  # poles
             center = cell_width // 2
-            box = (center - 260, 330, center + 260, 710)
+            box = (center - 185, 315, center + 185, 676)
         result.append(box)
     return result
 
@@ -149,14 +151,33 @@ def fit_gloves(image: Image.Image) -> Image.Image:
     cell_width = SIZE[0] // 4
     for index in range(4):
         cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
-        for side, offset in ((0, -132), (1, 132)):
+        for side, offset in ((0, -122), (1, 122)):
             half = cell.crop((side * cell_width // 2, 0, (side + 1) * cell_width // 2, SIZE[1]))
             source = visible_bbox(half)
             if not source:
                 continue
-            content = half.crop(source).resize((64, 98), Image.Resampling.LANCZOS)
+            content = half.crop(source)
+            content.thumbnail((94, 126), Image.Resampling.LANCZOS)
             center = index * cell_width + cell_width // 2 + offset
-            sheet.alpha_composite(content, (center - 32, 354))
+            sheet.alpha_composite(content, (center - content.width // 2, 336))
+    return sheet
+
+
+def fit_pair(image: Image.Image, top: int, bottom: int, offset: int, max_width: int) -> Image.Image:
+    """Fit left/right pieces independently, preserving their proportions."""
+    sheet = Image.new("RGBA", SIZE)
+    cell_width = SIZE[0] // 4
+    for index in range(4):
+        cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
+        for side, direction in ((0, -1), (1, 1)):
+            half = cell.crop((side * cell_width // 2, 0, (side + 1) * cell_width // 2, SIZE[1]))
+            source = visible_bbox(half)
+            if not source:
+                continue
+            content = half.crop(source)
+            content.thumbnail((max_width, bottom - top), Image.Resampling.LANCZOS)
+            center = index * cell_width + cell_width // 2 + direction * offset
+            sheet.alpha_composite(content, (center - content.width // 2, top))
     return sheet
 
 
@@ -221,12 +242,32 @@ def tint(image: Image.Image, brand: str) -> Image.Image:
 
 def brandize_catalog_icon(image: Image.Image, brand: str) -> Image.Image:
     """Color the complete original product art without adding arbitrary marks."""
-    image = image.convert("RGBA").resize((192, 192), Image.Resampling.LANCZOS)
+    image = image.convert("RGBA")
+    box = visible_bbox(image)
+    image = image.crop(box) if box else image
+    image.thumbnail((158, 158), Image.Resampling.LANCZOS)
     dark, light, _ = BRAND_PALETTES[brand]
     gray = ImageOps.grayscale(image)
     colored = ImageOps.colorize(gray, black=dark, white=light).convert("RGBA")
     colored.putalpha(image.getchannel("A"))
-    return colored
+    icon = Image.new("RGBA", (192, 192))
+    icon.alpha_composite(colored, ((192 - colored.width) // 2, (192 - colored.height) // 2))
+    return icon
+
+
+def catalog_from_brand_sheet(image: Image.Image, brand_index: int, parts: int = 1) -> Image.Image:
+    """Make a padded shop icon from the complete product illustration."""
+    cell_width = SIZE[0] // 4
+    cell = image.crop((brand_index * cell_width, 0, (brand_index + 1) * cell_width, SIZE[1]))
+    cell = keep_largest_components(cell, parts)
+    box = visible_bbox(cell)
+    if not box:
+        return Image.new("RGBA", (192, 192))
+    content = cell.crop(box)
+    content.thumbnail((158, 158), Image.Resampling.LANCZOS)
+    icon = Image.new("RGBA", (192, 192))
+    icon.alpha_composite(content, ((192 - content.width) // 2, (192 - content.height) // 2))
+    return icon
 
 
 def clear_outerwear_face(image: Image.Image) -> Image.Image:
@@ -266,6 +307,17 @@ for gear_name in CATALOG_BASES:
     for brand in BRANDS:
         brandize_catalog_icon(source, brand).save(gear_folder / f"{gear_name}-{brand}.png", optimize=True)
 
+# When a complete brand illustration exists, use it in the shop rather than a
+# clipped generic thumbnail. Packs and shoes retain their dedicated shop view.
+for kind in ("shell", "pile", "pants", "gaiters", "poles"):
+    sheet = normalized(ART / BRAND_SHEETS[kind])
+    gear_name = GEAR_NAMES[kind]
+    for brand_index, brand in enumerate(BRANDS):
+        parts = 2 if kind in {"gaiters", "poles"} else 1
+        catalog_from_brand_sheet(sheet, brand_index, parts).save(
+            gear_folder / f"{gear_name}-{brand}.png", optimize=True
+        )
+
 for kind, filename in MASTERS.items():
     boxes = targets(base, kind)
     master = fit_cells(normalized(ART / filename), boxes)
@@ -273,7 +325,17 @@ for kind, filename in MASTERS.items():
     for brand_index, (brand, color) in enumerate(BRANDS.items()):
         if brand_sheet:
             parts = 2 if kind.startswith("shoe-") or kind in {"gaiters", "poles"} else 1
-            rendered = fit_brand_cell(brand_sheet, brand_index, boxes, parts)
+            if kind in {"gaiters", "poles"}:
+                if kind == "gaiters":
+                    paired = fit_pair(brand_sheet, 482, 618, 72, 78)
+                else:
+                    paired = fit_pair(brand_sheet, 315, 676, 150, 74)
+                rendered = Image.new("RGBA", SIZE)
+                source_cell = paired.crop((brand_index * SIZE[0] // 4, 0, (brand_index + 1) * SIZE[0] // 4, SIZE[1]))
+                for character in range(4):
+                    rendered.alpha_composite(source_cell, (character * SIZE[0] // 4, 0))
+            else:
+                rendered = fit_brand_cell(brand_sheet, brand_index, boxes, parts)
         else:
             rendered = tint(master, brand)
         if kind in {"shell", "pile"}:
