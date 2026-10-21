@@ -22,6 +22,13 @@ MASTERS = {
     "gaiters": "wear-gaiters-v1.png",
     "poles": "wear-poles-v1.png",
 }
+BRAND_SHEETS = {
+    "shell": "wear-shell-brands-v1.png",
+    "pile": "wear-pile-brands-v1.png",
+    "pants": "wear-pants-brands-v1.png",
+    "gaiters": "wear-gaiters-brands-v1.png",
+}
+GEAR_NAMES = {"shell": "guscio", "pile": "pile", "pants": "pantaloni", "gaiters": "ghette"}
 
 
 def normalized(path: Path) -> Image.Image:
@@ -81,7 +88,8 @@ def targets(base: Image.Image, kind: str):
             center = cell_width // 2
             box = (center - 108, 342, center + 108, 642)
         elif kind == "gaiters":
-            box = (max(0, legs[0] - 5), 500, min(cell_width, legs[2] + 5), 650)
+            center = cell_width // 2
+            box = (center - 66, 522, center + 66, 650)
         elif kind == "gloves":
             box = (max(0, torso[0] - 6), 345, min(cell_width, torso[2] + 6), 525)
         elif kind == "hat-sun":
@@ -91,7 +99,8 @@ def targets(base: Image.Image, kind: str):
         elif kind == "head-net":
             box = (max(0, head[0] - 8), max(0, head[1] - 8), min(cell_width, head[2] + 8), 315)
         else:  # poles
-            box = (max(0, torso[0] - 28), 330, min(cell_width, torso[2] + 28), 710)
+            center = cell_width // 2
+            box = (center - 110, 334, center + 110, 710)
         result.append(box)
     return result
 
@@ -106,6 +115,21 @@ def fit_cells(image: Image.Image, boxes) -> Image.Image:
             continue
         content = cell.crop(source).resize((target[2] - target[0], target[3] - target[1]), Image.Resampling.LANCZOS)
         sheet.alpha_composite(content, (index * cell_width + target[0], target[1]))
+    return sheet
+
+
+def fit_brand_cell(image: Image.Image, brand_index: int, boxes) -> Image.Image:
+    """Reuse one brand design across the four registered character cells."""
+    sheet = Image.new("RGBA", SIZE)
+    cell_width = SIZE[0] // 4
+    cell = image.crop((brand_index * cell_width, 0, (brand_index + 1) * cell_width, SIZE[1]))
+    source = visible_bbox(cell)
+    if not source:
+        return sheet
+    content = cell.crop(source)
+    for index, target in enumerate(boxes):
+        fitted = content.resize((target[2] - target[0], target[3] - target[1]), Image.Resampling.LANCZOS)
+        sheet.alpha_composite(fitted, (index * cell_width + target[0], target[1]))
     return sheet
 
 
@@ -131,28 +155,41 @@ def clear_outerwear_face(image: Image.Image) -> Image.Image:
     return result
 
 
+def save_gear_icon(image: Image.Image, name: str):
+    cell_width = SIZE[0] // 4
+    cell = image.crop((0, 0, cell_width, SIZE[1]))
+    source = visible_bbox(cell)
+    if not source:
+        return
+    content = cell.crop(source)
+    content.thumbnail((176, 176), Image.Resampling.LANCZOS)
+    icon = Image.new("RGBA", (192, 192))
+    icon.alpha_composite(content, ((192 - content.width) // 2, (192 - content.height) // 2))
+    folder = ROOT / "assets" / "sprites" / "gear"
+    folder.mkdir(parents=True, exist_ok=True)
+    icon.save(folder / f"{name}.png", optimize=True)
+
+
 base = center_base(normalized(ART / "character-front-swimsuit-v3.png"))
 base.save(ART / "character-front-swimsuit-v3.png", optimize=True)
 
 for kind, filename in MASTERS.items():
-    master = fit_cells(normalized(ART / filename), targets(base, kind))
-    if kind in {"shell", "pile"}:
-        master = clear_outerwear_face(master)
-    for brand, color in BRANDS.items():
-        # StormShell riprende esattamente il giallo ocra dell'icona inventario.
-        rendered = master if kind == "shell" and brand == "Sh" else tint(master, color)
+    boxes = targets(base, kind)
+    master = fit_cells(normalized(ART / filename), boxes)
+    brand_sheet = normalized(ART / BRAND_SHEETS[kind]) if kind in BRAND_SHEETS else None
+    for brand_index, (brand, color) in enumerate(BRANDS.items()):
+        if brand_sheet:
+            rendered = fit_brand_cell(brand_sheet, brand_index, boxes)
+        else:
+            rendered = tint(master, color)
+        if kind in {"shell", "pile"}:
+            rendered = clear_outerwear_face(rendered)
         rendered.save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
+        if kind in GEAR_NAMES:
+            save_gear_icon(rendered, f"{GEAR_NAMES[kind]}-{brand}")
 
     if kind == "pants":
-        cell_width = SIZE[0] // 4
-        cell = master.crop((0, 0, cell_width, SIZE[1]))
-        source = visible_bbox(cell)
-        content = cell.crop(source)
-        content.thumbnail((176, 176), Image.Resampling.LANCZOS)
-        icon = Image.new("RGBA", (192, 192))
-        icon.alpha_composite(content, ((192 - content.width) // 2, (192 - content.height) // 2))
-        (ROOT / "assets" / "sprites" / "gear").mkdir(parents=True, exist_ok=True)
-        icon.save(ROOT / "assets" / "sprites" / "gear" / "pantaloni.png", optimize=True)
+        save_gear_icon(master, "pantaloni")
 
 for source, target in {
     "wear-gloves-v1.png": "wear-gloves-v2.png",

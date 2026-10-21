@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.7').waitFor();
+  await page.getByText('Prototipo · versione 0.5.8').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -121,6 +121,17 @@ const server = http.createServer((request, response) => {
   const shopLook = await page.evaluate(() => ({ cards:document.querySelectorAll('.shop-card').length, categories:document.querySelectorAll('.shop-categories button').length, oldRows:document.querySelectorAll('.prod').length, detail:!!document.querySelector('.gear-detail'), shelfDisplay:getComputedStyle(document.querySelector('.shop-shelf')).display, shelfOverflow:getComputedStyle(document.querySelector('.shop-shelf')).overflowX, back:getComputedStyle(document.querySelector('.shop-back')).backgroundImage }));
   if (shopLook.cards < 4 || shopLook.categories !== 6 || shopLook.oldRows !== 0 || !shopLook.detail || shopLook.shelfDisplay !== 'grid' || shopLook.shelfOverflow === 'auto' || shopLook.shelfOverflow === 'scroll' || shopLook.back === 'none') throw new Error(`Nuovo negozio incompleto: ${JSON.stringify(shopLook)}`);
   if (await page.locator('.brand-logo').count() < 4) throw new Error('Loghi dei marchi mancanti nel negozio');
+  await page.getByRole('button', { name: 'Abbigliamento', exact: true }).click();
+  const apparelLook = await page.evaluate(() => {
+    const cards = [...document.querySelectorAll('.shop-card')];
+    const byType = (type) => cards.filter((card) => card.textContent.includes(type));
+    const distinctIcons = (type) => new Set(byType(type).map((card) => card.querySelector('img')?.getAttribute('src'))).size;
+    return { pants: byType('Pantaloni').length, shellIcons: distinctIcons('Guscio'), pileIcons: distinctIcons('Strato caldo') };
+  });
+  if (apparelLook.pants !== 4 || apparelLook.shellIcons !== 4 || apparelLook.pileIcons !== 3) throw new Error(`Varianti abbigliamento incomplete: ${JSON.stringify(apparelLook)}`);
+  await page.getByRole('button', { name: 'Calzature', exact: true }).click();
+  const gaiterLook = await page.evaluate(() => { const cards=[...document.querySelectorAll('.shop-card')].filter(card=>card.textContent.includes('Ghette'));return { cards:cards.length, icons:new Set(cards.map(card=>card.querySelector('img')?.getAttribute('src'))).size }; });
+  if (gaiterLook.cards !== 3 || gaiterLook.icons !== 3) throw new Error(`Varianti ghette incomplete: ${JSON.stringify(gaiterLook)}`);
   await page.getByRole('button', { name: /Torna a casa/ }).click();
   await page.evaluate(() => { H.owned = new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']); prepareTrek(); });
   const packLook = await page.evaluate(() => ({ shell:!!document.querySelector('.pack-ui'), product:document.querySelectorAll('.pack-product .gear-sprite').length, people:document.querySelectorAll('.pack-hero .pose-sprite').length }));
