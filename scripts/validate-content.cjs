@@ -114,7 +114,8 @@ if (!appVersion || appVersion !== documentedVersion || !worker.includes('GAME_CO
 }
 if (manifest.name !== config.name || manifest.short_name !== config.name) errors.push(`Nome non allineato: config=${config.name}, manifest=${manifest.name}/${manifest.short_name}`);
 if (/<svg\b/i.test(visuals)) errors.push('La nuova identità visiva deve usare risorse raster, non markup SVG');
-for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','home-scenes-isometric-v2.png','character-front-v1.png','character-front-base-v2.png',...['shell','shoes','pack','hat-sun','hat-wool','head-net','gloves','gaiters','poles'].map((name)=>`wear-${name}-v1.png`),'protagonist-poses.png','walk-cycle-v2.png','walk-cycle-poles.png','event-scenes-water.png','event-scenes-terrain.png','event-scenes-places.png']) {
+const paperDoll=['character-front-swimsuit-v3.png',...['gloves','hat-sun','hat-wool','head-net'].map((name)=>`wear-${name}-v2.png`),...['pack-classic','pack-ul','shoe-trail','shoe-low','shoe-boot','shell','pile','gaiters','poles'].flatMap((kind)=>['A','S','Sh','D'].map((brand)=>`wear-${kind}-${brand}-v2.png`))];
+for (const relative of ['protagonists.png','story-cast.png','event-icons.png','gear.png','trail-scenes.png','home-scenes.png','home-scenes-isometric-v2.png','character-front-v1.png',...paperDoll,'protagonist-poses.png','walk-cycle-v2.png','walk-cycle-poles.png','event-scenes-water.png','event-scenes-terrain.png','event-scenes-places.png']) {
   if (!fs.existsSync(path.join(root, 'assets/art', relative))) errors.push(`Risorsa grafica mancante: ${relative}`);
 }
 for (let stage=2;stage<=8;stage++) if (!fs.existsSync(path.join(root,'assets','godot',`stage-${stage}-isometric-atlas-v1.png`))) errors.push(`Atlante isometrico mancante: tappa ${stage}`);

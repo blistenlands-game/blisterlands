@@ -35,13 +35,13 @@ const ISOMETRIC_STAGE_ONE=[
  'poi-t1-vuolle-refuge-isometric-v1','poi-t1-vuolle-refuge-isometric-closed-v1'
 ].map(name=>`./assets/godot/${name}.png`);
 const ISOMETRIC_STAGE_ATLASES=Array.from({length:7},(_,i)=>`./assets/godot/stage-${i+2}-isometric-atlas-v1.png`);
-const CHARACTER_WEAR=['shell','shoes','pack','hat-sun','hat-wool','head-net','gloves','gaiters','poles'].map(name=>`./assets/art/wear-${name}-v1.png`);
+const PAPER_DOLL=['./assets/art/character-front-swimsuit-v3.png',...['gloves','hat-sun','hat-wool','head-net'].map(name=>`./assets/art/wear-${name}-v2.png`),...['pack-classic','pack-ul','shoe-trail','shoe-low','shoe-boot','shell','pile','gaiters','poles'].flatMap(kind=>['A','S','Sh','D'].map(brand=>`./assets/art/wear-${kind}-${brand}-v2.png`))];
 const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`./assets/paper/paper-stage-${stage+1}-${wear+1}.jpg`)).flat();
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js','./src/map-routes.js',
  './vendor/pixi.min.js','./src/diorama.js','./src/visuals.js','./src/home-cards.js','./src/home.js','./src/bootstrap.js',
- './assets/art/trail-scenes.png','./assets/art/home-scenes.png','./assets/art/home-scenes-isometric-v2.png','./assets/art/character-front-v1.png','./assets/art/character-front-base-v2.png',...CHARACTER_WEAR,...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...ISOMETRIC_STAGE_ATLASES,...PAPERS,
+ './assets/art/trail-scenes.png','./assets/art/home-scenes.png','./assets/art/home-scenes-isometric-v2.png','./assets/art/character-front-v1.png',...PAPER_DOLL,...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...ISOMETRIC_STAGE_ATLASES,...PAPERS,
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];
