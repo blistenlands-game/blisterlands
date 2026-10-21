@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.3').waitFor();
+  await page.getByText('Prototipo · versione 0.5.4').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -109,8 +109,8 @@ const server = http.createServer((request, response) => {
   const expandedHome = await page.evaluate(() => ({ cards: CARDS.length, statStates: document.querySelectorAll('.home-stat[class*="state-"]').length }));
   if (expandedHome.cards < 60 || expandedHome.statStates !== 4) throw new Error(`Casa non ampliata: ${JSON.stringify(expandedHome)}`);
   await page.getByRole('button', { name: /Personaggio/ }).click();
-  const characterLook = await page.evaluate(() => { const board=document.querySelector('.character-board').getBoundingClientRect(),avatar=document.querySelector('.character-avatar').getBoundingClientRect(),layers=[...document.querySelectorAll('.character-wear')];return { front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, files:layers.map(layer=>getComputedStyle(layer).backgroundImage), slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length, layers:layers.length, fullCanvas:layers.every(layer=>{const r=layer.getBoundingClientRect();return Math.abs(r.left-avatar.left)<1&&Math.abs(r.top-avatar.top)<1&&Math.abs(r.width-avatar.width)<1&&Math.abs(r.height-avatar.height)<1}), legacyIcons:document.querySelectorAll('.character-wear .gear-sprite').length, centerDelta:Math.abs((board.left+board.width/2)-(avatar.left+avatar.width/2)) }; });
-  if (!characterLook.front.includes('character-front-swimsuit-v3.png') || characterLook.files.some(file=>!file.includes('-v2.png')) || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2 || characterLook.layers < 4 || !characterLook.fullCanvas || characterLook.legacyIcons || characterLook.centerDelta > 1) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
+  const characterLook = await page.evaluate(() => { const board=document.querySelector('.character-board').getBoundingClientRect(),avatar=document.querySelector('.character-avatar').getBoundingClientRect(),layers=[...document.querySelectorAll('.character-wear')];return { front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, files:layers.map(layer=>getComputedStyle(layer).backgroundImage), slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length, layers:layers.length, fullCanvas:layers.every(layer=>{const r=layer.getBoundingClientRect();return Math.abs(r.left-avatar.left)<1&&Math.abs(r.top-avatar.top)<1&&Math.abs(r.width-avatar.width)<1&&Math.abs(r.height-avatar.height)<1}), legacyIcons:document.querySelectorAll('.character-wear .gear-sprite').length, centerDelta:Math.abs((board.left+board.width/2)-(avatar.left+avatar.width/2)), topOverlap:!!document.querySelector('.wear-shell')&&!!document.querySelector('.wear-pile'), feetOverlap:!!document.querySelector('.wear-gaiters')&&!!document.querySelector('.wear-shoes') }; });
+  if (!characterLook.front.includes('character-front-swimsuit-v3.png') || characterLook.files.some(file=>!file.includes('-v2.png')) || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2 || characterLook.layers < 4 || !characterLook.fullCanvas || characterLook.legacyIcons || characterLook.centerDelta > 1 || characterLook.topOverlap || characterLook.feetOverlap) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
   await page.getByRole('button', { name: /Indietro/ }).click();
   await page.getByRole('button', { name: /Negozio/ }).click();
   await page.getByText('Conosci i quattro marchi').waitFor();
@@ -162,6 +162,8 @@ const server = http.createServer((request, response) => {
       panorama: document.querySelector('.stage-one-diorama>.scene-bg')?.getAttribute('src'),
       walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
       stats: document.querySelectorAll('.stage-one-stats>div').length,
+      dynamicStats: document.querySelectorAll('.dynamic-stats .home-stat[class*="state-"]').length,
+      statTracks: document.querySelectorAll('.dynamic-stats .home-stat-track').length,
       tools: [...document.querySelectorAll('.stage-one-tools summary span')].map((node) => node.textContent),
       map: document.querySelector('.stage-one-map-sheet>img')?.getAttribute('src'),
       routeDone: route?.dataset.done,
@@ -172,7 +174,7 @@ const server = http.createServer((request, response) => {
   });
   if (!trekLayout.stage || !trekLayout.panorama?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Panorama isometrico della prima tappa errato: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.walker !== 0) throw new Error(`L'omino non deve comparire nella schermata di tappa: ${JSON.stringify(trekLayout)}`);
-  if (trekLayout.stats !== 4 || !trekLayout.tools.includes('TACCUINO') || !trekLayout.tools.includes('ZAINO')) throw new Error(`Comandi o statistiche mancanti: ${JSON.stringify(trekLayout)}`);
+  if (trekLayout.stats !== 4 || trekLayout.dynamicStats !== 4 || trekLayout.statTracks !== 4 || !trekLayout.tools.includes('TACCUINO') || !trekLayout.tools.includes('ZAINO')) throw new Error(`Comandi o statistiche mancanti: ${JSON.stringify(trekLayout)}`);
   if (!trekLayout.map?.includes('stage-map-1.png') || trekLayout.routeDone !== '3') throw new Error(`Mappa della tappa non disponibile: ${JSON.stringify(trekLayout)}`);
   if (!trekLayout.continueButton?.includes('CONTINUA') || trekLayout.paperStage !== '1' || trekLayout.paperLevel !== '3') throw new Error(`Pannello di avanzamento errato: ${JSON.stringify(trekLayout)}`);
   await page.locator('.stage-one-diorama .diorama-canvas canvas').waitFor();
