@@ -39,7 +39,7 @@ async function mountStageDiorama(){
   }else if(poi===4){
    for(let i=0;i<10;i++){const g=new PIXI.Graphics();g.roundRect(0,0,22+Math.random()*46,1.3,1).fill({color:0xe9e2c9,alpha:.22});add(g,.05+Math.random()*.72,.52+Math.random()*.3,'lake',.1+Math.random()*.08)}
   }else{
-   for(let i=0;i<5;i++){const g=new PIXI.Graphics();g.ellipse(0,0,34+Math.random()*28,10+Math.random()*8).fill({color:0xeee8d7,alpha:.17});add(g,-.1-i*.18,.18+Math.random()*.23,'cloud',.08+Math.random()*.04)}
+   for(let i=0;i<5;i++){const g=new PIXI.Graphics();g.ellipse(0,0,26+Math.random()*22,7+Math.random()*5).fill({color:0xeee8d7,alpha:.07});add(g,-.1-i*.18,.16+Math.random()*.2,'cloud',.08+Math.random()*.04)}
   }
   let time=0;
   app.ticker.add(ticker=>{

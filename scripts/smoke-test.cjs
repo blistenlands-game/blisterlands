@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.2.1').waitFor();
+  await page.getByText('Prototipo · versione 0.3.0').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -165,6 +165,45 @@ const server = http.createServer((request, response) => {
     src: document.querySelector('.diorama-canvas')?.dataset.src,
   }));
   if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
+  const allStageLayouts = await page.evaluate(() => TAPPE.map((stage, index) => {
+    S = newState(); S.screen = 'tappa'; S.tappa = index; S.seg = 3; S.current = null; S.wx = index % 2 ? 'nuvole' : 'sole'; render();
+    return {
+      stage: index + 1,
+      ui: !!document.querySelector('.stage-one-ui'),
+      image: document.querySelector('.stage-one-diorama>.scene-bg')?.getAttribute('src'),
+      map: document.querySelector('.stage-one-map-sheet>img')?.getAttribute('src'),
+      route: document.querySelector('.stage-one-map .route-progress')?.dataset.stage,
+      heading: document.querySelector('.stage-one-heading>b')?.textContent,
+      title: document.querySelector('.stage-one-heading h2')?.textContent,
+      choices: document.querySelectorAll('.stage-event-choice').length,
+      walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
+    };
+  }));
+  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0)) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
+  if (new Set(allStageLayouts.map((stage) => stage.image)).size !== 8) throw new Error(`I panorami delle tappe non sono distinti: ${JSON.stringify(allStageLayouts)}`);
+  const laterEventLayout = await page.evaluate(() => {
+    S = newState(); S.screen = 'tappa'; S.tappa = 4; S.seg = 2; S.current = EV.find((event) => event.id === 'corvo') || EV[0]; render();
+    const paper = document.querySelector('.stage-one-event')?.getBoundingClientRect(), ui = document.querySelector('.stage-one-ui')?.getBoundingClientRect();
+    return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom };
+  });
+  if (!laterEventLayout.event || laterEventLayout.choices < 2 || !laterEventLayout.stage?.includes('stage-5') || Math.abs(laterEventLayout.bottom-laterEventLayout.uiBottom) > 1) throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(laterEventLayout)}`);
+  const allArrivals = await page.evaluate(() => TAPPE.slice(0,7).map((stage, index) => {
+    S = newState(); S.screen = 'sera'; S.tappa = index; S.arrive = 990; S.full = false; S.closed = false; S.arrMsg = []; S.forecast = { real: 'sole', shown: 'sole' }; render();
+    return { stage:index+1, arrival:!!document.querySelector('.stage-one-ui.arrival'), image:document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), title:document.querySelector('.stage-one-arrival-heading h2')?.textContent, sleep:document.querySelectorAll('.arrival-choice').length, shop:!!document.querySelector('.arrival-service>summary'), shopExpected:!!stage.shop, sauna:document.querySelectorAll('.arrival-smoke').length, saunaExpected:!!stage.sauna };
+  }));
+  if (allArrivals.some((arrival) => !arrival.arrival || !arrival.image || !arrival.title || arrival.sleep < 3 || (arrival.shopExpected && !arrival.shop) || (arrival.saunaExpected && arrival.sauna !== 2) || (!arrival.saunaExpected && arrival.sauna !== 0))) throw new Error(`Arrivi non completi: ${JSON.stringify(allArrivals)}`);
+  if (new Set(allArrivals.map((arrival) => arrival.image)).size !== 7) throw new Error(`Gli arrivi non hanno sette fondali distinti: ${JSON.stringify(allArrivals)}`);
+  const allMornings = await page.evaluate(() => TAPPE.slice(0,7).map((stage,index) => {
+    S = newState(); S.screen = 'mattino'; S.tappa = index; S.lastSleep = index%2?'tenda':'letto'; S.night = []; S.forecast = { real:'sole', shown:index%2?'nuvole':'sole' }; render();
+    return { stage:index+1, morning:!!document.querySelector('.stage-one-ui.morning'), image:document.querySelector('.morning-diorama>.scene-bg')?.getAttribute('src'), choices:document.querySelectorAll('.morning-choices .arrival-choice').length, tools:document.querySelectorAll('.stage-morning-paper .stage-one-tools details').length };
+  }));
+  if (allMornings.some((morning,index) => !morning.morning || !morning.image || morning.choices < 4 || morning.tools !== 2 || (index===5 && morning.choices !== 5))) throw new Error(`Mattini non completi: ${JSON.stringify(allMornings)}`);
+  const finalLayout = await page.evaluate(() => {
+    S = newState(); S.screen = 'fine'; S.tappa = 7; S.endKind = 'completo'; S.end = 'Arrivi a Njalla. Hai completato la Via delle Renne.'; S.timbri = ['Vuolle','Gaskas','Biegga','Sállo','Guovda','Gáisi','Njalla']; render();
+    const ui=document.querySelector('.stage-one-ui'),paper=document.querySelector('.stage-final-paper');
+    return { final:!!document.querySelector('.trail-final.completed'), image:document.querySelector('.final-diorama>.scene-bg')?.getAttribute('src'), stats:document.querySelectorAll('.trail-summary>div').length, restart:document.querySelector('.final-restart')?.textContent, height:ui?.getBoundingClientRect().height, paperBottom:paper?.getBoundingClientRect().bottom, uiBottom:ui?.getBoundingClientRect().bottom };
+  });
+  if (!finalLayout.final || !finalLayout.image?.includes('final-njalla-bench.jpg') || finalLayout.stats !== 4 || !finalLayout.restart?.includes('RICOMINCIA') || Math.abs(finalLayout.paperBottom-finalLayout.uiBottom)>1) throw new Error(`Finale non completo: ${JSON.stringify(finalLayout)}`);
   const lodgingScenes = await page.evaluate(() => {
     S.tappa = 5; S.lastSleep = 'letto'; S.forecast = { shown: 'sole' };
     const refuge = morningScene();

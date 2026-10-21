@@ -181,50 +181,16 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
   ${SECTIONS.map(([title,g])=>`<h3>${title}</h3><div class="items">${ITEMS.filter(it=>(it.group||null)===g).map(it=>{const radio=!!it.group;return `<label class="item"><input type="${radio?'radio':'checkbox'}" name="${radio?it.group:it.id}" ${S.kit.has(it.id)?'checked':''} onchange="toggleItem('${it.id}')"><span>${esc(it.name)}<small>${esc(it.note)}</small>${it.a&&Object.keys(it.a).length?`<small>${Object.entries(it.a).map(([k,v])=>ATTR[k]+' '+v).join(' · ')}</small>`:''}</span><span class="kg">${it.kg} kg</span></label>`}).join('')}</div>`).join('')}
   <h3>Scorte</h3>${CONSUM.map(c=>`<div class="qrow"><span>${esc(c.name)}<small>${esc(c.note)} · ${c.kg} kg</small></span><span class="qty"><button aria-label="Meno ${esc(c.name)}" onclick="qty('${c.id}',-1)">−</button><b>${inv(c.id)}</b><button aria-label="Più ${esc(c.name)}" onclick="qty('${c.id}',1)">+</button></span></div>`).join('')}
   <button class="btn primary" onclick="depart()">Parti da Lavvuby</button>`}
- else if(S.screen==='tappa'){const t=TAPPE[S.tappa];let body=S.notes.map(n=>`<p class="note">${esc(n)}</p>`).join('');
-  if(S.tappa===0){
-   body=S.current?stageOneEventPanel(S.current):stageOneTravelPanel(t);
-   a.innerHTML=`<div class="stage-one-ui ${S.current?'has-event':''}">${stageOneHero(t)}${body}</div>`
-  }
-  else{
-   if(S.current){const ev=S.current;
-    body+=`<div class="card">${tapedCard(eventCard(ev),104,116,'ritratto')}<h2>${esc(ev.title)}</h2><p>${esc(tx(ev.text))}</p>${opts(ev).map((op,i)=>{const ok=!op.req||op.req();const r=riskOf(op);const meta=optMeta(op);
-     return `<button class="btn" ${ok?'':'disabled'} onclick="choose(${i})">${esc(lab(op.l))}<span class="meta">${r&&ok?`<span class="risk ${r[1]}">${r[0]}</span>`:''}<span>${ok?(meta||'nessun costo immediato'):'Non hai quello che serve'}</span></span></button>`}).join('')}</div>`}
-   else{if(S.outcome)body+=`<div class="out ${S.outcome.bad?'bad':''}">${esc(tx(S.outcome.txt))}</div>`;
-    body+=`<button class="btn primary" onclick="step()">${S.seg>=t.terr.length?'Arrivi al rifugio':'Cammini'}</button>`}
-   a.innerHTML=`${hdr(scene(t),t.extra?t.name:'Tappa '+(t.label||t.n),`${poiName(S.tappa,S.seg)} · ${t.from} → ${t.to} · ${t.km} km`,S.clock)}${body}${logHtml()}`
-  }}
+ else if(S.screen==='tappa'){const t=TAPPE[S.tappa],body=S.current?stageOneEventPanel(S.current):stageOneTravelPanel(t);
+  a.innerHTML=`<div class="stage-one-ui stage-${S.tappa+1} ${S.current?'has-event':''}">${stageOneHero(t)}${body}</div>`}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
-  if(S.tappa===0)a.innerHTML=stageOneArrivalScreen(t,saunaOk&&!S.closed,late);
-  else a.innerHTML=`${hdr(hutScene(t,saunaOk&&!S.closed),t.to,'la sera',S.arrive)}<p>Arrivi alle ${hhmm(S.arrive)}. ${S.closed?'Il rifugio ha già chiuso per la fine della stagione: resta aperto solo il locale invernale, senza custode.':late?'Troppo tardi: i letti sono già tutti occupati.':'C\'è ancora un letto libero.'}</p>
-  ${S.arrMsg.map(m=>`<div class="out">${esc(m)}</div>`).join('')}
-  ${!S.closed&&S.tappa===0?`<p class="note">Il custode apre il registro: «Nome?». Scrive ${esc(pgName())} con una bella grafia.</p>`:!S.closed&&S.tappa>0&&(S.tappa*37)%10<4?`<p class="note">«Ah, ${esc(pgName())}! Ho saputo che arrivavi.» Le voci corrono tra i rifugi.</p>`:''}<p class="sub">${forecastWho()} domani ${WX[S.forecast.shown].toLowerCase()}.</p>
-  ${t.sauna&&!S.closed?`<div class="card"><h3>Sauna</h3>${saunaOk?`<button class="btn" ${S.didSauna?'disabled':''} onclick="sauna()">Sauna e tuffo nel torrente<span class="meta">${S.didSauna?'Fatto':'Morale, energia, asciughi tutto'}</span></button>`:'<p class="sub">Chiusa alle 17. Arriva prima la prossima volta.</p>'}</div>`:''}
-  ${t.shop&&!S.closed?`<div class="card"><h3>Spaccio</h3><button class="btn" ${S.soldi<12?'disabled':''} onclick="buy('pasti',12)">Un pasto<span class="meta">12 €</span></button><button class="btn" ${S.soldi<3?'disabled':''} onclick="buy('barrette',3)">Una barretta<span class="meta">3 €</span></button><button class="btn" ${S.soldi<4?'disabled':''} onclick="buy('cerotti',4)">Un cerotto<span class="meta">4 €</span></button></div>`:''}
-  ${inv('powerbank')>0?`<div class="card"><h3>Dispositivi</h3><button class="btn" onclick="ricarica()">Usa una carica di powerbank<span class="meta">+60% al dispositivo più scarico · ne hai ${inv('powerbank')}</span></button></div>`:''}<div class="card"><h3>Dove dormi?</h3>
-  <button class="btn" ${late||S.soldi<hutPrice(t)?'disabled':''} onclick="sleep('letto')">Letto nel rifugio<span class="meta">${late?'Pieno':hutPrice(t)+' € · recupero pieno, scarpe asciutte, batteria carica'}</span></button>
-  <button class="btn" ${S.soldi<floorPrice(t)?'disabled':''} onclick="sleep('pavimento')">${S.closed?'Locale invernale':'Pavimento del locale comune'}<span class="meta">${S.closed?'Gratis':floorPrice(t)+' €'} · recupero ridotto</span></button>
-  <button class="btn" ${(att('riparo')>=1)?'':'disabled'} onclick="sleep('tenda')">In tenda<span class="meta">${(att('riparo')>=1)?'Gratis · dipende dal meteo':'Non hai la tenda'}</span></button>
-  ${!(att('riparo')>=1)&&S.soldi<FLOOR?`<button class="btn" onclick="sleep('tenda')">All'aperto, avvolto nel sacco<span class="meta">Gratis · dormi male</span></button>`:''}</div>${logHtml()}`}
+  a.innerHTML=stageOneArrivalScreen(t,saunaOk&&!S.closed,late)}
  else if(S.screen==='mattino'){const cur=TAPPE[S.tappa],station=cur.n===6;
-  const vreq=`Serve esperienza ${VETTA_XP} (ne hai ${S.xp}), aderenza 3 e calore 1`;
   const next=TAPPE[nextIndex(S.tappa)];
-  a.innerHTML=`${hdr(morningScene(),'Il mattino dopo',`${next?'verso '+next.to:''}`,420)}${S.night.map(m=>`<p class="note">${esc(m)}</p>`).join('')}
-  <div class="card"><p>${station?'Dalla finestra della stazione vedi il Gáisi. ':''}${forecastWho(true)} oggi ${WX[S.forecast.shown].toLowerCase()}.${next?' Prossima tappa: '+esc(next.to)+', '+next.km+' km.':''}</p>
-  ${station?`<button class="btn" ${vettaOk()?'':'disabled'} onclick="nextDay('vetta')">Giorno extra: sali sul Gáisi<span class="meta">${vettaOk()?'Costa un giorno di ferie · la vetta più alta della regione':vreq}</span></button>`:''}
-  <button class="btn" onclick="nextDay('presto')">Sveglia presto, partenza alle 6:30<span class="meta">Più tempo davanti · −8 energia</span></button>
-  <button class="btn" onclick="nextDay('normale')">Partenza alle 8:00</button>
-  <button class="btn" onclick="nextDay('tardi')">Colazione lunga, partenza alle 9:30<span class="meta">+6 energia, +3 morale · meno margine</span></button>
-  <button class="btn" onclick="nextDay('riposo')">Resti un giorno al rifugio<span class="meta">Costa un giorno di ferie · +30 energia</span></button></div>`}
+  a.innerHTML=stageMorningScreen(cur,next,station)}
  else if(S.screen==='fine'){const k=endKind(),win=k==='completo',km=trekKm(),days=Math.max(1,(S.ferie0||8)-S.ferie+(win?1:0));
   const T={completo:`Ce l'hai fatta, ${pgName()}!`,energia:'Il corpo ha detto basta',morale:'La testa ha detto basta',ferie:'Le ferie sono finite',altro:'Fine del cammino'}[k];
-  a.innerHTML=`${hdr(endScene(),T,win?'La Via delle Renne è tua':'Il cammino finisce qui',S.clock)}
-  <p>${esc(tx(S.end))}</p>
-   <div class="sum"><div><b>${km}</b><span>km percorsi</span></div><div><b>${days}</b><span>${days===1?'giorno':'giorni'}</span></div><div><b>${S.xp}</b><span>esperienza</span></div><div><b>${S.timbri.length}</b><span>timbri</span></div></div>
-   <p class="sub">Seed della partita: ${S.seed}. Per rigiocarla usa <code>?seed=${S.seed}</code> nell'indirizzo.</p>
-  ${win?'':`<p class="sub">${k==='energia'?'Prossima volta: mangia regolarmente, riposa un giorno quando l\'energia scende, alleggerisci lo zaino.':k==='morale'?'Prossima volta: proteggiti da pioggia e zanzare, concediti la sauna, parti con più voglia.':k==='ferie'?'Prossima volta: parti con più giorni di ferie, o riposa meno lungo la strada.':''}</p>`}
-  <div class="card"><h3>Diario</h3><p>${S.timbri.length?S.timbri.map(t=>`<span class="stamp">${esc(t)}</span>`).join(''):'<span class="sub">Nessun timbro.</span>'}</p></div>
-  <button class="btn primary" onclick="S=newState();render()">Ricomincia</button>${logHtml()}`}
+  a.innerHTML=stageFinalScreen(k,T,km,days)}
  if(!(S.screen==='zaino'&&lastScreen==='zaino'))window.scrollTo(0,0);lastScreen=S.screen}
 let lastScreen=null;
 function logHtml(){return S.log.length?`<details class="log"><summary>Taccuino</summary><ul>${S.log.slice(0,20).map(l=>`<li>${esc(l)}</li>`).join('')}</ul></details>`:''}
