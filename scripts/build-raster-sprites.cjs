@@ -72,6 +72,17 @@ async function colorMask(input,destination,person,pose,kind,isStrip=false){
     for (let i = 0; i < names.length; i++) await cell(file, cols, rows, i, path.join(dir, `${names[i]}.png`), folder === 'gear' ? 192 : 256, folder === 'gear');
   }
 
+  const pantsMaster = path.join(art, 'wear-pants-master-v2.png');
+  if (fs.existsSync(pantsMaster)) {
+    const meta = await sharp(pantsMaster).metadata();
+    await sharp(pantsMaster)
+      .extract({ left: 0, top: 0, width: Math.floor(meta.width / 4), height: meta.height })
+      .trim({ background: { r: 0, g: 0, b: 0, alpha: 0 }, threshold: 8 })
+      .resize({ width: 176, height: 176, fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .extend({ top: 8, bottom: 8, left: 8, right: 8, background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .png().toFile(path.join(out, 'gear', 'pantaloni.png'));
+  }
+
   const poseDir = path.join(out, 'pose');
   fs.mkdirSync(poseDir, { recursive: true });
   for (let row = 0; row < people.length; row++) {

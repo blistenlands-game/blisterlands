@@ -2,22 +2,22 @@
 const MONTHS=['Gennaio','Febbraio','Marzo','Aprile','Maggio','Giugno','Luglio','Agosto','Settembre','Ottobre','Novembre','Dicembre'];
 const SEASON={6:'giugno',7:'luglio',8:'agosto',9:'settembre'};
 const PRICE={zainoClassico:140,zainoUL:250,saccoPiuma:280,saccoSint:110,quiltPiuma:230,quiltSint:90,matGonfiabile:120,matSchiuma:30,
- trail:130,scarponi:230,basse:150,guscio:220,pile:60,ghette:40,bastoncini:80,sandali:45,rete:12,cappello:30,cappelloLana:22,guanti:24,filtro:50,mappa:25,
+ trail:130,scarponi:230,basse:150,guscio:220,pile:60,pantaloni:80,ghette:40,bastoncini:80,sandali:45,rete:12,cappello:30,cappelloLana:22,guanti:24,filtro:50,mappa:25,
  orologio:350,faro:400,kit:20,fornello:45,tenda:320,carte:5};
 const CPRICE={pasti:7,barrette:2,gas:3,cerotti:1,repellente:3,calze:15,powerbank:15};
 const SALARY=70,FERIE_MESE=2,FERIE_MAX=20,TREK_DAYS=8;
 const ABIL={resistenza:'Resistenza',orientamento:'Orientamento',tecnica:'Tecnica di montagna',adattamento:'Adattamento'};
 const ABIL_NOTE={resistenza:'Meno fatica a ogni chilometro',orientamento:'Un punto di orientamento in più ogni due livelli',tecnica:'Aderenza e appoggio in più ogni due livelli',adattamento:'Meteo, insetti e acciacchi pesano meno sul morale'};
-const SAVE_KEY=GAME_CONFIG.storageKey,SAVE_VERSION=2;
+const SAVE_KEY=GAME_CONFIG.storageKey,SAVE_VERSION=3;
 let H=null;
 function newHome(){return{mese:4,anno:1,soldi:300,ferie:8,forma:60,voglia:70,xp:0,punti:0,abil:{resistenza:0,orientamento:0,tecnica:0,adattamento:0},
- owned:new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sCappello']),catalogo:true,scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
- timbri:[],storia:[],cardHistory:[],loadout:{},fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio',pg:'marco',nome:'',charTab:'equip',inspectItem:null,shopCat:'Zaini',shopItem:null,saveVersion:SAVE_VERSION}}
+ owned:new Set(['sGita','sRifugio','sZigzag','sCresta','sPile','sPantaloni','sCappello']),catalogo:true,scorte:{pasti:2,barrette:4,gas:0,cerotti:2,repellente:1,calze:1,powerbank:0},
+ timbri:[],storia:[],cardHistory:[],loadout:{},unequipped:{},fila:0,sconto:0,completati:0,vette:0,carta:null,esito:null,ritorno:null,scelta:'luglio',pg:'marco',nome:'',charTab:'equip',inspectItem:null,shopCat:'Zaini',shopItem:null,saveVersion:SAVE_VERSION}}
 const lvl=()=>Math.floor(H.xp/100);
-function migrateHome(o){const d=newHome(),defaultOwned=[...d.owned],m=Object.assign(d,o||{});
- m.saveVersion=SAVE_VERSION;m.owned=new Set(Array.isArray(o&&o.owned)?o.owned:defaultOwned);
+function migrateHome(o){const d=newHome(),defaultOwned=[...d.owned],oldVersion=Number(o&&o.saveVersion)||0,m=Object.assign(d,o||{});
+ m.saveVersion=SAVE_VERSION;m.owned=new Set(Array.isArray(o&&o.owned)?o.owned:defaultOwned);if(oldVersion<3)m.owned.add('sPantaloni');
  m.abil=Object.assign({},newHome().abil,o&&o.abil||{});m.scorte=Object.assign({},newHome().scorte,o&&o.scorte||{});
- m.timbri=Array.isArray(m.timbri)?m.timbri:[];m.storia=Array.isArray(m.storia)?m.storia:[];m.cardHistory=Array.isArray(m.cardHistory)?m.cardHistory:[];m.loadout=m.loadout&&typeof m.loadout==='object'?m.loadout:{};m.ordini=Array.isArray(m.ordini)?m.ordini:[];
+ m.timbri=Array.isArray(m.timbri)?m.timbri:[];m.storia=Array.isArray(m.storia)?m.storia:[];m.cardHistory=Array.isArray(m.cardHistory)?m.cardHistory:[];m.loadout=m.loadout&&typeof m.loadout==='object'?m.loadout:{};m.unequipped=m.unequipped&&typeof m.unequipped==='object'?m.unequipped:{};m.ordini=Array.isArray(m.ordini)?m.ordini:[];
  return m}
 function save(){try{const o=Object.assign({},H,{saveVersion:SAVE_VERSION,owned:[...H.owned]});localStorage.setItem(SAVE_KEY,JSON.stringify(o))}catch(e){}}
 function load(){try{const t=localStorage.getItem(SAVE_KEY);if(!t)return null;const o=JSON.parse(t),v=Number(o.saveVersion)||0;
@@ -121,8 +121,8 @@ function spendPoint(k){if(H.punti<1||H.abil[k]>=5)return;H.punti--;H.abil[k]++;s
 /* armadio, personaggio e nuovo emporio */
 const GEAR_SLOTS=[
  ['zaino','Zaino','zaino'],['sacco','Sonno','sacco'],['materassino','Materassino','materassino'],['scarpe','Calzature','scarpe'],
- ['guscio','Guscio','guscio'],['pile','Strato caldo','pile'],['bastoncini','Bastoncini','bastoncini'],['ghette','Ghette','ghette'],
- ['sandali','Guado','sandali'],['testa','Testa','rete|cappello|cappelloLana'],['guanti','Guanti','guanti'],['filtro','Acqua','filtro'],
+ ['guscio','Guscio','guscio'],['pile','Strato caldo','pile'],['pantaloni','Pantaloni','pantaloni'],['bastoncini','Bastoncini','bastoncini'],
+ ['ghette','Ghette','ghette'],['sandali','Guado','sandali'],['testa','Testa','rete|cappello|cappelloLana'],['guanti','Guanti','guanti'],['filtro','Acqua','filtro'],
  ['mappa','Mappa','mappa'],['orologio','Orologio','orologio'],['faro','Sicurezza','faro'],['kit','Riparazione','kit'],
  ['fornello','Cucina','fornello'],['tenda','Riparo','tenda'],['carte','Svago','carte']
 ];
@@ -130,20 +130,21 @@ const slotDef=id=>GEAR_SLOTS.find(s=>s[0]===id);
 function itemBase(it){return it?(it.base||it.id):''}
 function itemSlot(it){if(!it)return null;if(it.group)return it.group;const b=itemBase(it);return ['rete','cappello','cappelloLana'].includes(b)?'testa':b}
 function bestOwnedFor(slot){const own=ITEMS.filter(it=>H.owned.has(it.id)&&itemSlot(it)===slot&&cond(it.id)>0);return own.sort((a,b)=>itPrice(b.id)-itPrice(a.id))[0]}
-function initLoadout(){H.loadout=H.loadout||{};for(const [slot] of GEAR_SLOTS){const id=H.loadout[slot];if(id&&!H.owned.has(id))delete H.loadout[slot];if(!H.loadout[slot]){const it=bestOwnedFor(slot);if(it)H.loadout[slot]=it.id}}}
-function equipHome(id){eqInit();const it=ITEM_BY[id],slot=itemSlot(it);if(!it||!slot||!H.owned.has(id)||cond(id)<=0)return;H.loadout[slot]=id;H.inspectItem=id;save();render()}
+function initLoadout(){H.loadout=H.loadout||{};H.unequipped=H.unequipped||{};for(const [slot] of GEAR_SLOTS){const id=H.loadout[slot];if(id&&!H.owned.has(id))delete H.loadout[slot];if(!H.loadout[slot]&&!H.unequipped[slot]){const it=bestOwnedFor(slot);if(it)H.loadout[slot]=it.id}}}
+function equipHome(id){eqInit();const it=ITEM_BY[id],slot=itemSlot(it);if(!it||!slot||!H.owned.has(id)||cond(id)<=0)return;H.loadout[slot]=id;delete H.unequipped[slot];H.inspectItem=id;save();render()}
+function unequipHome(slot){if(!slot)return;delete H.loadout[slot];H.unequipped=H.unequipped||{};H.unequipped[slot]=true;save();render()}
 function inspectGear(id){H.inspectItem=id;save();render()}
 function setCharTab(tab){H.charTab=tab;save();render()}
 function gearAttrs(it,owned=true){if(!it)return '';const a=owned?effAttrs(it.id):it.a||{};return Object.entries(a).filter(([,v])=>v>0).map(([k,v])=>`${ATTR[k]} ${'●'.repeat(v)}`).join(' · ')}
 function gearDetail(id,mode='wardrobe'){const it=ITEM_BY[id];if(!it)return '<div class="gear-detail empty"><p>Scegli un oggetto per vederne caratteristiche e stato.</p></div>';const own=H.owned.has(id),c=own?cond(id):1,slot=itemSlot(it),equipped=H.loadout[slot]===id;
  const brand=it.brand?`<div class="detail-brand">${brandLogo(it.brand,38)}<span style="color:${BRANDS[it.brand].color}">${esc(BRANDS[it.brand].name)}</span></div>`:'';
- const actions=mode==='shop'?shopAction(it):`<button class="btn character-equip ${equipped?'equipped':''}" ${c<=0?'disabled':''} onclick="equipHome('${id}')">${equipped?'Equipaggiato':'Equipaggia'}</button>`;
+ const actions=mode==='shop'?shopAction(it):equipped?`<button class="btn character-unequip" onclick="unequipHome('${slot}')">Disequipaggia</button>`:`<button class="btn character-equip" ${c<=0?'disabled':''} onclick="equipHome('${id}')">Equipaggia</button>`;
  return `<article class="gear-detail">${brand}<div class="gear-detail-main">${gearSvg(id,116)}<div><small>${esc((slotDef(slot)||[,'Oggetto'])[1].toUpperCase())}</small><h3>${esc(it.model||it.name)}</h3><p>${esc(it.note||'')}</p></div></div><div class="gear-specs"><span><b>${String(it.kg).replace('.',',')} kg</b>PESO</span>${own&&it.dur<9999?`<span><b>${Math.round(c*100)}%</b>${esc(condLabel(c).toUpperCase())}</span>`:''}<span><b>${it.lvl||0}</b>LIVELLO</span></div>${gearAttrs(it,own)?`<p class="gear-attrs">${gearAttrs(it,own)}</p>`:''}${it.trait?`<p class="gear-trait">${esc(TRAITS[it.trait])}</p>`:''}${actions}</article>`}
 function wearableLayer(file,cls){return `<span class="character-wear ${cls} pg-${esc(H.pg)}" aria-hidden="true" style="background-image:url('assets/art/${file}')"></span>`}
 function loadoutItem(slot){const id=H.loadout[slot];return id&&H.owned.has(id)?ITEM_BY[id]:null}
 function brandedLayer(kind,it,cls){return it?wearableLayer(`wear-${kind}-${it.brand||'S'}-v2.png`,cls):''}
 function headwearLayer(){const it=loadoutItem('testa');if(!it)return '';const base=itemBase(it);return wearableLayer(base==='cappelloLana'?'wear-hat-wool-v2.png':base==='rete'?'wear-head-net-v2.png':'wear-hat-sun-v2.png','wear-head')}
-function characterAvatar(){const pack=loadoutItem('zaino'),shoe=loadoutItem('scarpe'),shell=loadoutItem('guscio'),pile=loadoutItem('pile'),gaiters=loadoutItem('ghette'),gloves=loadoutItem('guanti'),poles=loadoutItem('bastoncini'),packKind=pack&&itemBase(pack)==='zainoUL'?'pack-ul':'pack-classic',shoeBase=shoe&&itemBase(shoe),shoeKind=shoeBase==='scarponi'?'shoe-boot':shoeBase==='trail'?'shoe-trail':'shoe-low';return `<div class="character-avatar">${brandedLayer('poles',poles,'wear-poles')}<span class="character-front pg-${esc(H.pg)}"></span>${brandedLayer('pile',pile,'wear-pile')}${brandedLayer('shell',shell,'wear-shell')}${brandedLayer(packKind,pack,'wear-pack')}${gaiters?'':brandedLayer(shoeKind,shoe,'wear-shoes')}${brandedLayer('gaiters',gaiters,'wear-gaiters')}${gloves?wearableLayer('wear-gloves-v2.png','wear-gloves'):''}${headwearLayer()}</div>`}
+function characterAvatar(){const pack=loadoutItem('zaino'),shoe=loadoutItem('scarpe'),shell=loadoutItem('guscio'),pile=loadoutItem('pile'),pants=loadoutItem('pantaloni'),gaiters=loadoutItem('ghette'),gloves=loadoutItem('guanti'),poles=loadoutItem('bastoncini'),packKind=pack&&itemBase(pack)==='zainoUL'?'pack-ul':'pack-classic',shoeBase=shoe&&itemBase(shoe),shoeKind=shoeBase==='scarponi'?'shoe-boot':shoeBase==='trail'?'shoe-trail':'shoe-low';return `<div class="character-avatar"><span class="character-front pg-${esc(H.pg)}"></span>${brandedLayer(packKind,pack,'wear-pack')}${brandedLayer(shoeKind,shoe,'wear-shoes')}${brandedLayer('pants',pants,'wear-pants')}${brandedLayer('gaiters',gaiters,'wear-gaiters')}${brandedLayer('pile',pile,'wear-pile')}${brandedLayer('shell',shell,'wear-shell')}${brandedLayer('poles',poles,'wear-poles')}${gloves?wearableLayer('wear-gloves-v2.png','wear-gloves'):''}${headwearLayer()}</div>`}
 function characterScreen(){eqInit();initLoadout();const tab=H.charTab||'equip';if(tab==='abilita')return characterSkills();const selected=H.inspectItem&&H.owned.has(H.inspectItem)?H.inspectItem:(Object.values(H.loadout)[0]||[...H.owned][0]);H.inspectItem=selected;
  const primary=GEAR_SLOTS.slice(0,12).map(([slot,label])=>{const id=H.loadout[slot],it=ITEM_BY[id];return `<button class="equipment-slot ${id?'filled':''}" onclick="${id?`inspectGear('${id}')`:`document.querySelector('.wardrobe-card')?.focus()`}"><span>${id?gearSvg(id,42):'＋'}</span><small>${esc(label)}</small><b>${it?esc(it.model||it.name):'Vuoto'}</b></button>`}).join('');
  const wardrobe=[...H.owned].map(id=>ITEM_BY[id]).filter(Boolean).sort((a,b)=>itemSlot(a).localeCompare(itemSlot(b))||itPrice(b.id)-itPrice(a.id));
@@ -152,7 +153,7 @@ function characterTabs(active){return `<nav class="character-tabs"><button class
 function characterSkills(){return `${homeCompactHeader('Personaggio')}<main class="character-page">${characterTabs('abilita')}<section class="skill-hero"><small>PROGRESSIONE</small><h2>Competenze sul sentiero</h2><p>Ogni 100 punti esperienza ottieni un punto. Disponibili: <b>${H.punti}</b>.</p></section><div class="skill-tree">${Object.entries(ABIL).map(([k,v],i)=>`<article class="skill-branch skill-${i}"><span class="skill-glyph">${['ϟ','⌖','▲','✦'][i]}</span><div><h3>${v}</h3><p>${ABIL_NOTE[k]}</p><div class="skill-pips">${Array.from({length:5},(_,n)=>`<i class="${n<H.abil[k]?'on':''}"></i>`).join('')}</div></div><button ${H.punti<1||H.abil[k]>=5?'disabled':''} onclick="spendPoint('${k}')">${H.abil[k]>=5?'MAX':'+1'}</button></article>`).join('')}</div></main>`}
 
 const SHOP_SECTIONS=[
- ['Zaini',['zainoClassico','zainoUL']],['Sonno',['saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma']],['Calzature',['trail','basse','scarponi','ghette','sandali']],['Abbigliamento',['guscio','pile','rete','cappello','cappelloLana','guanti']],['Campo',['tenda','fornello','filtro']],['Tecnica',['bastoncini','mappa','orologio','faro','kit','carte']]
+ ['Zaini',['zainoClassico','zainoUL']],['Sonno',['saccoPiuma','saccoSint','quiltPiuma','quiltSint','matGonfiabile','matSchiuma']],['Calzature',['trail','basse','scarponi','ghette','sandali']],['Abbigliamento',['guscio','pile','pantaloni','rete','cappello','cappelloLana','guanti']],['Campo',['tenda','fornello','filtro']],['Tecnica',['bastoncini','mappa','orologio','faro','kit','carte']]
 ];
 function shopItems(cat){const bases=(SHOP_SECTIONS.find(s=>s[0]===cat)||SHOP_SECTIONS[0])[1];return ITEMS.filter(it=>it.brand&&bases.includes(itemBase(it)))}
 function setShopCat(cat){H.shopCat=cat;H.shopItem=null;save();render()}

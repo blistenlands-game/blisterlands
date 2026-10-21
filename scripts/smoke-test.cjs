@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.5.6').waitFor();
+  await page.getByText('Prototipo · versione 0.5.7').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -95,7 +95,7 @@ const server = http.createServer((request, response) => {
     current: JSON.parse(localStorage.getItem('blisterlands')),
     backup: JSON.parse(localStorage.getItem('blisterlands-backup-v0')),
   }));
-  if (migratedSave.current.saveVersion !== 2 || !migratedSave.backup || 'saveVersion' in migratedSave.backup) {
+  if (migratedSave.current.saveVersion !== 3 || !migratedSave.current.owned.includes('sPantaloni') || !migratedSave.backup || 'saveVersion' in migratedSave.backup) {
     throw new Error('Migrazione del salvataggio precedente non riuscita');
   }
 
@@ -109,9 +109,12 @@ const server = http.createServer((request, response) => {
   const expandedHome = await page.evaluate(() => ({ cards: CARDS.length, statStates: document.querySelectorAll('.home-stat[class*="state-"]').length }));
   if (expandedHome.cards < 60 || expandedHome.statStates !== 4) throw new Error(`Casa non ampliata: ${JSON.stringify(expandedHome)}`);
   await page.getByRole('button', { name: /Personaggio/ }).click();
-  await page.evaluate(() => { H.owned.add('shStorm'); H.owned.add('sGuanti'); H.loadout.guscio='shStorm'; H.loadout.guanti='sGuanti'; render(); });
-  const characterLook = await page.evaluate(() => { const board=document.querySelector('.character-board').getBoundingClientRect(),avatar=document.querySelector('.character-avatar').getBoundingClientRect(),layers=[...document.querySelectorAll('.character-wear')],z=(selector)=>Number(getComputedStyle(document.querySelector(selector)).zIndex);return { front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, files:layers.map(layer=>getComputedStyle(layer).backgroundImage), slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length, layers:layers.length, fullCanvas:layers.every(layer=>{const r=layer.getBoundingClientRect();return Math.abs(r.left-avatar.left)<1&&Math.abs(r.top-avatar.top)<1&&Math.abs(r.width-avatar.width)<1&&Math.abs(r.height-avatar.height)<1}), legacyIcons:document.querySelectorAll('.character-wear .gear-sprite').length, centerDelta:Math.abs((board.left+board.width/2)-(avatar.left+avatar.width/2)), topOverlap:!!document.querySelector('.wear-shell')&&!!document.querySelector('.wear-pile'), layerOrder:z('.character-front')<z('.wear-pile')&&z('.wear-pile')<z('.wear-shell')&&z('.wear-shell')<z('.wear-gloves'), feetOverlap:!!document.querySelector('.wear-gaiters')&&!!document.querySelector('.wear-shoes') }; });
-  if (!characterLook.front.includes('character-front-swimsuit-v3.png') || characterLook.files.some(file=>!file.includes('-v2.png')) || characterLook.slots < 10 || characterLook.wardrobe < 6 || characterLook.tabs !== 2 || characterLook.layers < 4 || !characterLook.fullCanvas || characterLook.legacyIcons || characterLook.centerDelta > 1 || !characterLook.topOverlap || !characterLook.layerOrder || characterLook.feetOverlap) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
+  await page.evaluate(() => { for(const id of ['shStorm','sGuanti','sGhette','shCarbon','sPantaloni'])H.owned.add(id);Object.assign(H.loadout,{guscio:'shStorm',guanti:'sGuanti',ghette:'sGhette',bastoncini:'shCarbon',pantaloni:'sPantaloni'});render(); });
+  const characterLook = await page.evaluate(() => { const board=document.querySelector('.character-board').getBoundingClientRect(),avatar=document.querySelector('.character-avatar').getBoundingClientRect(),layers=[...document.querySelectorAll('.character-wear')],z=(selector)=>Number(getComputedStyle(document.querySelector(selector)).zIndex);return { front:getComputedStyle(document.querySelector('.character-front')).backgroundImage, files:layers.map(layer=>getComputedStyle(layer).backgroundImage), slots:document.querySelectorAll('.equipment-slot').length, wardrobe:document.querySelectorAll('.wardrobe-card').length, tabs:document.querySelectorAll('.character-tabs button').length, layers:layers.length, fullCanvas:layers.every(layer=>{const r=layer.getBoundingClientRect();return Math.abs(r.left-avatar.left)<1&&Math.abs(r.top-avatar.top)<1&&Math.abs(r.width-avatar.width)<1&&Math.abs(r.height-avatar.height)<1}), legacyIcons:document.querySelectorAll('.character-wear .gear-sprite').length, centerDelta:Math.abs((board.left+board.width/2)-(avatar.left+avatar.width/2)), topOverlap:!!document.querySelector('.wear-shell')&&!!document.querySelector('.wear-pile'), lowerLayers:!!document.querySelector('.wear-pants')&&!!document.querySelector('.wear-gaiters')&&!!document.querySelector('.wear-shoes'), poles:!!document.querySelector('.wear-poles')&&getComputedStyle(document.querySelector('.wear-poles')).display!=='none', layerOrder:z('.character-front')<z('.wear-pants')&&z('.wear-pants')<z('.wear-gaiters')&&z('.wear-pile')<z('.wear-shell')&&z('.wear-shell')<z('.wear-poles')&&z('.wear-poles')<z('.wear-gloves') }; });
+  if (!characterLook.front.includes('character-front-swimsuit-v3.png') || characterLook.files.some(file=>!file.includes('-v2.png')) || characterLook.slots < 12 || characterLook.wardrobe < 8 || characterLook.tabs !== 2 || characterLook.layers < 8 || !characterLook.fullCanvas || characterLook.legacyIcons || characterLook.centerDelta > 1 || !characterLook.topOverlap || !characterLook.lowerLayers || !characterLook.poles || !characterLook.layerOrder) throw new Error(`Scheda personaggio incompleta: ${JSON.stringify(characterLook)}`);
+  await page.locator('.equipment-slot').filter({ hasText: 'StormShell' }).click();
+  await page.getByRole('button', { name: 'Disequipaggia' }).click();
+  if (await page.locator('.wear-shell').count()) throw new Error('Il comando Disequipaggia non rimuove il guscio');
   await page.getByRole('button', { name: /Indietro/ }).click();
   await page.getByRole('button', { name: /Negozio/ }).click();
   await page.getByText('Conosci i quattro marchi').waitFor();
@@ -258,7 +261,7 @@ const server = http.createServer((request, response) => {
   if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || Math.abs(stageOneArrival.open.bottom-stageOneArrival.open.uiBottom) > 1) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
   if (!stageOneArrival.closed.image?.includes('poi-t1-vuolle-refuge-isometric-closed-v1.png') || stageOneArrival.closed.smoke !== 0 || !stageOneArrival.closed.label?.includes('SAUNA CHIUSA')) throw new Error(`Arrivo Vuolle chiuso errato: ${JSON.stringify(stageOneArrival)}`);
   if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
-  const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });
+  const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; save(); render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });
   if (cleanAtHome.wear !== 'clean' || cleanAtHome.stage !== '1' || cleanAtHome.level !== '1') throw new Error(`Il taccuino a casa non e pulito: ${JSON.stringify(cleanAtHome)}`);
   await page.reload({ waitUntil: 'networkidle' });
 

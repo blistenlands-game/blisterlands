@@ -2334,6 +2334,11 @@ const CATALOG=[
  ['shPuffLite','pile','Sh','ultralight','PuffLite',0.3,70,0,320,{calore:2},null],
  ['aUll','pile','A','classica','Ullvarm',0.42,150,1,900,{calore:2,antivento:1},'lana'],
  ['aVarme','pile','A','ultralight','Varmekjerne',0.33,240,2,900,{calore:3,antivento:1},null],
+ // pantaloni
+ ['sPantaloni','pantaloni','S','classica','Trail Base',0.48,45,0,500,{antivento:1,asciugatura:1},null],
+ ['shFlex','pantaloni','Sh','ultralight','FlexTrail',0.31,85,0,380,{antivento:1,asciugatura:2},null],
+ ['dScramble','pantaloni','D','ultralight','Scramble Pants',0.27,120,1,420,{antivento:1,asciugatura:2},'riparabile'],
+ ['aFjellbukse','pantaloni','A','classica','Fjellbukse Pro',0.44,210,2,1000,{antivento:2,asciugatura:2,fango:1},null],
  // tende
  ['sCampeggio','tenda','S','classica','Campeggio 2',2.6,90,0,400,{riparo:2},null],
  ['shSky','tenda','Sh','ultralight','SkyDome 1',1.2,150,1,320,{riparo:2},null],

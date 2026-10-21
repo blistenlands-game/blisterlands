@@ -13,6 +13,7 @@ const ITEMS=[
  {id:'basse',name:'Scarpe da trekking basse',kg:1.0,note:'Il compromesso: abbastanza protezione, abbastanza leggerezza',a:{asciugatura:2,caviglia:2,aderenza:2,suola:2,piediAsciutti:1},group:'scarpe'},
  {id:'guscio',name:'Guscio impermeabile',kg:0.4,note:'Sotto la pioggia perdi poco morale',a:{impermeabile:2,antivento:2}},
  {id:'pile',name:'Pile',kg:0.45,note:'Contro vento e freddo',a:{calore:2,antivento:1}},
+ {id:'pantaloni',name:'Pantaloni da trekking',kg:0.42,note:'Proteggono le gambe da vento, vegetazione e umidità',a:{antivento:1,asciugatura:1},group:'pantaloni'},
  {id:'ghette',name:'Ghette',kg:0.2,note:'Riducono molto il rischio di piedi bagnati',a:{fango:3}},
  {id:'bastoncini',name:'Bastoncini',kg:0.5,note:'Meno fatica, guadi e nevai più sicuri',a:{appoggio:2}},
  {id:'sandali',name:'Sandali da guado',kg:0.4,note:'Guadi senza bagnare le scarpe, ma ci vuole tempo',a:{guado:2}},

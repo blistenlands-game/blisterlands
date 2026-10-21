@@ -1,5 +1,5 @@
 from pathlib import Path
-from PIL import Image, ImageOps
+from PIL import Image, ImageDraw, ImageOps
 
 ROOT = Path(__file__).resolve().parents[1]
 ART = ROOT / "assets" / "art"
@@ -18,6 +18,7 @@ MASTERS = {
     "shoe-boot": "wear-shoe-boot-master-v2.png",
     "shell": "wear-shell-master-v2.png",
     "pile": "wear-pile-master-v2.png",
+    "pants": "wear-pants-master-v2.png",
     "gaiters": "wear-gaiters-v1.png",
     "poles": "wear-poles-v1.png",
 }
@@ -76,8 +77,11 @@ def targets(base: Image.Image, kind: str):
             box = (max(0, torso[0] + 22), 185, min(cell_width, torso[2] - 22), 520)
         elif kind.startswith("shoe-"):
             box = (max(0, feet[0] - 8), 580, min(cell_width, feet[2] + 8), 710)
+        elif kind == "pants":
+            center = cell_width // 2
+            box = (center - 108, 342, center + 108, 642)
         elif kind == "gaiters":
-            box = (max(0, legs[0] - 5), 455, min(cell_width, legs[2] + 5), 700)
+            box = (max(0, legs[0] - 5), 500, min(cell_width, legs[2] + 5), 650)
         elif kind == "gloves":
             box = (max(0, torso[0] - 6), 345, min(cell_width, torso[2] + 6), 525)
         elif kind == "hat-sun":
@@ -87,7 +91,7 @@ def targets(base: Image.Image, kind: str):
         elif kind == "head-net":
             box = (max(0, head[0] - 8), max(0, head[1] - 8), min(cell_width, head[2] + 8), 315)
         else:  # poles
-            box = (max(0, torso[0] - 28), 245, min(cell_width, torso[2] + 28), 710)
+            box = (max(0, torso[0] - 28), 330, min(cell_width, torso[2] + 28), 710)
         result.append(box)
     return result
 
@@ -114,15 +118,41 @@ def tint(image: Image.Image, color: str) -> Image.Image:
     return colored
 
 
+def clear_outerwear_face(image: Image.Image) -> Image.Image:
+    """Punch a real alpha window through collars and the folded hood."""
+    result = image.copy()
+    mask = result.getchannel("A")
+    draw = ImageDraw.Draw(mask)
+    cell_width = SIZE[0] // 4
+    for index in range(4):
+        center = index * cell_width + cell_width // 2
+        draw.ellipse((center - 76, 142, center + 76, 226), fill=0)
+    result.putalpha(mask)
+    return result
+
+
 base = center_base(normalized(ART / "character-front-swimsuit-v3.png"))
 base.save(ART / "character-front-swimsuit-v3.png", optimize=True)
 
 for kind, filename in MASTERS.items():
     master = fit_cells(normalized(ART / filename), targets(base, kind))
+    if kind in {"shell", "pile"}:
+        master = clear_outerwear_face(master)
     for brand, color in BRANDS.items():
         # StormShell riprende esattamente il giallo ocra dell'icona inventario.
         rendered = master if kind == "shell" and brand == "Sh" else tint(master, color)
         rendered.save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
+
+    if kind == "pants":
+        cell_width = SIZE[0] // 4
+        cell = master.crop((0, 0, cell_width, SIZE[1]))
+        source = visible_bbox(cell)
+        content = cell.crop(source)
+        content.thumbnail((176, 176), Image.Resampling.LANCZOS)
+        icon = Image.new("RGBA", (192, 192))
+        icon.alpha_composite(content, ((192 - content.width) // 2, (192 - content.height) // 2))
+        (ROOT / "assets" / "sprites" / "gear").mkdir(parents=True, exist_ok=True)
+        icon.save(ROOT / "assets" / "sprites" / "gear" / "pantaloni.png", optimize=True)
 
 for source, target in {
     "wear-gloves-v1.png": "wear-gloves-v2.png",
