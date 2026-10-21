@@ -30,12 +30,19 @@ def normalized(path: Path) -> Image.Image:
     return image
 
 
+def visible_bbox(image: Image.Image):
+    """Ignore near-transparent fringe pixels when deriving anatomical anchors."""
+    alpha = image.getchannel("A")
+    visible = alpha.point(lambda value: 255 if value >= 96 else 0)
+    return visible.getbbox()
+
+
 def center_base(image: Image.Image) -> Image.Image:
     sheet = Image.new("RGBA", SIZE)
     cell_width = SIZE[0] // 4
     for index in range(4):
         cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
-        box = cell.getchannel("A").getbbox()
+        box = visible_bbox(cell)
         if not box:
             continue
         shift_x = round(cell_width / 2 - (box[0] + box[2]) / 2)
@@ -45,7 +52,8 @@ def center_base(image: Image.Image) -> Image.Image:
 
 
 def region_box(cell: Image.Image, top: int, bottom: int):
-    box = cell.getchannel("A").crop((0, top, cell.width, bottom)).getbbox()
+    alpha = cell.getchannel("A").crop((0, top, cell.width, bottom))
+    box = alpha.point(lambda value: 255 if value >= 96 else 0).getbbox()
     return (box[0], box[1] + top, box[2], box[3] + top)
 
 
@@ -69,7 +77,7 @@ def targets(base: Image.Image, kind: str):
         elif kind == "gloves":
             box = (max(0, torso[0] - 6), 345, min(cell_width, torso[2] + 6), 525)
         elif kind == "hat-sun":
-            box = (max(0, head[0] - 18), max(0, head[1] - 8), min(cell_width, head[2] + 18), min(235, head[3] + 8))
+            box = (max(0, head[0] - 18), max(0, head[1] - 28), min(cell_width, head[2] + 18), min(170, head[1] + 130))
         elif kind == "hat-wool":
             box = (max(0, head[0] - 5), max(0, head[1] - 8), min(cell_width, head[2] + 5), min(185, head[1] + 150))
         elif kind == "head-net":
@@ -85,7 +93,7 @@ def fit_cells(image: Image.Image, boxes) -> Image.Image:
     cell_width = SIZE[0] // 4
     for index, target in enumerate(boxes):
         cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
-        source = cell.getchannel("A").getbbox()
+        source = visible_bbox(cell)
         if not source:
             continue
         content = cell.crop(source).resize((target[2] - target[0], target[3] - target[1]), Image.Resampling.LANCZOS)
