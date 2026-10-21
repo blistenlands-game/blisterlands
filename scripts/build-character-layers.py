@@ -151,7 +151,7 @@ def fit_gloves(image: Image.Image) -> Image.Image:
     cell_width = SIZE[0] // 4
     for index in range(4):
         cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
-        for side, offset in ((0, -122), (1, 122)):
+        for side, offset in ((0, -154), (1, 154)):
             half = cell.crop((side * cell_width // 2, 0, (side + 1) * cell_width // 2, SIZE[1]))
             source = visible_bbox(half)
             if not source:
@@ -159,7 +159,7 @@ def fit_gloves(image: Image.Image) -> Image.Image:
             content = half.crop(source)
             content.thumbnail((94, 126), Image.Resampling.LANCZOS)
             center = index * cell_width + cell_width // 2 + offset
-            sheet.alpha_composite(content, (center - content.width // 2, 336))
+            sheet.alpha_composite(content, (center - content.width // 2, 396))
     return sheet
 
 
@@ -329,7 +329,7 @@ for kind, filename in MASTERS.items():
                 if kind == "gaiters":
                     paired = fit_pair(brand_sheet, 482, 618, 72, 78)
                 else:
-                    paired = fit_pair(brand_sheet, 315, 676, 150, 74)
+                    paired = fit_pair(brand_sheet, 382, 698, 154, 68)
                 rendered = Image.new("RGBA", SIZE)
                 source_cell = paired.crop((brand_index * SIZE[0] // 4, 0, (brand_index + 1) * SIZE[0] // 4, SIZE[1]))
                 for character in range(4):
