@@ -116,7 +116,7 @@ def targets(base: Image.Image, kind: str):
             box = (center - 120, 462, center + 120, 655)
         elif kind == "gloves":
             center = cell_width // 2
-            box = (center - 150, 355, center + 150, 462)
+            box = (center - 210, 335, center + 210, 485)
         elif kind == "hat-sun":
             box = (max(0, head[0] - 18), max(0, head[1] - 28), min(cell_width, head[2] + 18), min(170, head[1] + 130))
         elif kind == "hat-wool":
@@ -125,7 +125,7 @@ def targets(base: Image.Image, kind: str):
             box = (max(0, head[0] - 8), max(0, head[1] - 8), min(cell_width, head[2] + 8), 315)
         else:  # poles
             center = cell_width // 2
-            box = (center - 110, 334, center + 110, 710)
+            box = (center - 260, 330, center + 260, 710)
         result.append(box)
     return result
 
@@ -140,6 +140,23 @@ def fit_cells(image: Image.Image, boxes) -> Image.Image:
             continue
         content = cell.crop(source).resize((target[2] - target[0], target[3] - target[1]), Image.Resampling.LANCZOS)
         sheet.alpha_composite(content, (index * cell_width + target[0], target[1]))
+    return sheet
+
+
+def fit_gloves(image: Image.Image) -> Image.Image:
+    """Register each glove independently on the two hands."""
+    sheet = Image.new("RGBA", SIZE)
+    cell_width = SIZE[0] // 4
+    for index in range(4):
+        cell = image.crop((index * cell_width, 0, (index + 1) * cell_width, SIZE[1]))
+        for side, offset in ((0, -132), (1, 132)):
+            half = cell.crop((side * cell_width // 2, 0, (side + 1) * cell_width // 2, SIZE[1]))
+            source = visible_bbox(half)
+            if not source:
+                continue
+            content = half.crop(source).resize((64, 98), Image.Resampling.LANCZOS)
+            center = index * cell_width + cell_width // 2 + offset
+            sheet.alpha_composite(content, (center - 32, 354))
     return sheet
 
 
@@ -194,37 +211,22 @@ def fit_brand_cell(image: Image.Image, brand_index: int, boxes, parts: int = 1) 
     return sheet
 
 
-def tint(image: Image.Image, color: str) -> Image.Image:
-    red, green, blue = tuple(bytes.fromhex(color.removeprefix("#")))
-    pale = tuple(min(255, round(channel * 1.55 + 48)) for channel in (red, green, blue))
+def tint(image: Image.Image, brand: str) -> Image.Image:
+    dark, pale, _ = BRAND_PALETTES[brand]
     gray = ImageOps.grayscale(image)
-    colored = ImageOps.colorize(gray, black=(18, 17, 16), white=pale).convert("RGBA")
+    colored = ImageOps.colorize(gray, black=dark, white=pale).convert("RGBA")
     colored.putalpha(image.getchannel("A"))
     return colored
 
 
 def brandize_catalog_icon(image: Image.Image, brand: str) -> Image.Image:
-    """Apply the complete brand language, not just a flat hue, to shop art."""
+    """Color the complete original product art without adding arbitrary marks."""
     image = image.convert("RGBA").resize((192, 192), Image.Resampling.LANCZOS)
-    dark, light, accent = BRAND_PALETTES[brand]
+    dark, light, _ = BRAND_PALETTES[brand]
     gray = ImageOps.grayscale(image)
     colored = ImageOps.colorize(gray, black=dark, white=light).convert("RGBA")
     colored.putalpha(image.getchannel("A"))
-    marks = Image.new("RGBA", image.size)
-    draw = ImageDraw.Draw(marks)
-    if brand == "A":
-        draw.rounded_rectangle((112, 25, 132, 166), 6, fill=accent, outline=(45, 35, 24, 220), width=3)
-    elif brand == "S":
-        draw.rounded_rectangle((24, 116, 168, 137), 5, fill=accent, outline=(45, 35, 34, 220), width=2)
-    elif brand == "Sh":
-        draw.polygon(((38, 160), (60, 174), (158, 35), (137, 24)), fill=accent)
-    else:
-        draw.rounded_rectangle((20, 20, 171, 171), 20, outline=accent, width=7)
-        for x in range(34, 164, 20):
-            draw.line((x, 24, x + 8, 24), fill=(86, 45, 30, 230), width=2)
-            draw.line((x, 168, x + 8, 168), fill=(86, 45, 30, 230), width=2)
-    marks.putalpha(ImageChops.multiply(marks.getchannel("A"), image.getchannel("A")))
-    return Image.alpha_composite(colored, marks)
+    return colored
 
 
 def clear_outerwear_face(image: Image.Image) -> Image.Image:
@@ -273,13 +275,10 @@ for kind, filename in MASTERS.items():
             parts = 2 if kind.startswith("shoe-") or kind in {"gaiters", "poles"} else 1
             rendered = fit_brand_cell(brand_sheet, brand_index, boxes, parts)
         else:
-            rendered = tint(master, color)
+            rendered = tint(master, brand)
         if kind in {"shell", "pile"}:
             rendered = clear_outerwear_face(rendered)
         rendered.save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
-        if kind in GEAR_NAMES:
-            save_gear_icon(rendered, f"{GEAR_NAMES[kind]}-{brand}")
-
     if kind == "pants":
         save_gear_icon(master, "pantaloni")
 
@@ -290,6 +289,10 @@ for source, target in {
     "wear-head-net-v1.png": "wear-head-net-v2.png",
 }.items():
     kind = target.removeprefix("wear-").removesuffix("-v2.png")
-    fit_cells(normalized(ART / source), targets(base, kind)).save(ART / target, optimize=True)
+    source_image = normalized(ART / source)
+    aligned = fit_gloves(source_image) if kind == "gloves" else fit_cells(source_image, targets(base, kind))
+    aligned.save(ART / target, optimize=True)
+    for brand in BRANDS:
+        tint(aligned, brand).save(ART / f"wear-{kind}-{brand}-v2.png", optimize=True)
 
-print(f"Paper-doll: {len(MASTERS) * len(BRANDS) + 4} livelli esportati a {SIZE[0]}x{SIZE[1]}")
+print(f"Paper-doll: {(len(MASTERS) + 4) * len(BRANDS)} livelli di marchio esportati a {SIZE[0]}x{SIZE[1]}")

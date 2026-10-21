@@ -37,7 +37,7 @@ const ISOMETRIC_STAGE_ONE=[
  'poi-t1-vuolle-refuge-isometric-v1','poi-t1-vuolle-refuge-isometric-closed-v1'
 ].map(name=>`./assets/godot/${name}.png`);
 const ISOMETRIC_STAGE_HD=Array.from({length:7},(_,stage)=>Array.from({length:6},(_,panel)=>`./assets/godot/poi-t${stage+2}-${String(panel+1).padStart(2,'0')}-isometric-hd-v2.png`)).flat();
-const PAPER_DOLL=['./assets/art/character-front-swimsuit-v3.png',...['gloves','hat-sun','hat-wool','head-net'].map(name=>`./assets/art/wear-${name}-v2.png`),...['pack-classic','pack-ul','shoe-trail','shoe-low','shoe-boot','shell','pile','pants','gaiters','poles'].flatMap(kind=>['A','S','Sh','D'].map(brand=>`./assets/art/wear-${kind}-${brand}-v2.png`))];
+const PAPER_DOLL=['./assets/art/character-front-swimsuit-v3.png',...['pack-classic','pack-ul','shoe-trail','shoe-low','shoe-boot','shell','pile','pants','gaiters','poles','gloves','hat-sun','hat-wool','head-net'].flatMap(kind=>['A','S','Sh','D'].map(brand=>`./assets/art/wear-${kind}-${brand}-v2.png`))];
 const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`./assets/paper/paper-stage-${stage+1}-${wear+1}.jpg`)).flat();
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
