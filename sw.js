@@ -41,7 +41,7 @@ const PAPER_DOLL=['./assets/art/character-front-swimsuit-v3.png',...['pack-class
 const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`./assets/paper/paper-stage-${stage+1}-${wear+1}.jpg`)).flat();
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
- './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/game.js','./src/map-routes.js',
+ './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/audio.js','./src/game.js','./src/map-routes.js',
  './vendor/pixi.min.js','./src/diorama.js','./src/visuals.js','./src/home-cards.js','./src/home.js','./src/bootstrap.js',
  './assets/art/trail-scenes.png','./assets/art/home-scenes.png','./assets/art/home-scenes-isometric-v2.png','./assets/art/character-front-v1.png',...PAPER_DOLL,...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...ISOMETRIC_STAGE_HD,...PAPERS,
  './assets/ui/event-card-parchment-v1.png','./assets/ui/event-card-frame-v2.png','./assets/ui/event-card-frame-v3.png','./assets/ui/event-choice-tabs-v1.png','./assets/ui/event-art-mask-v1.png',

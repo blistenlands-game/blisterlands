@@ -94,9 +94,9 @@ function choose(i){const ev=S.current;if(!ev||S.cardResult)return;const op=opts(
  if(r.f.lose){const lid=[...S.kit].find(k=>k===r.f.lose||(ITEM_BY[k]&&ITEM_BY[k].base===r.f.lose));if(lid){S.kit.delete(lid);S.log.unshift('Perso: '+ITEM_BY[lid].name)}}
  if(!ev.forced)S.used.add(ev.id);
  const txt=tw?r.txt+' '+tw.txt:r.txt;S.outcome={txt,bad:r.t==='b'&&!(tw&&tw.t==='g')};S.cardResult={choice:i,txt,bad:S.outcome.bad};S.log.unshift(`${hhmm(S.clock)} · ${ev.title}: ${txt}`);
- S.notes=[];if(fail())return render();render()}
+ S.notes=[];if(fail()){GameAudio?.play('bad');return render()}GameAudio?.play(S.cardResult.bad?'bad':'good');render()}
 function dismissEvent(){S.current=null;S.cardResult=null;step(true)}
-function toggleEventScene(){const panel=document.querySelector('.stage-one-event'),button=panel&&panel.querySelector('.event-scene-toggle');if(!panel||!button)return;const open=panel.classList.toggle('show-scene');button.textContent=open?'CARTA':'SCENA';button.setAttribute('aria-pressed',String(open))}
+function toggleEventScene(){const panel=document.querySelector('.stage-one-event'),button=panel&&panel.querySelector('.event-scene-toggle');if(!panel||!button)return;const open=panel.classList.toggle('show-scene');button.textContent=open?'CARTA':'SCENA';button.setAttribute('aria-pressed',String(open));GameAudio?.play('scene')}
 function arrive(){if(TAPPE[S.tappa].finale){S.arrive=S.clock;fx({timbro:'Via delle Renne completata',xp:30});S.endKind='completo';S.end=`Arrivi a Njalla alle ${hhmm(S.clock)}. Davanti al chiosco del villaggio ordini un hamburger di renna, ti siedi su una panca e guardi le montagne da cui sei sceso. Hai completato la Via delle Renne.`;S.screen='fine';return render()}
  S.arrive=S.clock;S.screen='sera';S.didSauna=false;S.arrMsg=[];if(TAPPE[S.tappa].n===2&&S.wx==='pioggia')S.arrMsg.push('Il custode guarda la pioggia: «Con questa acqua il lago di domani si alza, e le barche a remi rischiano di andarsene. Domani conviene arrivare in tempo per la barca a motore: parte alle 10, alle 12 e alle 14.»');
  S.full=chance(clamp((S.arrive-960-MESI[S.mese].posti)/180,0,1));

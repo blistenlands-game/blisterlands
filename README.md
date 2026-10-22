@@ -28,11 +28,13 @@ GitHub Pages può pubblicare direttamente la radice del branch `main`. Il servic
 
 ## Versione
 
-Prototipo `0.6.7`.
+Prototipo `0.6.8`.
 
 Le tappe 2–8 usano 42 panorami isometrici autonomi in alta risoluzione (1254×1254), senza ritagli da atlanti condivisi.
 
 Gli indicatori di ora, energia, morale e distanza durante il cammino mostrano stato, colore e barra dinamici. Nel paperdoll le ghette sostituiscono le scarpe, mentre pile e guscio possono essere indossati insieme nell'ordine anatomico corretto.
+
+Gli effetti sonori procedurali accompagnano pulsanti, ingresso delle carte, apertura del panorama ed esiti delle scelte. Il comando audio resta disponibile durante tutta la partita, ricorda la preferenza scelta e non richiede file esterni né connessione.
 
 Il paperdoll usa ora l'asse della sagoma opaca reale. Pantaloni e ghette sono due livelli indipendenti; pile, guscio, bastoncini e guanti rispettano l'ordine anatomico e ogni oggetto può essere disequipaggiato. Quando è equipaggiato un guscio, il pile rimane attivo nella meccanica ma viene nascosto dal solo rendering. Ghette, guanti e bastoncini hanno ancoraggi anatomici dedicati. Il guscio StormShell è giallo ocra come l'icona dell'inventario e il cappuccio abbassato ha un'apertura alfa reale che lascia libero il volto.
 

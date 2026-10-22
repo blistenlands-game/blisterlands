@@ -67,7 +67,13 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.7').waitFor();
+  await page.getByText('Prototipo · versione 0.6.8').waitFor();
+  const audioControl = await page.evaluate(() => ({ button:document.querySelector('.sound-toggle')?.getAttribute('aria-label'), api:typeof GameAudio?.play==='function' }));
+  if (!audioControl.button || !audioControl.api) throw new Error(`Controllo audio non disponibile: ${JSON.stringify(audioControl)}`);
+  await page.locator('.sound-toggle').click();
+  const mutedAudio = await page.evaluate(() => ({ muted:localStorage.getItem('blisterlands-audio-muted'), label:document.querySelector('.sound-toggle')?.getAttribute('aria-label') }));
+  if (mutedAudio.muted !== '1' || mutedAudio.label !== 'Attiva effetti sonori') throw new Error(`Preferenza audio non memorizzata: ${JSON.stringify(mutedAudio)}`);
+  await page.locator('.sound-toggle').click();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
