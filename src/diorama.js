@@ -1,5 +1,10 @@
 /* Prima tappa: piccoli movimenti ambientali disegnati sopra i fondali raster. */
-let activeDiorama=null,dioramaToken=0;
+let activeDiorama=null,dioramaToken=0,dioramaScheduleToken=0,pixiLoader=null;
+function loadPixi(){
+ if(window.PIXI)return Promise.resolve(window.PIXI);
+ if(!pixiLoader)pixiLoader=new Promise((resolve,reject)=>{const script=document.createElement('script');script.src=`vendor/pixi.min.js?v=${GAME_CONFIG.version}`;script.async=true;script.onload=()=>resolve(window.PIXI);script.onerror=()=>reject(new Error('Pixi non disponibile'));document.head.appendChild(script)});
+ return pixiLoader
+}
 function stopStageDiorama(){
  dioramaToken++;
  if(activeDiorama){try{activeDiorama.destroy(true,{children:true,texture:false,textureSource:false})}catch(e){}activeDiorama=null}
@@ -12,9 +17,11 @@ function dioramaDot(color,alpha,radius){const g=new PIXI.Graphics();g.circle(0,0
 async function mountStageDiorama(){
  stopStageDiorama();
  const host=document.querySelector('.stage-one-diorama .diorama-canvas,.trek-scene .diorama-canvas');
- if(!host||!window.PIXI||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
+ if(!host||matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  const token=++dioramaToken,src=host.dataset.src,poi=Number(host.dataset.poi)||0;
  try{
+  await loadPixi();
+  if(token!==dioramaToken||!host.isConnected)return;
   const app=new PIXI.Application();
   await app.init({resizeTo:host,backgroundAlpha:0,antialias:true,resolution:Math.min(devicePixelRatio||1,2),autoDensity:true,powerPreference:'low-power'});
   if(token!==dioramaToken||!host.isConnected){app.destroy(true,{children:true,texture:false,textureSource:false});return}
@@ -55,4 +62,8 @@ async function mountStageDiorama(){
   });
   host.closest('.stage-one-diorama,.trek-scene')?.classList.add('diorama-ready');
  }catch(error){console.warn('Diorama non disponibile, uso il fondale statico.',error);stopStageDiorama()}
+}
+function scheduleStageDiorama(){
+ const token=++dioramaScheduleToken,run=()=>{if(token===dioramaScheduleToken)mountStageDiorama()};
+ if('requestIdleCallback' in window)requestIdleCallback(run,{timeout:900});else setTimeout(run,180)
 }

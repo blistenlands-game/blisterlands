@@ -24,11 +24,11 @@ Il progetto è una PWA statica e non richiede una compilazione. Per provarlo cor
 
 ## Pubblicazione
 
-GitHub Pages può pubblicare direttamente la radice del branch `main`. Il service worker mantiene in cache tutti i file necessari al funzionamento offline.
+GitHub Pages può pubblicare direttamente la radice del branch `main`. Il service worker conserva subito l'interfaccia essenziale e aggiunge gli scenari alla cache mentre vengono visitati, evitando un download iniziale molto pesante sul telefono.
 
 ## Versione
 
-Prototipo `0.6.11`.
+Prototipo `0.6.12`.
 
 Le tappe 2–8 usano 42 panorami isometrici autonomi in alta risoluzione (1254×1254), senza ritagli da atlanti condivisi.
 

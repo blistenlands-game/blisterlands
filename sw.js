@@ -42,9 +42,8 @@ const PAPERS=Array.from({length:8},(_,stage)=>Array.from({length:4},(_,wear)=>`.
 const CORE=[
  './','./index.html','./styles.css','./manifest.webmanifest',
  './src/config.js','./src/data.js','./src/state.js','./src/content.js','./src/audio.js','./src/game.js','./src/map-routes.js',
- './vendor/pixi.min.js','./src/diorama.js','./src/visuals.js','./src/home-cards.js','./src/home.js','./src/bootstrap.js',
- './assets/art/trail-scenes.png','./assets/art/home-scenes.png','./assets/art/home-scenes-isometric-v2.png','./assets/art/character-front-v1.png',...PAPER_DOLL,...SPRITES,...BACKGROUNDS,...MAPS,...ISOMETRIC_STAGE_ONE,...ISOMETRIC_STAGE_HD,...PAPERS,
- './assets/ui/event-card-parchment-v1.png','./assets/ui/event-card-frame-v2.png','./assets/ui/event-card-frame-v3.png','./assets/ui/event-choice-tabs-v1.png','./assets/ui/event-art-mask-v1.png',
+ './src/diorama.js','./src/visuals.js','./src/home-cards.js','./src/home.js','./src/bootstrap.js',
+ './assets/art/home-scenes-isometric-v2.webp','./assets/sprites/brand/A.png',
  './icons/icon-192.png','./icons/icon-512.png','./icons/maskable-192.png',
  './icons/maskable-512.png','./icons/apple-touch-icon.png'
 ];
@@ -53,8 +52,13 @@ self.addEventListener('activate',e=>{e.waitUntil(caches.keys().then(ks=>Promise.
 self.addEventListener('fetch',e=>{const r=e.request;if(r.method!=='GET')return;
  const url=new URL(r.url);
  if(url.origin===location.origin){
-  /* pagina: prima la rete, così vedi sempre l'ultima versione; offline usa la copia */
-  e.respondWith(fetch(r).then(res=>{const c=res.clone();caches.open(CACHE).then(k=>k.put(r,c));return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./index.html'))));
+  if(r.mode==='navigate'){
+   /* Il documento controlla gli aggiornamenti; offline usa l'ultima copia. */
+   e.respondWith(fetch(r).then(res=>{const c=res.clone();caches.open(CACHE).then(k=>k.put(r,c));return res}).catch(()=>caches.match(r).then(m=>m||caches.match('./index.html'))));
+  }else{
+   /* Immagini e codice già visitati partono subito dalla cache e si aggiornano in background. */
+   e.respondWith(caches.match(r).then(cached=>{const update=fetch(r).then(res=>{if(res.ok){const c=res.clone();caches.open(CACHE).then(k=>k.put(r,c))}return res}).catch(()=>cached||caches.match('./index.html'));return cached||update}));
+  }
  } else if(url.host.includes('fonts.googleapis.com')||url.host.includes('fonts.gstatic.com')){
   /* caratteri: copia locale appena possibile */
   e.respondWith(caches.match(r).then(m=>m||fetch(r).then(res=>{const c=res.clone();caches.open(CACHE).then(k=>k.put(r,c));return res})));

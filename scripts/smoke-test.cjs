@@ -19,6 +19,7 @@ const mime = {
   '.json': 'application/json; charset=utf-8',
   '.png': 'image/png',
   '.jpg': 'image/jpeg',
+  '.webp': 'image/webp',
   '.webmanifest': 'application/manifest+json; charset=utf-8',
 };
 
@@ -67,7 +68,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.11').waitFor();
+  await page.getByText('Prototipo · versione 0.6.12').waitFor();
   const audioControl = await page.evaluate(() => ({ button:document.querySelector('.sound-toggle')?.getAttribute('aria-label'), api:typeof GameAudio?.play==='function' }));
   if (!audioControl.button || !audioControl.api) throw new Error(`Controllo audio non disponibile: ${JSON.stringify(audioControl)}`);
   await page.locator('.sound-toggle').click();
@@ -95,7 +96,7 @@ const server = http.createServer((request, response) => {
     atlas: getComputedStyle(document.querySelector('.home-diorama .scene-bg')).backgroundImage,
     stats: document.querySelectorAll('.home-stats>div').length,
   }));
-  if (!homeLook.shell || !homeLook.atlas.includes('home-scenes-isometric-v2.png') || homeLook.stats !== 4) throw new Error(`Nuova interfaccia di casa incompleta: ${JSON.stringify(homeLook)}`);
+  if (!homeLook.shell || !homeLook.atlas.includes('home-scenes-isometric-v2.webp') || homeLook.stats !== 4) throw new Error(`Nuova interfaccia di casa incompleta: ${JSON.stringify(homeLook)}`);
   await page.getByRole('button', { name: /Lavoro normale/ }).click();
   const migratedSave = await page.evaluate(() => ({
     current: JSON.parse(localStorage.getItem('blisterlands')),
@@ -197,7 +198,7 @@ const server = http.createServer((request, response) => {
       paperLevel: document.body.dataset.paperLevel,
     };
   });
-  if (!trekLayout.stage || !trekLayout.panorama?.includes('poi-t1-03-betulle-isometric.png')) throw new Error(`Panorama isometrico della prima tappa errato: ${JSON.stringify(trekLayout)}`);
+  if (!trekLayout.stage || !trekLayout.panorama?.includes('poi-t1-03-betulle-isometric.webp')) throw new Error(`Panorama isometrico della prima tappa errato: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.walker !== 0) throw new Error(`L'omino non deve comparire nella schermata di tappa: ${JSON.stringify(trekLayout)}`);
   if (trekLayout.stats !== 4 || trekLayout.dynamicStats !== 4 || trekLayout.statTracks !== 4 || !trekLayout.tools.includes('TACCUINO') || !trekLayout.tools.includes('ZAINO')) throw new Error(`Comandi o statistiche mancanti: ${JSON.stringify(trekLayout)}`);
   if (!trekLayout.map?.includes('stage-map-1.png') || trekLayout.routeDone !== '3') throw new Error(`Mappa della tappa non disponibile: ${JSON.stringify(trekLayout)}`);
@@ -211,7 +212,7 @@ const server = http.createServer((request, response) => {
     backgroundAnimation: getComputedStyle(document.querySelector('.stage-one-diorama>.scene-bg')).animationName,
     backgroundOpacity: getComputedStyle(document.querySelector('.stage-one-diorama>.scene-bg')).opacity,
   }));
-  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.png') || diorama.backgroundAnimation !== 'none' || diorama.backgroundOpacity !== '1') throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
+  if (!diorama.ready || diorama.poi !== '2' || !diorama.src?.includes('poi-t1-03-betulle-isometric.webp') || diorama.backgroundAnimation !== 'none' || diorama.backgroundOpacity !== '1') throw new Error(`Animazione ambientale isometrica errata: ${JSON.stringify(diorama)}`);
   const allStageLayouts = await page.evaluate(() => TAPPE.map((stage, index) => {
     S = newState(); S.screen = 'tappa'; S.tappa = index; S.seg = 3; S.current = null; S.wx = index % 2 ? 'nuvole' : 'sole'; render();
     return {
@@ -226,7 +227,7 @@ const server = http.createServer((request, response) => {
       walker: document.querySelectorAll('.map-hiker,.stage-one-ui .pose-sprite').length,
     };
   }));
-  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0 || (index>0&&!stage.image.includes(`poi-t${index+1}-03-isometric-hd-v2.png`)))) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
+  if (allStageLayouts.some((stage, index) => !stage.ui || !stage.image || !stage.map?.includes(`stage-map-${index + 1}.png`) || stage.route !== String(index + 1) || !stage.title || stage.walker !== 0 || (index>0&&!stage.image.includes(`poi-t${index+1}-03-isometric-hd-v2.webp`)))) throw new Error(`Interfacce delle otto tappe incomplete: ${JSON.stringify(allStageLayouts)}`);
   if (new Set(allStageLayouts.map((stage) => stage.image)).size !== 8) throw new Error(`I panorami delle tappe non sono distinti: ${JSON.stringify(allStageLayouts)}`);
   const laterEventLayout = await page.evaluate(() => {
     S = newState(); S.screen = 'tappa'; S.tappa = 4; S.seg = 2; S.current = EV.find((event) => event.id === 'corvo') || EV[0]; render();
@@ -239,6 +240,10 @@ const server = http.createServer((request, response) => {
     return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom, deck:document.querySelectorAll('.event-deck-card').length, art:document.querySelector('.event-card-art img')?.getAttribute('src'), shell:!!document.querySelector('.event-card-shell'), sceneToggle:document.querySelector('.event-scene-toggle')?.textContent, crest:document.querySelector('.trail-crest img')?.getAttribute('src'), statGap:card&&stats?card.top-stats.bottom:-1, loweredBack:card&&back?back.top>card.top:false };
   });
   if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell || eventCardLayout.sceneToggle !== 'SCENA' || !eventCardLayout.crest || eventCardLayout.statGap < 4 || !eventCardLayout.loweredBack) throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
+  await page.setViewportSize({ width: 430, height: 932 });
+  const tallEventLayout = await page.evaluate(() => { const stats=document.querySelector('.stage-one-stats')?.getBoundingClientRect(),card=document.querySelector('.event-card-shell')?.getBoundingClientRect(),back=document.querySelector('.event-deck-card')?.getBoundingClientRect();return {gap:card&&stats?card.top-stats.bottom:-1,statsTop:stats?.top,cardTop:card?.top,backTop:back?.top} });
+  if (tallEventLayout.gap < 4 || tallEventLayout.gap > 10 || tallEventLayout.backTop <= tallEventLayout.cardTop) throw new Error(`Barra e mazzo non ancorati sul telefono alto: ${JSON.stringify(tallEventLayout)}`);
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.event-scene-toggle').click();
   await page.waitForTimeout(520);
   const sceneReveal = await page.evaluate(() => ({ button:document.querySelector('.event-scene-toggle')?.textContent, pressed:document.querySelector('.event-scene-toggle')?.getAttribute('aria-pressed'), cardTop:document.querySelector('.event-card-shell')?.getBoundingClientRect().top, viewport:innerHeight }));
@@ -290,7 +295,7 @@ const server = http.createServer((request, response) => {
     host.remove();
     return result;
   });
-  if (eveningEffects.sun !== 'none' || !eveningEffects.stage?.includes('stage-1') || !eveningEffects.stage?.includes('isometric-refuge') || !eveningEffects.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || !eveningEffects.glow || eveningEffects.smoke !== 2) throw new Error(`Effetti serali o sauna errati: ${JSON.stringify(eveningEffects)}`);
+  if (eveningEffects.sun !== 'none' || !eveningEffects.stage?.includes('stage-1') || !eveningEffects.stage?.includes('isometric-refuge') || !eveningEffects.image?.includes('poi-t1-vuolle-refuge-isometric-v1.webp') || !eveningEffects.glow || eveningEffects.smoke !== 2) throw new Error(`Effetti serali o sauna errati: ${JSON.stringify(eveningEffects)}`);
   const stageOneArrival = await page.evaluate(() => {
     H.screen = null; S = newState(); S.screen = 'sera'; S.tappa = 0; S.arrive = 990; S.full = false; S.closed = false; S.arrMsg = []; S.forecast = { real: 'sole', shown: 'sole' }; render();
     const open = { image: document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), smoke: document.querySelectorAll('.arrival-smoke').length, choices: document.querySelectorAll('.arrival-choice').length, bottom: document.querySelector('.stage-one-arrival-paper')?.getBoundingClientRect().bottom, uiBottom: document.querySelector('.stage-one-ui')?.getBoundingClientRect().bottom };
@@ -299,8 +304,8 @@ const server = http.createServer((request, response) => {
     return { open, closed };
   });
   const arrivalBottomGap = stageOneArrival.open.uiBottom - stageOneArrival.open.bottom;
-  if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || arrivalBottomGap < 8 || arrivalBottomGap > 16) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
-  if (!stageOneArrival.closed.image?.includes('poi-t1-vuolle-refuge-isometric-closed-v1.png') || stageOneArrival.closed.smoke !== 0 || !stageOneArrival.closed.label?.includes('SAUNA CHIUSA')) throw new Error(`Arrivo Vuolle chiuso errato: ${JSON.stringify(stageOneArrival)}`);
+  if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.webp') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || arrivalBottomGap < 8 || arrivalBottomGap > 16) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
+  if (!stageOneArrival.closed.image?.includes('poi-t1-vuolle-refuge-isometric-closed-v1.webp') || stageOneArrival.closed.smoke !== 0 || !stageOneArrival.closed.label?.includes('SAUNA CHIUSA')) throw new Error(`Arrivo Vuolle chiuso errato: ${JSON.stringify(stageOneArrival)}`);
   if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; save(); render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });
   if (cleanAtHome.wear !== 'clean' || cleanAtHome.stage !== '1' || cleanAtHome.level !== '1') throw new Error(`Il taccuino a casa non e pulito: ${JSON.stringify(cleanAtHome)}`);
