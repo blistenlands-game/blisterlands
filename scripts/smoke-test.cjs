@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.10').waitFor();
+  await page.getByText('Prototipo · versione 0.6.11').waitFor();
   const audioControl = await page.evaluate(() => ({ button:document.querySelector('.sound-toggle')?.getAttribute('aria-label'), api:typeof GameAudio?.play==='function' }));
   if (!audioControl.button || !audioControl.api) throw new Error(`Controllo audio non disponibile: ${JSON.stringify(audioControl)}`);
   await page.locator('.sound-toggle').click();
@@ -235,9 +235,10 @@ const server = http.createServer((request, response) => {
   await page.waitForTimeout(550);
   const eventCardLayout = await page.evaluate(() => {
     const paper = document.querySelector('.stage-one-event')?.getBoundingClientRect(), ui = document.querySelector('.stage-one-ui')?.getBoundingClientRect();
-    return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom, deck:document.querySelectorAll('.event-deck-card').length, art:document.querySelector('.event-card-art img')?.getAttribute('src'), shell:!!document.querySelector('.event-card-shell'), sceneToggle:document.querySelector('.event-scene-toggle')?.textContent };
+    const stats=document.querySelector('.stage-one-stats')?.getBoundingClientRect(),card=document.querySelector('.event-card-shell')?.getBoundingClientRect(),back=document.querySelector('.event-deck-card')?.getBoundingClientRect();
+    return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom, deck:document.querySelectorAll('.event-deck-card').length, art:document.querySelector('.event-card-art img')?.getAttribute('src'), shell:!!document.querySelector('.event-card-shell'), sceneToggle:document.querySelector('.event-scene-toggle')?.textContent, crest:document.querySelector('.trail-crest img')?.getAttribute('src'), statGap:card&&stats?card.top-stats.bottom:-1, loweredBack:card&&back?back.top>card.top:false };
   });
-  if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell || eventCardLayout.sceneToggle !== 'SCENA') throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
+  if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell || eventCardLayout.sceneToggle !== 'SCENA' || !eventCardLayout.crest || eventCardLayout.statGap < 4 || !eventCardLayout.loweredBack) throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
   await page.locator('.event-scene-toggle').click();
   await page.waitForTimeout(520);
   const sceneReveal = await page.evaluate(() => ({ button:document.querySelector('.event-scene-toggle')?.textContent, pressed:document.querySelector('.event-scene-toggle')?.getAttribute('aria-pressed'), cardTop:document.querySelector('.event-card-shell')?.getBoundingClientRect().top, viewport:innerHeight }));
