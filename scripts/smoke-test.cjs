@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.1').waitFor();
+  await page.getByText('Prototipo · versione 0.6.2').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -235,8 +235,10 @@ const server = http.createServer((request, response) => {
   await page.locator('.stage-event-choice:not([disabled])').first().click();
   const resolvedCard = await page.evaluate(() => ({ current:!!S.current, result:!!S.cardResult, ribbon:!!document.querySelector('.event-result'), selected:document.querySelectorAll('.stage-event-choice.selected').length }));
   if (!resolvedCard.current || !resolvedCard.result || !resolvedCard.ribbon || resolvedCard.selected !== 1) throw new Error(`Esito non mostrato sulla carta: ${JSON.stringify(resolvedCard)}`);
+  const resolvedSegment = await page.evaluate(() => S.seg);
   await page.locator('.event-result').click();
-  if (await page.locator('.stage-one-event').count()) throw new Error('La carta evento non si chiude dopo Continua');
+  const continuedEvent = await page.evaluate((before) => ({ before, after:S.seg, screen:S.screen, stale:!!S.cardResult }), resolvedSegment);
+  if (continuedEvent.stale || (continuedEvent.screen==='tappa' && continuedEvent.after<=continuedEvent.before)) throw new Error(`La carta non prosegue direttamente: ${JSON.stringify(continuedEvent)}`);
   const allArrivals = await page.evaluate(() => TAPPE.slice(0,7).map((stage, index) => {
     S = newState(); S.screen = 'sera'; S.tappa = index; S.arrive = 990; S.full = false; S.closed = false; S.arrMsg = []; S.forecast = { real: 'sole', shown: 'sole' }; render();
     return { stage:index+1, arrival:!!document.querySelector('.stage-one-ui.arrival'), image:document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), title:document.querySelector('.stage-one-arrival-heading h2')?.textContent, sleep:document.querySelectorAll('.arrival-choice').length, shop:!!document.querySelector('.arrival-service>summary'), shopExpected:!!stage.shop, sauna:document.querySelectorAll('.arrival-smoke').length, saunaExpected:!!stage.sauna };

@@ -49,14 +49,14 @@ function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:
  if(starts.length&&chance(0.5)){const f=starts[Math.floor(rnd()*starts.length)];S.used.add(f.id);S.clock+=f.pre||0;S.current=f;render()}
  else{S.current=null;step()}}
 let walkTimer=null;
-function step(){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
+function step(forceCard=false){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
  const km=t.km/t.terr.length;S.clock+=km/speed()*60;S.energia=clamp(S.energia-energyCost(km),0,100);
  S.seg++;S.gseg++;S.notes=[...processLater(),...passive()];S.outcome=null;S.cardResult=null;
  if(t.extra&&S.seg===5&&!S.flags.rinuncia&&!S.used.has('vettaCima'))S.force='vettaCima';
  if(t.n===3&&S.seg===4&&!S.used.has('traversataLago'))S.force='traversataLago';
  if(t.extra&&S.seg===6&&!S.used.has('vettaRitorno'))S.force='vettaRitorno';
  if(fail())return render();
- S.current=S.force?draw():(chance(0.1)?null:draw());S.walking=true;
+ S.current=S.force?draw():(forceCard?draw():(chance(0.1)?null:draw()));S.walking=true;
  if(!S.current)S.notes.push(QUIET[Math.floor(rnd()*QUIET.length)]);
  render();clearTimeout(walkTimer);walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking){S.walking=false;render()}},1800)}
 /* variazione: gli stessi effetti non sono mai identici */
@@ -95,7 +95,7 @@ function choose(i){const ev=S.current;if(!ev||S.cardResult)return;const op=opts(
  if(!ev.forced)S.used.add(ev.id);
  const txt=tw?r.txt+' '+tw.txt:r.txt;S.outcome={txt,bad:r.t==='b'&&!(tw&&tw.t==='g')};S.cardResult={choice:i,txt,bad:S.outcome.bad};S.log.unshift(`${hhmm(S.clock)} · ${ev.title}: ${txt}`);
  S.notes=[];if(fail())return render();render()}
-function dismissEvent(){S.current=null;S.cardResult=null;render()}
+function dismissEvent(){S.current=null;S.cardResult=null;step(true)}
 function arrive(){if(TAPPE[S.tappa].finale){S.arrive=S.clock;fx({timbro:'Via delle Renne completata',xp:30});S.endKind='completo';S.end=`Arrivi a Njalla alle ${hhmm(S.clock)}. Davanti al chiosco del villaggio ordini un hamburger di renna, ti siedi su una panca e guardi le montagne da cui sei sceso. Hai completato la Via delle Renne.`;S.screen='fine';return render()}
  S.arrive=S.clock;S.screen='sera';S.didSauna=false;S.arrMsg=[];if(TAPPE[S.tappa].n===2&&S.wx==='pioggia')S.arrMsg.push('Il custode guarda la pioggia: «Con questa acqua il lago di domani si alza, e le barche a remi rischiano di andarsene. Domani conviene arrivare in tempo per la barca a motore: parte alle 10, alle 12 e alle 14.»');
  S.full=chance(clamp((S.arrive-960-MESI[S.mese].posti)/180,0,1));
