@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.5').waitFor();
+  await page.getByText('Prototipo · versione 0.6.6').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -284,7 +284,8 @@ const server = http.createServer((request, response) => {
     const closed = { image: document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), smoke: document.querySelectorAll('.arrival-smoke').length, label: document.querySelector('.arrival-closed')?.textContent };
     return { open, closed };
   });
-  if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || Math.abs(stageOneArrival.open.bottom-stageOneArrival.open.uiBottom) > 1) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
+  const arrivalBottomGap = stageOneArrival.open.uiBottom - stageOneArrival.open.bottom;
+  if (!stageOneArrival.open.image?.includes('poi-t1-vuolle-refuge-isometric-v1.png') || stageOneArrival.open.smoke !== 2 || stageOneArrival.open.choices < 4 || arrivalBottomGap < 8 || arrivalBottomGap > 16) throw new Error(`Arrivo Vuolle aperto errato: ${JSON.stringify(stageOneArrival)}`);
   if (!stageOneArrival.closed.image?.includes('poi-t1-vuolle-refuge-isometric-closed-v1.png') || stageOneArrival.closed.smoke !== 0 || !stageOneArrival.closed.label?.includes('SAUNA CHIUSA')) throw new Error(`Arrivo Vuolle chiuso errato: ${JSON.stringify(stageOneArrival)}`);
   if (!lodgingScenes.ending.includes('final-njalla-bench.jpg')) throw new Error('Sfondo finale di Njalla mancante');
   const cleanAtHome = await page.evaluate(() => { H.screen = 'casa'; save(); render(); return { wear: document.body.dataset.paperWear, stage: document.body.dataset.paperStage, level: document.body.dataset.paperLevel }; });

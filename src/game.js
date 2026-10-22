@@ -56,9 +56,9 @@ function step(forceCard=false){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)re
  if(t.n===3&&S.seg===4&&!S.used.has('traversataLago'))S.force='traversataLago';
  if(t.extra&&S.seg===6&&!S.used.has('vettaRitorno'))S.force='vettaRitorno';
  if(fail())return render();
- S.current=S.force?draw():(forceCard?draw():(chance(0.1)?null:draw()));S.walking=true;
+ S.current=S.force?draw():(forceCard?draw():(chance(0.1)?null:draw()));S.walking=!S.current;
  if(!S.current)S.notes.push(QUIET[Math.floor(rnd()*QUIET.length)]);
- render();clearTimeout(walkTimer);walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking){S.walking=false;render()}},1800)}
+ render();clearTimeout(walkTimer);if(S.walking)walkTimer=setTimeout(()=>{if(S&&S.screen==='tappa'&&S.walking&&!S.current){S.walking=false;render()}},1800)}
 /* variazione: gli stessi effetti non sono mai identici */
 function vary(f){const g=Object.assign({},f);
  ['e','m'].forEach(k=>{if(g[k])g[k]=Math.round(g[k]*(0.6+rnd()*0.8))||Math.sign(g[k])});
