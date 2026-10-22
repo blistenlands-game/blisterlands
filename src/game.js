@@ -44,14 +44,14 @@ function fail(){
  if(S.energia<=0){S.endKind='energia';S.end='Crolli dalla stanchezza. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  if(S.morale<=0){S.endKind='morale';S.end='Non ne puoi più. Il cammino finisce qui.'+sosTxt();S.screen='fine';return true}
  return false}
-function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:3});S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.walking=false;S.screen='tappa';
+function startTappa(){if(traitOn('tasche'))fx({e:3});if(traitOn('sedile'))fx({m:3});S.seg=0;S.clock=S.start;S.flags={};S.notes=[];S.outcome=null;S.cardResult=null;S.walking=false;S.screen='tappa';
  const t=TAPPE[S.tappa];const starts=EV.filter(e=>e.first&&e.tappe.includes(t.n)&&!S.used.has(e.id));
  if(starts.length&&chance(0.5)){const f=starts[Math.floor(rnd()*starts.length)];S.used.add(f.id);S.clock+=f.pre||0;S.current=f;render()}
  else{S.current=null;step()}}
 let walkTimer=null;
 function step(){const t=TAPPE[S.tappa];if(S.seg>=t.terr.length)return arrive();
  const km=t.km/t.terr.length;S.clock+=km/speed()*60;S.energia=clamp(S.energia-energyCost(km),0,100);
- S.seg++;S.gseg++;S.notes=[...processLater(),...passive()];S.outcome=null;
+ S.seg++;S.gseg++;S.notes=[...processLater(),...passive()];S.outcome=null;S.cardResult=null;
  if(t.extra&&S.seg===5&&!S.flags.rinuncia&&!S.used.has('vettaCima'))S.force='vettaCima';
  if(t.n===3&&S.seg===4&&!S.used.has('traversataLago'))S.force='traversataLago';
  if(t.extra&&S.seg===6&&!S.used.has('vettaRitorno'))S.force='vettaRitorno';
@@ -87,14 +87,15 @@ const TWISTS=[
  {t:'b',txt:'Ti accorgi di avere una sete tremenda.',f:{e:-3}}
 ];
 function twist(single){if(!chance(single?0.3:0.15))return null;const p=TWISTS.filter(t=>!t.when||t.when());if(!p.length)return null;const t=p[Math.floor(rnd()*p.length)];fx(t.f);if(t.f.hot&&!S.used.has('hotspot'+S.tappa))S.force='hotspot';return t}
-function choose(i){const ev=S.current,op=opts(ev)[i];
+function choose(i){const ev=S.current;if(!ev||S.cardResult)return;const op=opts(ev)[i];
  useInv(op.use);S.clock+=op.min||0;
  const w={};op.out.forEach((x,k)=>w[k]=Math.max(0.0001,wv(x.w)));const r=op.out[+pickW(w)];
  fx(vary(r.f));const tw=twist(op.out.length<2);if(r.f.gain){S.kit.add(r.f.gain);S.log.unshift('Nuovo: '+ITEMS.find(x=>x.id===r.f.gain).name)}
  if(r.f.lose){const lid=[...S.kit].find(k=>k===r.f.lose||(ITEM_BY[k]&&ITEM_BY[k].base===r.f.lose));if(lid){S.kit.delete(lid);S.log.unshift('Perso: '+ITEM_BY[lid].name)}}
  if(!ev.forced)S.used.add(ev.id);
- const txt=tw?r.txt+' '+tw.txt:r.txt;S.outcome={txt,bad:r.t==='b'&&!(tw&&tw.t==='g')};S.log.unshift(`${hhmm(S.clock)} · ${ev.title}: ${txt}`);
- S.current=null;S.notes=[];if(fail())return render();render()}
+ const txt=tw?r.txt+' '+tw.txt:r.txt;S.outcome={txt,bad:r.t==='b'&&!(tw&&tw.t==='g')};S.cardResult={choice:i,txt,bad:S.outcome.bad};S.log.unshift(`${hhmm(S.clock)} · ${ev.title}: ${txt}`);
+ S.notes=[];if(fail())return render();render()}
+function dismissEvent(){S.current=null;S.cardResult=null;render()}
 function arrive(){if(TAPPE[S.tappa].finale){S.arrive=S.clock;fx({timbro:'Via delle Renne completata',xp:30});S.endKind='completo';S.end=`Arrivi a Njalla alle ${hhmm(S.clock)}. Davanti al chiosco del villaggio ordini un hamburger di renna, ti siedi su una panca e guardi le montagne da cui sei sceso. Hai completato la Via delle Renne.`;S.screen='fine';return render()}
  S.arrive=S.clock;S.screen='sera';S.didSauna=false;S.arrMsg=[];if(TAPPE[S.tappa].n===2&&S.wx==='pioggia')S.arrMsg.push('Il custode guarda la pioggia: «Con questa acqua il lago di domani si alza, e le barche a remi rischiano di andarsene. Domani conviene arrivare in tempo per la barca a motore: parte alle 10, alle 12 e alle 14.»');
  S.full=chance(clamp((S.arrive-960-MESI[S.mese].posti)/180,0,1));
