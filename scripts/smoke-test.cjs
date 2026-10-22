@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.6').waitFor();
+  await page.getByText('Prototipo · versione 0.6.7').waitFor();
   const sceneCoverage = await page.evaluate(() => ({ scenes: new Set(Object.values(EVENT_SCENE)).size, events: Object.keys(EVENT_SCENE).length }));
   if (sceneCoverage.scenes !== 27 || sceneCoverage.events < 100) throw new Error(`Copertura paesaggi insufficiente: ${JSON.stringify(sceneCoverage)}`);
   const poiCoverage = await page.evaluate(() => ({ stages: POI.length, counts: POI.map((stage) => stage.length), names: new Set(POI.flat().map(([name]) => name)).size, assets: new Set(POI.flat().map(([,asset]) => asset)).size }));
@@ -229,9 +229,14 @@ const server = http.createServer((request, response) => {
   await page.waitForTimeout(550);
   const eventCardLayout = await page.evaluate(() => {
     const paper = document.querySelector('.stage-one-event')?.getBoundingClientRect(), ui = document.querySelector('.stage-one-ui')?.getBoundingClientRect();
-    return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom, deck:document.querySelectorAll('.event-deck-card').length, art:document.querySelector('.event-card-art img')?.getAttribute('src'), shell:!!document.querySelector('.event-card-shell') };
+    return { event: !!paper, choices: document.querySelectorAll('.stage-event-choice').length, stage: document.querySelector('.stage-one-ui')?.className, bottom: paper?.bottom, uiBottom: ui?.bottom, deck:document.querySelectorAll('.event-deck-card').length, art:document.querySelector('.event-card-art img')?.getAttribute('src'), shell:!!document.querySelector('.event-card-shell'), sceneToggle:document.querySelector('.event-scene-toggle')?.textContent };
   });
-  if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell) throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
+  if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell || eventCardLayout.sceneToggle !== 'SCENA') throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
+  await page.locator('.event-scene-toggle').click();
+  await page.waitForTimeout(520);
+  const sceneReveal = await page.evaluate(() => ({ button:document.querySelector('.event-scene-toggle')?.textContent, pressed:document.querySelector('.event-scene-toggle')?.getAttribute('aria-pressed'), cardTop:document.querySelector('.event-card-shell')?.getBoundingClientRect().top, viewport:innerHeight }));
+  if (sceneReveal.button !== 'CARTA' || sceneReveal.pressed !== 'true' || sceneReveal.cardTop < sceneReveal.viewport*.7) throw new Error(`Panorama evento non scoperto: ${JSON.stringify(sceneReveal)}`);
+  await page.locator('.event-scene-toggle').click();
   await page.locator('.stage-event-choice:not([disabled])').first().click();
   const resolvedCard = await page.evaluate(() => ({ current:!!S.current, result:!!S.cardResult, ribbon:!!document.querySelector('.event-result'), selected:document.querySelectorAll('.stage-event-choice.selected').length }));
   if (!resolvedCard.current || !resolvedCard.result || !resolvedCard.ribbon || resolvedCard.selected !== 1) throw new Error(`Esito non mostrato sulla carta: ${JSON.stringify(resolvedCard)}`);
@@ -241,15 +246,17 @@ const server = http.createServer((request, response) => {
   if (continuedEvent.stale || (continuedEvent.screen==='tappa' && continuedEvent.after<=continuedEvent.before)) throw new Error(`La carta non prosegue direttamente: ${JSON.stringify(continuedEvent)}`);
   const allArrivals = await page.evaluate(() => TAPPE.slice(0,7).map((stage, index) => {
     S = newState(); S.screen = 'sera'; S.tappa = index; S.arrive = 990; S.full = false; S.closed = false; S.arrMsg = []; S.forecast = { real: 'sole', shown: 'sole' }; render();
-    return { stage:index+1, arrival:!!document.querySelector('.stage-one-ui.arrival'), image:document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), title:document.querySelector('.stage-one-arrival-heading h2')?.textContent, sleep:document.querySelectorAll('.arrival-choice').length, shop:!!document.querySelector('.arrival-service>summary'), shopExpected:!!stage.shop, sauna:document.querySelectorAll('.arrival-smoke').length, saunaExpected:!!stage.sauna };
+    const hero=document.querySelector('.stage-one-hero')?.getBoundingClientRect(),paper=document.querySelector('.stage-one-arrival-paper')?.getBoundingClientRect();
+    return { stage:index+1, arrival:!!document.querySelector('.stage-one-ui.arrival'), image:document.querySelector('.arrival-diorama>.scene-bg')?.getAttribute('src'), title:document.querySelector('.stage-one-arrival-heading h2')?.textContent, sleep:document.querySelectorAll('.arrival-choice').length, shop:!!document.querySelector('.arrival-service>summary'), shopExpected:!!stage.shop, sauna:document.querySelectorAll('.arrival-smoke').length, saunaExpected:!!stage.sauna, split:paper&&hero&&Math.abs(paper.top-hero.bottom)<3&&getComputedStyle(document.querySelector('.stage-one-arrival-paper')).position==='relative' };
   }));
-  if (allArrivals.some((arrival) => !arrival.arrival || !arrival.image || !arrival.title || arrival.sleep < 3 || (arrival.shopExpected && !arrival.shop) || (arrival.saunaExpected && arrival.sauna !== 2) || (!arrival.saunaExpected && arrival.sauna !== 0))) throw new Error(`Arrivi non completi: ${JSON.stringify(allArrivals)}`);
+  if (allArrivals.some((arrival) => !arrival.arrival || !arrival.image || !arrival.title || arrival.sleep < 3 || !arrival.split || (arrival.shopExpected && !arrival.shop) || (arrival.saunaExpected && arrival.sauna !== 2) || (!arrival.saunaExpected && arrival.sauna !== 0))) throw new Error(`Arrivi non completi: ${JSON.stringify(allArrivals)}`);
   if (new Set(allArrivals.map((arrival) => arrival.image)).size !== 7) throw new Error(`Gli arrivi non hanno sette fondali distinti: ${JSON.stringify(allArrivals)}`);
   const allMornings = await page.evaluate(() => TAPPE.slice(0,7).map((stage,index) => {
     S = newState(); S.screen = 'mattino'; S.tappa = index; S.lastSleep = index%2?'tenda':'letto'; S.night = []; S.forecast = { real:'sole', shown:index%2?'nuvole':'sole' }; render();
-    return { stage:index+1, morning:!!document.querySelector('.stage-one-ui.morning'), image:document.querySelector('.morning-diorama>.scene-bg')?.getAttribute('src'), choices:document.querySelectorAll('.morning-choices .arrival-choice').length, tools:document.querySelectorAll('.stage-morning-paper .stage-one-tools details').length };
+    const hero=document.querySelector('.stage-one-hero')?.getBoundingClientRect(),paper=document.querySelector('.stage-morning-paper')?.getBoundingClientRect();
+    return { stage:index+1, morning:!!document.querySelector('.stage-one-ui.morning'), image:document.querySelector('.morning-diorama>.scene-bg')?.getAttribute('src'), choices:document.querySelectorAll('.morning-choices .arrival-choice').length, tools:document.querySelectorAll('.stage-morning-paper .stage-one-tools details').length, split:paper&&hero&&Math.abs(paper.top-hero.bottom)<3&&getComputedStyle(document.querySelector('.stage-morning-paper')).position==='relative' };
   }));
-  if (allMornings.some((morning,index) => !morning.morning || !morning.image || morning.choices < 4 || morning.tools !== 2 || (index===5 && morning.choices !== 5))) throw new Error(`Mattini non completi: ${JSON.stringify(allMornings)}`);
+  if (allMornings.some((morning,index) => !morning.morning || !morning.image || morning.choices < 4 || morning.tools !== 2 || !morning.split || (index===5 && morning.choices !== 5))) throw new Error(`Mattini non completi: ${JSON.stringify(allMornings)}`);
   const finalLayout = await page.evaluate(() => {
     S = newState(); S.screen = 'fine'; S.tappa = 7; S.endKind = 'completo'; S.end = 'Arrivi a Njalla. Hai completato la Via delle Renne.'; S.timbri = ['Vuolle','Gaskas','Biegga','Sállo','Guovda','Gáisi','Njalla']; render();
     const ui=document.querySelector('.stage-one-ui'),paper=document.querySelector('.stage-final-paper');
