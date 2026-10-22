@@ -67,7 +67,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.8').waitFor();
+  await page.getByText('Prototipo · versione 0.6.9').waitFor();
   const audioControl = await page.evaluate(() => ({ button:document.querySelector('.sound-toggle')?.getAttribute('aria-label'), api:typeof GameAudio?.play==='function' }));
   if (!audioControl.button || !audioControl.api) throw new Error(`Controllo audio non disponibile: ${JSON.stringify(audioControl)}`);
   await page.locator('.sound-toggle').click();
