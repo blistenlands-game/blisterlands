@@ -184,7 +184,7 @@ function render(){const a=$('#app');a.classList.toggle('flush',(S.screen==='tapp
   <h3>Scorte</h3>${CONSUM.map(c=>`<div class="qrow"><span>${esc(c.name)}<small>${esc(c.note)} · ${c.kg} kg</small></span><span class="qty"><button aria-label="Meno ${esc(c.name)}" onclick="qty('${c.id}',-1)">−</button><b>${inv(c.id)}</b><button aria-label="Più ${esc(c.name)}" onclick="qty('${c.id}',1)">+</button></span></div>`).join('')}
   <button class="btn primary" onclick="depart()">Parti da Lavvuby</button></section></div>`}
  else if(S.screen==='tappa'){const t=TAPPE[S.tappa],body=S.current?stageOneEventPanel(t,S.current):stageOneTravelPanel(t);
-  a.innerHTML=`<div class="stage-one-ui stage-${S.tappa+1} ${S.current?'has-event':''}">${stageOneHero(t,!S.current)}${body}</div>`}
+  a.innerHTML=`<div class="stage-one-ui stage-${S.tappa+1} ${S.current?'has-event':''}">${stageOneHero(t)}${body}</div>`}
  else if(S.screen==='sera'){const t=TAPPE[S.tappa],late=S.full,saunaOk=t.sauna&&S.arrive<=1020;
   a.innerHTML=stageOneArrivalScreen(t,saunaOk&&!S.closed,late)}
  else if(S.screen==='mattino'){const cur=TAPPE[S.tappa],station=cur.n===6;

@@ -521,11 +521,14 @@ details summary{list-style:none}
 @media(max-width:430px){.stage-one-event .event-card-shell{width:min(350px,calc(100vw - 40px))}.stage-one-event .event-deck-card{width:min(344px,calc(100vw - 48px))}}
 @media(max-height:720px){.stage-one-ui.has-event .stage-one-stats{top:clamp(108px,16svh,124px)}.stage-one-event{inset:195px 0 0;padding-bottom:43px!important}.stage-one-event .event-scene-toggle{top:-92px}}
 
-/* 0.6.12: la barra segue fisicamente il mazzo, anche sugli schermi molto alti. */
-.stage-one-ui.has-event .stage-one-event>.event-inline-stats{position:relative;z-index:18;inset:auto;flex:none;order:0;width:calc(100% - 24px);margin:0 auto 1px;padding:8px 3px;border-radius:10px;background:rgba(9,38,43,.94);box-shadow:0 5px 13px rgba(2,17,20,.34)}
+/* 0.6.13: stemma chiuso nella fascia e statistiche separate sotto la testata. */
+.stage-one-ui.has-event .stage-one-heading::after{top:2px;height:68px;clip-path:polygon(1% 6%,16% 1%,32% 5%,49% 1%,65% 6%,81% 2%,99% 7%,97% 27%,100% 50%,97% 73%,99% 94%,80% 91%,62% 97%,44% 92%,25% 97%,1% 92%,4% 70%,0 49%,4% 26%)}
+.stage-one-ui.has-event .trail-crest{height:68px;border-radius:4px 4px 13px 13px;clip-path:polygon(5% 0,95% 0,100% 80%,86% 96%,50% 100%,14% 96%,0 80%)}
+.stage-one-ui.has-event .stage-one-hero>.stage-one-stats{display:grid;z-index:18;top:128px;bottom:auto;left:16px;right:16px;padding:8px 3px;border-radius:10px;background:rgba(9,38,43,.94);box-shadow:0 5px 13px rgba(2,17,20,.34)}
 .stage-one-event>.event-card-shell{order:1;margin-top:0}
 .stage-one-event>.event-deck-card{top:55%}
-@media(max-height:720px){.stage-one-ui.has-event .stage-one-event>.event-inline-stats{margin-bottom:0;padding-top:6px;padding-bottom:6px}}
+.stage-one-event .event-scene-toggle{top:-140px}
+@media(max-height:720px){.stage-one-ui.has-event .stage-one-hero>.stage-one-stats{top:120px;padding-top:6px;padding-bottom:6px}.stage-one-event .event-scene-toggle{top:-110px}}
 
 /* Correzioni 0.5.1: niente caroselli, avatar centrato e fondali isometrici completi. */
 .shop-page{padding-top:14px}.shop-back{position:relative;z-index:2;display:flex;justify-content:center;width:100%;min-height:46px;margin:0 0 14px;padding:10px 16px;border:1px solid #0d292e;border-radius:8px;background:linear-gradient(#21464b,#112f34);box-shadow:0 4px 9px rgba(43,29,19,.2);color:#fff3d9;font-size:14px}.shop-back:first-letter{color:#e0b557;font-size:25px}.shop-categories{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;margin:0 0 15px;padding:0 0 13px;overflow:visible}.shop-categories button{width:100%;padding:8px 5px;white-space:normal}.shop-shelf{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 14px;padding:3px 0 8px;overflow:visible;scroll-snap-type:none}.shop-card{width:100%;min-width:0;min-height:194px}.shop-card-art{height:112px}

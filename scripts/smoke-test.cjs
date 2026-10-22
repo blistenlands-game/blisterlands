@@ -68,7 +68,7 @@ const server = http.createServer((request, response) => {
   });
 
   await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
-  await page.getByText('Prototipo · versione 0.6.12').waitFor();
+  await page.getByText('Prototipo · versione 0.6.13').waitFor();
   const audioControl = await page.evaluate(() => ({ button:document.querySelector('.sound-toggle')?.getAttribute('aria-label'), api:typeof GameAudio?.play==='function' }));
   if (!audioControl.button || !audioControl.api) throw new Error(`Controllo audio non disponibile: ${JSON.stringify(audioControl)}`);
   await page.locator('.sound-toggle').click();
@@ -241,8 +241,8 @@ const server = http.createServer((request, response) => {
   });
   if (!laterEventLayout || !eventCardLayout.event || eventCardLayout.choices < 2 || !eventCardLayout.stage?.includes('stage-5') || Math.abs(eventCardLayout.bottom-eventCardLayout.uiBottom) > 1 || eventCardLayout.deck !== 2 || !eventCardLayout.art || !eventCardLayout.shell || eventCardLayout.sceneToggle !== 'SCENA' || !eventCardLayout.crest || eventCardLayout.statGap < 4 || !eventCardLayout.loweredBack) throw new Error(`Evento delle tappe successive non impaginato: ${JSON.stringify(eventCardLayout)}`);
   await page.setViewportSize({ width: 430, height: 932 });
-  const tallEventLayout = await page.evaluate(() => { const stats=document.querySelector('.stage-one-stats')?.getBoundingClientRect(),card=document.querySelector('.event-card-shell')?.getBoundingClientRect(),back=document.querySelector('.event-deck-card')?.getBoundingClientRect();return {gap:card&&stats?card.top-stats.bottom:-1,statsTop:stats?.top,cardTop:card?.top,backTop:back?.top} });
-  if (tallEventLayout.gap < 4 || tallEventLayout.gap > 10 || tallEventLayout.backTop <= tallEventLayout.cardTop) throw new Error(`Barra e mazzo non ancorati sul telefono alto: ${JSON.stringify(tallEventLayout)}`);
+  const tallEventLayout = await page.evaluate(() => { const header=document.querySelector('.stage-one-heading')?.getBoundingClientRect(),stats=document.querySelector('.stage-one-stats')?.getBoundingClientRect(),card=document.querySelector('.event-card-shell')?.getBoundingClientRect(),back=document.querySelector('.event-deck-card')?.getBoundingClientRect();return {headerGap:header&&stats?stats.top-header.bottom:-1,barHeight:stats?.height,statsBottom:stats?.bottom,cardTop:card?.top,backTop:back?.top} });
+  if (Math.abs(tallEventLayout.headerGap-tallEventLayout.barHeight) > 8 || tallEventLayout.statsBottom >= tallEventLayout.cardTop || tallEventLayout.backTop <= tallEventLayout.cardTop) throw new Error(`Barra non separata correttamente sotto la testata: ${JSON.stringify(tallEventLayout)}`);
   await page.setViewportSize({ width: 390, height: 844 });
   await page.locator('.event-scene-toggle').click();
   await page.waitForTimeout(520);
